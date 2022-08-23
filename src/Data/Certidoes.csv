@@ -1,0 +1,33 @@
+ID_CERTIDAO;CODIGO_CERTIDAO;NOME_CERTIDAO;SITE_CERTIDAO;TIPO_PESSOA;UF_CERTIDAO;WORKFLOW_RPA;SITUACAO_WORKFLOW
+106;11;Certidão Negativa de Débitos e Créditos Federais;http://servicos.receita.fazenda.gov.br/Servicos/certidao/CNDConjuntaInter/InformaNICertidao.asp?Tipo=1;PJ;ND;CertidaoNegativaDebitosCreditos_RFB;A
+107;13;Cadastro de Empresas Inidôneas e Suspensas - CEIS;http://www.portaltransparencia.gov.br/sancoes/ceis;PJ;ND;CertidaoEmpresasIndoneasSuspensas_CGU;A
+108;14;Cadastro Nacional de Empresas Punidas - CNEP;http://www.portaltransparencia.gov.br/sancoes/cnep;PJ;ND;CertidaoEmpresasPunidas_CNEP_CGU;A
+109;15;Cadastro de Entidades Privadas sem Fins Lucrativos Impedidas - CEPIM;http://www.portaltransparencia.gov.br/sancoes/cepim;PJ;ND;CertidaoSemFinsLucrativos_CEPIM_CGU;A
+110;18;Cadastro de Expulsões da Administração Federal - CEAF;http://www.portaltransparencia.gov.br/sancoes/ceaf;PF;ND;CertidaoExpulsoesAdmFederal_CEAF_CGU;A
+111;19;Certidão de Distribuição STF;http://portal.stf.jus.br/processos/;FJ;ND;CertidaoDistribuicao_STF;A
+112;2;Certidão de Débitos Trabalhistas;http://cdcit.mte.gov.br/inter/cdcit/emitir.seam;FJ;ND;CertidaoDebitosTrabalhistas_SIT;A
+113;20;Consulta Processual STJ;https://processo.stj.jus.br/processo/pesquisa/;FJ;ND;CertidaoProcessual_STJ;A
+114;21;Consulta processual TST;http://www.tst.jus.br/processos-do-tst;PJ;ND;CertidaoProcessual_TST;A
+115;23;Pesquisa no Jusbrasil;https://www.jusbrasil.com.br/?ref=logo;FJ;ND;CertidaoJusbrasil_Jusbrasil;A
+116;24;Pesquisa Google Palavras-Chave;https://www.google.com/;FJ;ND;CertidaoPesquisasGoogle_Google;A
+117;3;Relação de Infrações Trabalhistas SIT;http://cdcit.mte.gov.br/inter/cdcit/pages/infracoes/?cid=1722206;FJ;ND;CertidaoRelacaoInfracoes_SIT;A
+119;4.5.1;Certidão Negativa do Tribunal Regional Federal da 5ª Região - Cível;https://www4.trf5.jus.br/certidoes/paginas/certidaodistribuicao.faces;FJ;ND;CertidaoNegativaCivel_TRF5;A
+120;4.5.2;Certidão Negativa do Tribunal Regional Federal da 5ª Região - Criminal;https://certidoes.trf5.jus.br/certidoes/paginas/certidaocriminal.faces;FJ;ND;CertidaoNegativaCriminal_TRF5;A
+121;7;Relatório processual no site do Tribunal de Justiça do ES;http://aplicativos.tjes.jus.br/consultaunificada/faces/pages/pesquisaSimplificada.xhtml;FJ;ND;CertidaoProcessual_TJES;A
+122;12.1;Certidão negativa – SEFAZ ES;https://internet.sefaz.es.gov.br/agenciavirtual/area_publica/cnd/emissao.php;FJ;ND;CertidaoNegativa_SEFAZES;A
+123;12.2;Certidão negativa – SEFAZ SP;https://www10.fazenda.sp.gov.br/CertidaoNegativaDeb/Pages/EmissaoCertidaoNegativa.aspx;FJ;ND;CertidaoNegativa_SEFAZSP;A
+124;22;Consulta Pública Unificada PJe TSE;https://consultaunificadapje.tse.jus.br/#/public/inicial/index;FJ;ND;CertidaoPJe_TSE;A
+125;4.1.1;Certidão Negativa do Tribunal Regional Federal da 1ª Região - Cível;https://sistemas.trf1.jus.br/certidao/#/solicitacao;FJ;ND;CertidaoNegativaCivel_TRF1;A
+126;4.2.1;Certidão Negativa do Tribunal Regional Federal da 2ª Região - TRF2;https://balcaojus.trf2.jus.br/balcaojus/#/consultar-certidao;FJ;ND;CertidaoNegativaGeral_TRF2;A
+127;4.2.2;Certidão Negativa do Tribunal Regional Federal da 2ª Região - 1ºGrau RJ;https://balcaojus.trf2.jus.br/balcaojus/#/consultar-certidao;FJ;ND;CertidaoNegativa1GrauRJ_TRF2;A
+128;4.2.3;Certidão Negativa do Tribunal Regional Federal da 2ª Região - 1ºGrau ES;https://balcaojus.trf2.jus.br/balcaojus/#/consultar-certidao;FJ;ND;CertidaoNegativa1GrauES_TRF2;A
+129;6.1;Relatório processual do Tribunal de Justiça de São Paulo - 1ºGrau;https://esaj.tjsp.jus.br/cpopg/open.do;FJ;ND;CertidaoProcessual1Grau_TJSP;A
+130;6.2;Relatório processual do Tribunal de Justiça de São Paulo - 2ºGrau;https://esaj.tjsp.jus.br/cposg/open.do;FJ;ND;CertidaoProcessual2Grau_TJSP;A
+131;4.1.2;Certidão Negativa do Tribunal Regional Federal da 1ª Região - Criminal;https://sistemas.trf1.jus.br/certidao/#/solicitacao;FJ;ND;CertidaoNegativaCriminal_TRF1;A
+132;1;Verificar cartão CNPJ no site da Receita Federal;http://servicos.receita.fazenda.gov.br/Servicos/cnpjreva/cnpjreva_solicitacao.asp;PJ;ND;CertidaoInscricaoCadastral_RFB;A
+133;22.1;Situação eleitoral TSE - CPF;https://www.tse.jus.br/eleitor/titulo-e-local-de-votacao/copy_of_consulta-por-nome;PF;ND;CertidaoSituacaoEleitoral_TSE;A
+134;4.3.1;Certidão Negativa do Tribunal Regional Federal da 3ª Região - 1ºGrau SP;http://web.trf3.jus.br/certidao/Certidao/Solicitar;FJ;ND;CertidaoNegativa1GrauSP_TRF3;A
+135;4.3.2;Certidão Negativa do Tribunal Regional Federal da 3ª Região - 1ºGrau MT;http://web.trf3.jus.br/certidao/Certidao/Solicitar;FJ;ND;CertidaoNegativa1GrauMT_TRF3;A
+136;4.3.3;Certidão Negativa do Tribunal Regional Federal da 3ª Região - TRF3;http://web.trf3.jus.br/certidao/Certidao/Solicitar;FJ;ND;CertidaoNegativaGeral_TRF3;A
+137;4.4.1;Certidão Negativa do Tribunal Regional Federal da 4ª Região - Cívil;https://www2.trf4.jus.br/trf4/processos/certidao/index.php;FJ;ND;CertidaoNegativaCivel_TRF4;A
+138;4.4.2;Certidão Negativa do Tribunal Regional Federal da 4ª Região - Criminal;https://www2.trf4.jus.br/trf4/processos/certidao/index.php;FJ;ND;CertidaoNegativaCriminal_TRF4;A
