@@ -1,0 +1,4 @@
+{
+    "sqs_queue_url": "fila",
+    "sqs_queue_region": "us-east-1"
+}

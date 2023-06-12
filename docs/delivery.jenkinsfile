@@ -1,0 +1,64 @@
+pipeline {
+    agent any
+
+    stages {
+        
+        // Estágio pré-deploy para limpar a pasta
+        stage('Pré-Deploy : limpa projeto da máquina') {
+            steps {
+                // Verificar se a pasta '/home/robo/repos' existe antes de removê-la
+                script {
+                    if (fileExists('...')) {
+                        // Remover a pasta '/home/robo/repos'
+                        sh 'rm -rf ...'
+                    }
+                }
+            }
+        }
+        
+        // Estágio de deploy > clonar repositório e garantir branch
+        stage('Deploy : Clone Repository') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'codecommit-credentials', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                    // Criar o diretório '/home/robo/repos'
+                    sh 'mkdir -p ...'
+                    
+                    // Acessar o diretório de trabalho
+                    dir('...') {
+                        // Clonar o repositório na branch 'Master'
+                        sh "git clone ..."
+                        
+                        // Entrar no diretório clonado
+                        dir('...') {
+                            // Exibir o conteúdo do diretório
+                            sh "ls -lart"
+                            
+                            // Exibir as branches disponíveis
+                            sh "git branch -a"
+                            
+                            // Trocar para a branch 'Master'
+                            sh "git checkout master"
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Estágio de build > constroi venv e instala pacotes
+        stage('Build : constroi Virtual Environment') {
+            steps {
+                sh 'python -m venv venv'
+                sh 'venv/bin/activate'
+                sh 'pip install -r docs/requirements-ubuntu.txt'
+            }
+        }
+        
+        // Estágio de pós-build > execute o código
+        stage('Pós-Build : Execute Code') {
+            steps {
+                sh 'python main.py'
+            }
+        }
+
+    }
+}

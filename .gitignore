@@ -1,1 +1,10 @@
+# python stuff
+__pycache__/
+
+# venv stuff
+Scripts/
+Lib/
 venv/
+
+# vscode stuff
+# .vscode/
