@@ -41,9 +41,6 @@ def send_log_message(message):
 
 # lógica reservada para testes
 if __name__ == '__main__':
-    print("xixi")
-    print("o piru gozou...")
-    print("é... parece que é isso!")
     # threading.Thread(target=start_agent_server).start()
 
     # # Exemplo de uso: enviar uma mensagem de log

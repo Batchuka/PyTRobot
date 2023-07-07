@@ -1,8 +1,0 @@
-{
-    "tiny_sleep": 1,
-    "medium_sleep": 5,
-    "large_sleep": 10,
-    "wait_time_seconds": 10,
-    "retry_loop_number": 2,
-    "max_number_of_messages_queue": 1
-}

@@ -3,23 +3,30 @@ import schedule
 import os
 
 
-def kill_schedule():
-    # limparemos qualquer schedule ativo, pois não queremos mais observar a fila
-    schedule.clear()
-
-
 def look_for_transaction_item(self):
 
-    print(Bag.transaction_item)
-
     if Bag.transaction_item:
-        kill_schedule()
+        # se hourve item, vai para o perfomer processar e mata todos schedules ativos
+        kill_pending_schedule()
         self.next_state = State.PERFORMER
     else:
         if len(schedule.get_jobs()) == 0:
+            # quando não há schedules, vai para dispatcher criar um
             self.next_state = State.DISPATCHER
         else:
+            # verifica se os schedules ativos atingiram a hora atual
+            run_pending_schedule()
             self.next_state = State.CONTROLLER
+
+
+def run_pending_schedule():
+    # procura pelos schedules ativos
+    schedule.run_pending()
+
+
+def kill_pending_schedule():
+    # limpa qualquer schedule ativo
+    schedule.clear()
 
 
 def delete_all_temp_files():
@@ -42,3 +49,10 @@ def delete_all_temp_files():
                     print(f"Deleted file: {file_path}")
     else:
         print(f"Temporary directory '{temp_directory}' not found")
+
+def delete_input_json():
+    
+    if os.path.exists(Bag.transaction_item["input_json"]):
+        os.remove(Bag.transaction_item["input_json"])
+    
+    Bag.transaction_item = {}

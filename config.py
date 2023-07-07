@@ -15,19 +15,21 @@ class State(Enum):
 
 class Environment(Enum):
     DEFAULT = None
-    DEV = 'development'
-    HML = 'homologation'
-    OPS = 'production'
+    DEV = 'data/DEV-assets.json'
+    HML = None
+    OPS = 'data/OPS-assets.json'
 
 
 class Bag:
     assets = None
-    params = None
     transaction_item = {}
     list_of_projects = None
     sqs_client = None
+    aws_session = None
     flask_server = None
     debugger_mode = False
+    Environment = Environment.DEV
+    xvfb = True
 
 ########################## SUPER CLASSE ROBOT #################################
 
@@ -117,7 +119,7 @@ def handle(func):
 
     def wrapper(self, *args, **kwargs):
         try:
-            if self.debugger_mode:
+            if self.debugger_mode == True:
                 print(f"* {self.current_state} > {func.__name__}")
             func(self, *args, **kwargs)
             self.status = True
@@ -145,7 +147,7 @@ def fill_arguments_from_bag(func):
                 filled_kwargs[param.name] = kwargs[param.name]
             else:
                 # Verifica se o argumento é None e preenche com valores de Bag.params e Bag.assets
-                filled_kwargs[param.name] = kwargs.get(param.name) or Bag.params.get(
+                filled_kwargs[param.name] = kwargs.get(param.name) or Bag.assets.get(
                     param.name) or Bag.assets.get(param.name)
 
         # Chama a função original com os argumentos preenchidos

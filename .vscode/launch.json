@@ -20,7 +20,13 @@
             "program": "${workspaceFolder}/main.py",
             "console": "integratedTerminal",
             "justMyCode": true,
-            "cwd": "${workspaceFolder}"
+            "cwd": "${workspaceFolder}",
+            "args": [
+                "--environment",
+                "DEV",
+                "--xvfb",
+                "False"
+            ]
         }
     ]
 }

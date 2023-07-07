@@ -19,7 +19,7 @@ def get_client(sqs_queue_region=None):
     """
 
     # obtém o cliente pela região
-    Bag.sqs_client = boto3.client('sqs', sqs_queue_region)
+    Bag.sqs_client = Bag.aws_session.client('sqs', sqs_queue_region, )
 
 
 @fill_arguments_from_bag
@@ -117,38 +117,58 @@ def get_queue_item(message_group_id=None,
     # se retornar algo e não tiver sido solicitada a lista de itens
     if _response and not list_of_itens:
 
-        # vamos processar o retorno e adicionar corretamente em 'transaction_item'
-        _prepare_transaction_item(_response)
+        # verifica se 'Messages' está presente no dicionário
+        if 'Messages' in _response:
+
+            # vamos processar o retorno e adicionar corretamente em 'transaction_item'
+            _prepare_transaction_item(_response)
+
+            # após pegar o item, delete ele imediatamente
+            if Bag.transaction_item:
+                delete_queue_item()
+
+        else:
+            # Não há itens na fila
+            print("Queue is empty")
 
     # se retornar algo e tiver sido solicitada a lista
     elif _response and list_of_itens:
 
-        # retorna a lista completa
-        return _response
+        # verifica se 'Messages' está presente no dicionário
+        if 'Messages' in _response:
+
+            # retorna a lista completa
+            return _response
+
+        else:
+            # Não há itens na fila
+            return []
 
     else:
-        raise Exception("Error on _get_queue_item")
+        raise Exception("Error on get_queue_item")
 
 
 @fill_arguments_from_bag
 def delete_queue_item(sqs_queue_url=None):
-
     # obtem todas as mensagens da fila atual
     _response = get_queue_item(
         list_of_itens=True, max_number_of_messages_queue=10)
 
-    # Extrair o conteúdo do atributo 'body' do JSON de origem
-    _receipt_handle = _prepare_message_receipt(
-        list_of_itens=_response, message_id=Bag.transaction_item['message_id'])
+    if _response:
+        # Extrair o conteúdo do atributo 'body' do JSON de origem
+        _receipt_handle = _prepare_message_receipt(
+            list_of_itens=_response, message_id=Bag.transaction_item['message_id']
+        )
 
-    # chama o cliente para deletar a mensagem
-    Bag.sqs_client.delete_message(
-        QueueUrl=sqs_queue_url,
-        ReceiptHandle=_receipt_handle
-    )
+        # chama o cliente para deletar a mensagem
+        Bag.sqs_client.delete_message(
+            QueueUrl=sqs_queue_url,
+            ReceiptHandle=_receipt_handle
+        )
 
-    if Bag.transaction_item["input_json"]:
-        os.remove(Bag.transaction_item["input_json"])
+    else:
+        # Não há itens na fila
+        print("Queue is empty")
 
 
 @fill_arguments_from_bag
@@ -171,6 +191,7 @@ def _prepare_transaction_item(response):
     try:
         with open(_file_path, "w") as file:
             file.write(_body)
+            print(_body)
         print(f"Transaction item converted on: {_file_path}")
     except IOError as e:
         raise Exception(f"Failed to convert transaction item: {str(e)}")
@@ -200,20 +221,36 @@ if __name__ == "__main__":
 
     # preencha assets com parâmetros
     Bag.assets = {
-        'sqs_queue_url': "fila",
-        'sqs_queue_region': "us-east-1"
-    }
-
-    # preencha params com parâmetros
-    Bag.params = {
+        'sqs_queue_url': "https://sqs.us-east-1.amazonaws.com/435062120355/wmt-agente-onpremise-dev.fifo",
+        'sqs_queue_region': "us-east-1",
         'medium_sleep': 5,
         'large_sleep': 10,
         'max_number_of_messages_queue': 1,
-        'wait_time_seconds': 10
+        'wait_time_seconds': 10,
+        "aws_access_key_id": "-",
+        "aws_secret_access_key": "-",
     }
+
+    Bag.aws_session = boto3.Session(
+        aws_access_key_id=Bag.assets['aws_access_key_id'],
+        aws_secret_access_key=Bag.assets['aws_secret_access_key'],
+        region_name=Bag.assets['sqs_queue_region'])
 
     get_client()
 
-    get_queue_item()
+    watch_queue_until_get_one(by_interval=True, large_sleep=0.5)
 
-    delete_queue_item()
+    counter = 0
+
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
+        counter += 1
+        print("Aguardando... Contador:", counter)
+
+        # Faça aqui a lógica para verificar se o item foi encontrado na fila
+        if Bag.transaction_item:
+            print("Item encontrado!")
+            break
+
+    # delete_queue_item()

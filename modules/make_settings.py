@@ -2,6 +2,7 @@ from config import *
 import json
 import os
 import re
+import boto3
 
 
 def from_environment():
@@ -26,20 +27,18 @@ def from_json(file):
 
 def look_for_projects():
 
-    username = os.getlogin()  # Obtém o nome de usuário atual
+    # username = os.getlogin()  # Obtém o nome de usuário atual
 
     # Cria o caminho completo usando o nome de usuário
-    path_of_projects = f"/home/{username}/repos/"
-
-    # Preenche o valor do atributo "path_of_projects" no JSON
-    Bag.params["path_of_projects"] = path_of_projects
+    pass
 
 
 def get_list_projects():
     project_list = []
     pattern = r'^wmt-bot'
+    _path_of_projects = str(Bag.assets['path_of_projects'])
 
-    for root, dirs, _ in os.walk(Bag.params['path_of_projects']):
+    for root, dirs, _ in os.walk(_path_of_projects):
         for dir_name in dirs:
             if re.match(pattern, dir_name):
                 project_path = os.path.join(root, dir_name)
@@ -55,3 +54,7 @@ def get_list_projects():
                     project_list.append(project_info)
 
     Bag.list_of_projects = project_list
+
+
+def set_aws_profile():
+    Bag.aws_session = boto3.Session(profile_name=Bag.assets['aws_session'])

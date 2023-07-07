@@ -1,0 +1,14 @@
+{
+    "sqs_queue_url": "sqs fila",
+    "sqs_queue_region": "us-east-1",
+    "aws_session": "wmt...",
+    "aws_access_key_id": null,
+    "aws_secret_access_key": null,
+    "path_of_projects": "...",
+    "tiny_sleep": 1,
+    "medium_sleep": 5,
+    "large_sleep": 0.5,
+    "wait_time_seconds": 10,
+    "retry_loop_number": 2,
+    "max_number_of_messages_queue": 1
+}

@@ -22,8 +22,14 @@ def launch():
     except:
         raise Exception("Error retrieving project information")
 
-    # Comando para executar o main.py com xvfb e o arquivo JSON como argumentos
-    comando = ["xvfb-run", venv_path, main_path, input_json]
+    if Bag.xvfb == False:
+        # Comando para executar o main.py com xvfb e o arquivo JSON como argumentos
+        comando = [venv_path, main_path, input_json]
+        print(comando)
+    else:
+        # Comando para executar o main.py com xvfb e o arquivo JSON como argumentos
+        comando = ["xvfb-run", venv_path, main_path, input_json]
+        print(comando)
 
     # Chama a função main passando o JSON usando threading
     subprocess.run(comando)

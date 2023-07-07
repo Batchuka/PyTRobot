@@ -17,12 +17,10 @@ class Starter(Robot):
 
         # inicie seu dicionário de assets caso não exista
         if Bag.assets is None:
-            Bag.assets = make_settings.from_json("data/assets.json")
-        if Bag.params is None:
-            Bag.params = make_settings.from_json("data/params.json")
+            Bag.assets = make_settings.from_json(Bag.Environment.value)
 
         # inicie variáveis que precisar nos dicionários
-        make_settings.look_for_projects()
+        make_settings.set_aws_profile()
 
     def execute(self):
 
@@ -80,8 +78,7 @@ class Dispatcher(Robot):
 
     def on_entry(self):
 
-        # avalie novamente os projetos na máquina
-        make_settings.look_for_projects()
+        pass
 
     def execute(self):
 
@@ -112,8 +109,8 @@ class Performer(Robot):
         # chama o a automação devida
         make_subprocess.launch()
 
-        # após executar automação — correta ou incorretamente — deve apagar o item da fila e o 'input.json'
-        make_sqs.delete_queue_item()
+        # após executar automação — correta ou incorretamente — deve apagar o 'input.json'. O item da fila já é excluido na função 'get_queue_item'
+        make_control.delete_input_json()
 
     def on_error(self):
 
@@ -140,7 +137,7 @@ class Finisher(Robot):
 
         # Feche todas as aplicações, limpe sua bagunça e mande um Log
         make_control.delete_all_temp_files()
-        make_control.kill_schedule()
+        make_control.kill_pending_schedule()
         # make_flask.shutdown_flask()
 
     def on_error(self):
