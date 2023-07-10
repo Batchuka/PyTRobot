@@ -2,6 +2,7 @@ from config import *
 from modules import make_settings
 from modules import make_control
 from modules import make_flask
+from modules import make_websocket
 from modules import make_sqs
 from modules import make_subprocess
 
@@ -34,7 +35,10 @@ class Starter(Robot):
         # inicie todas aplicações que serão utilizadas
         if Bag.sqs_client is None:
             make_sqs.get_client()
-        # if Bag.flask_server is None: make_flask.run_flask()
+        if Bag.websocket_server is None:
+            make_websocket.run_websocket()
+        # if Bag.flask_server is None:
+        #     make_flask.run_flask()
 
     def on_error(self):
 
