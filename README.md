@@ -1,4 +1,4 @@
-#  PyTRob — Robô Transacional com Python
+#  PyTRobot — Robô Transacional com Python
 
 ## Visão geral
 
