@@ -1,10 +1,13 @@
+
+"""
+"""
 from framework.robot import *
-from framework.config import *
+from framework.inventory import *
 from framework.utils import *
 
 
-@apply_decorator_to_all_methods(with_logging)
 @apply_decorator_to_all_methods(handle_exceptions)
+@apply_decorator_to_all_methods(with_logging)
 class Controller(Robot):
 
     def __init__(self):
@@ -13,11 +16,13 @@ class Controller(Robot):
 
     def on_entry(self):
 
-        pass
+        # lógicas para iniciar o controler
+        print("...")
 
     def execute(self):
 
-        pass
+        # lógicas alvo do controler
+        print("...")
 
     def on_error(self):
 
@@ -25,4 +30,4 @@ class Controller(Robot):
 
     def on_exit(self):
 
-        pass
+        self.next_state = State.CONTROLLER

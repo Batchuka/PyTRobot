@@ -1,4 +1,3 @@
-from framework.config import Config
 import logging
 import os
 

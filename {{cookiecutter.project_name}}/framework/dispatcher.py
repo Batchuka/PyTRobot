@@ -1,10 +1,13 @@
+
+"""
+"""
 from framework.robot import *
-from framework.config import *
+from framework.inventory import *
 from framework.utils import *
 
 
-@apply_decorator_to_all_methods(with_logging)
 @apply_decorator_to_all_methods(handle_exceptions)
+@apply_decorator_to_all_methods(with_logging)
 class Dispatcher(Robot):
 
     def __init__(self):
@@ -13,11 +16,13 @@ class Dispatcher(Robot):
 
     def on_entry(self):
 
-        pass
+        # lógicas para iniciar o dispatcher
+        print("...")
 
     def execute(self):
 
-        pass
+        # lógicas alvo do dispatcher
+        print("...")
 
     def on_error(self):
 

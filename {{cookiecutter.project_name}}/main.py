@@ -3,6 +3,8 @@ from framework import *
 
 def run():
 
+    Inventory.load_config()
+    Inventory.set_config()
     robot = Starter()
 
     while True:

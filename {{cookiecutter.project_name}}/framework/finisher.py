@@ -1,10 +1,13 @@
+
+"""
+"""
 from framework.robot import *
-from framework.config import *
+from framework.inventory import *
 from framework.utils import *
 
 
-@apply_decorator_to_all_methods(with_logging)
 @apply_decorator_to_all_methods(handle_exceptions)
+@apply_decorator_to_all_methods(with_logging)
 class Finisher(Robot):
 
     def __init__(self):
@@ -13,13 +16,13 @@ class Finisher(Robot):
 
     def on_entry(self):
 
-        # se prepare para desligar: salve algo se precisar
-        pass
+        # lógicas para iniciar o finisher
+        print("...")
 
     def execute(self):
 
-        # Feche todas as aplicações, limpe sua bagunça e mande um Log
-        pass
+        # lógicas alvo para o finisher
+        print("...")
 
     def on_error(self):
 

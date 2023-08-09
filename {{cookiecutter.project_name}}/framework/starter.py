@@ -1,10 +1,13 @@
+
+"""
+"""
 from framework.robot import *
-from framework.config import *
+from framework.inventory import *
 from framework.utils import *
 
 
-@apply_decorator_to_all_methods(with_logging)
 @apply_decorator_to_all_methods(handle_exceptions)
+@apply_decorator_to_all_methods(with_logging)
 class Starter(Robot):
 
     def __init__(self):
@@ -13,13 +16,13 @@ class Starter(Robot):
 
     def on_entry(self):
 
-        # inicie seu dicionário de assets caso não exista
+        # lógicas para iniciar o starter
         print("...")
 
     def execute(self):
 
-        # para garantir a limpeza de arquivos residuais
-        print(...)
+        # lógicas alvo do starter
+        print("...")
 
     def on_error(self):
 

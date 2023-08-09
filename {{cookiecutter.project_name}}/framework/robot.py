@@ -22,7 +22,7 @@ class Robot:
 
     def __init__(self):
         self.status = False
-        self.current_state = None
+        self.current_state = State.DEFAULT
         self.next_state = None
 
     def __repr__(self) -> str:
@@ -34,8 +34,11 @@ class Robot:
 
     @status.setter
     def status(self, value):
-        if value in bool:
+        if isinstance(value, bool):
             self.status = value
+        else:
+            raise ValueError(
+                "O valor do status deve ser um booleano (True ou False).")
 
     @property
     def current_state(self):
@@ -43,8 +46,11 @@ class Robot:
 
     @current_state.setter
     def current_state(self, value):
-        if value in State:
+        if isinstance(value, State):
             self.current_state = value
+        else:
+            raise ValueError(
+                "O valor do current_state deve ser um membro da enumeração State.")
 
     @property
     def next_state(self):
@@ -52,8 +58,11 @@ class Robot:
 
     @next_state.setter
     def next_state(self, value):
-        if value in State:
+        if isinstance(value, State):
             self.next_state = value
+        else:
+            raise ValueError(
+                "O valor do current_state deve ser um membro da enumeração State.")
 
     def execute(self):
         """

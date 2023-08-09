@@ -1,5 +1,8 @@
+
+"""
+"""
 from framework.robot import *
-from framework.config import *
+from framework.inventory import *
 from framework.utils import *
 
 

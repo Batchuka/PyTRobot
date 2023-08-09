@@ -1,6 +1,6 @@
 from enum import Enum
 from .robot import Robot
-from .config import Config
+from .inventory import Inventory
 from .starter import Starter
 from .controller import Controller
 from .dispatcher import Dispatcher
