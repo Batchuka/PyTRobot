@@ -2,7 +2,7 @@
 """
 """
 from framework.robot import *
-from framework.inventory import *
+from framework.config import *
 from framework.utils import *
 
 
