@@ -1,8 +1,10 @@
+# exemplo → from make_database import MySQL
 
 """
 """
-from framework.robot import *
-from framework.config import *
+from framework.robot import Robot, State
+from framework.config import Config
+from framework.transaction import Transaction
 from framework.utils import *
 
 
@@ -16,13 +18,13 @@ class Dispatcher(Robot):
 
     def on_entry(self):
 
-        # lógicas para iniciar o dispatcher
-        print("...")
+        # exemplo → result = MySQL.select('entidade', "id_status='2'")
+        pass
 
     def execute(self):
 
         # lógicas alvo do dispatcher
-        print("...")
+        print("lógicas alvo do dispatcher")
 
     def on_error(self):
 

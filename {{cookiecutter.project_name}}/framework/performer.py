@@ -1,13 +1,14 @@
 
 """
 """
-from framework.robot import *
-from framework.config import *
+from framework.robot import Robot, State
+from framework.config import Config
+from framework.transaction import Transaction
 from framework.utils import *
 
 
-@apply_decorator_to_all_methods(with_logging)
 @apply_decorator_to_all_methods(handle_exceptions)
+@apply_decorator_to_all_methods(with_logging)
 class Performer(Robot):
 
     def __init__(self):
@@ -16,11 +17,13 @@ class Performer(Robot):
 
     def on_entry(self):
 
-        pass
+        # lógicas para iniciar o performer
+        print("...")
 
     def execute(self):
 
-        pass
+        # lógicas alvo do performer
+        print("...")
 
     def on_error(self):
 

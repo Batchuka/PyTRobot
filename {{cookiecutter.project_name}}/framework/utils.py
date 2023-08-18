@@ -3,6 +3,13 @@ import os
 
 
 def handle_exceptions(func):
+    """
+    Um decorator que envolve a função fornecida com tratamento de exceções genéricas.
+    Se a função for executada com sucesso, atualiza o status do robô para True. Se ocorrer
+    uma exceção, registra um erro e atualiza o status do robô para False.
+
+    :param func: A função a ser decorada.
+    """
 
     def wrapper(self, *args, **kwargs):
         try:
@@ -17,6 +24,11 @@ def handle_exceptions(func):
 
 
 def with_logging(func):
+    """
+    Um decorator que registra a chamada de uma função com informações de depuração.
+
+    :param func: A função a ser decorada.
+    """
 
     def wrapper(self, *args, **kwargs):
         logging.debug(f"{self.current_state}.{func.__name__}")
@@ -25,6 +37,11 @@ def with_logging(func):
 
 
 def apply_decorator_to_all_methods(decorator):
+    """
+    Um decorator de classe que aplica um decorator fornecido a todos os métodos da classe.
+
+    :param decorator: O decorator a ser aplicado.
+    """
 
     def class_decorator(cls):
         for name, value in vars(cls).items():
@@ -36,6 +53,9 @@ def apply_decorator_to_all_methods(decorator):
 
 
 def delete_all_temp_files():
+    """
+    Exclui todos os arquivos no diretório temporário, exceto 'placeholder.txt'.
+    """
 
     temp_directory = 'temp'
 

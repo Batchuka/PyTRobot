@@ -13,98 +13,84 @@ class State(Enum):
 
 class Robot:
     """
-    Essa classe implementa a estrutura do estado. Temos cinco métodos, que servem
-    para controlar e separar as lógicas e os diversos estados do robô. O controle
-    desses estados é baseado no retorno 'robot.status()'. Além disso, temos o dicionário
-    config que guarda variáveis de execução desse robô — você pode acessa-las e modifica-
-    las em qualquer estados, caso precise.
+    Essa classe implementa a estrutura do estado. Ela controla e separa as lógicas 
+    e os diversos estados do robô. O controle desses estados é baseado no retorno 'robot.status()'. 
     """
 
     def __init__(self):
-        self.status = False
-        self.current_state = State.DEFAULT
-        self.next_state = None
+        self._status = False
+        self._current_state = State.DEFAULT
+        self._next_state = None
 
     def __repr__(self) -> str:
-        return f'Robot.{self.current_state}'
+        return f'Robot.{self._current_state}'
 
     @property
     def status(self):
-        return self.status
+        return self._status
 
     @status.setter
     def status(self, value):
         if isinstance(value, bool):
-            self.status = value
+            self._status = value
         else:
             raise ValueError(
-                "O valor do status deve ser um booleano (True ou False).")
+                "The status value must be a Boolean (True or False).")
 
     @property
     def current_state(self):
-        return self.current_state
+        return self._current_state
 
     @current_state.setter
     def current_state(self, value):
         if isinstance(value, State):
-            self.current_state = value
+            self._current_state = value
         else:
             raise ValueError(
-                "O valor do current_state deve ser um membro da enumeração State.")
+                "The current_state value must be a member of the State enumeration.")
 
     @property
     def next_state(self):
-        return self.next_state
+        return self._next_state
 
     @next_state.setter
     def next_state(self, value):
         if isinstance(value, State):
-            self.next_state = value
+            self._next_state = value
         else:
             raise ValueError(
-                "O valor do current_state deve ser um membro da enumeração State.")
+                "The next_state value must be a member of the State enumeration.")
 
     def execute(self):
         """
-        Aqui, a lógica principal do estado deve ser executada. Logo, esse método
-        reserva espaço para chamar e tratar as lógicas principais.
+        Executa a lógica principal do estado atual do robô. Deve ser implementado em cada subclasse.
 
-        - args : <dict>config
-        - return : <bool>robot_state
+        :return: Retorna o estado do robô após a execução da lógica.
         """
         pass
 
     def on_error(self):
         """
-        Este método é invocado quando robot_state retorna 'False', indicando que o
-        Robot.execute() em questão não executou como previsto. Esse método deve
-        implementar as tratativas de erro adequadas. Este método invoca 'handle()' e
-        somente retorna o que 'handle()' retornar.
+        Método invocado quando a execução do estado atual retorna 'False', indicando um erro.
+        Deve implementar as tratativas de erro adequadas.
 
-        - args : <str>robot_state or <bool>robot_state
-        - return : <RobotState>robot — que é o retorno do 'handle()'
+        :return: Retorna o próximo estado planejado após o tratamento de erro.
         """
         pass
 
     def on_exit(self):
         """
-        Este método é invocado quando robot_state retorna 'True' — ou as strings
-        mapeadas para cada estado —, indicando que o Robot.execute() em questão
-        executou como previsto. Este método invoca 'handle()' e somente retorna o que
-        'handle()' retornar.
+        Método invocado quando a execução do estado atual retorna 'True', indicando sucesso.
+        Pode implementar ações de limpeza ou transição para o próximo estado.
 
-        - args : <str>robot_state or <bool>robot_state
-        - return : <RobotState>robot — que é o retorno do 'handle()'
+        :return: Retorna o próximo estado planejado após a conclusão com sucesso.
         """
         pass
 
     def on_entry(self):
         """
-        É o primeiro método invocado de qualquer estado e serve para implementar
-        lógicas de inicialização do estado. É tipicamente aqui que acessos ao
-        config do robô ocorrem.
+        Primeiro método invocado ao entrar em qualquer estado. Pode ser usado para inicializações e acessos ao config.
 
-        - args : <dict>config, <str>robot_state or <bool>robot_state
-        - return : <bool>robot_state
+        :return: Retorna o estado do robô após a inicialização.
         """
         pass

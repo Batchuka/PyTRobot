@@ -3,8 +3,9 @@ from framework import *
 
 def run():
 
-    Inventory.load_config()
-    Inventory.set_config()
+    Config.load_config()
+    Config.set_assets()
+    Config.set_config()
     robot = Starter()
 
     while True:

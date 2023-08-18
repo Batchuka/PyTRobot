@@ -1,8 +1,10 @@
+# exemplo → from make_database import MySQL
 
 """
 """
-from framework.robot import *
-from framework.config import *
+from framework.robot import Robot, State
+from framework.config import Config
+from framework.transaction import Transaction
 from framework.utils import *
 
 
@@ -16,13 +18,12 @@ class Starter(Robot):
 
     def on_entry(self):
 
-        # lógicas para iniciar o starter
-        print("...")
+        result = MySQL.select('classificao_email', "id_status='2'")
 
     def execute(self):
 
-        # lógicas alvo do starter
-        print("...")
+        # Instalação do certificado
+        pass
 
     def on_error(self):
 

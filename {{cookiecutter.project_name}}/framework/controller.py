@@ -1,8 +1,9 @@
 
 """
 """
-from framework.robot import *
-from framework.config import *
+from framework.robot import Robot, State
+from framework.config import Config
+from framework.transaction import Transaction
 from framework.utils import *
 
 
@@ -17,12 +18,12 @@ class Controller(Robot):
     def on_entry(self):
 
         # lógicas para iniciar o controler
-        print("...")
+        print("lógicas para iniciar o controler")
 
     def execute(self):
 
         # lógicas alvo do controler
-        print("...")
+        print("lógicas alvo do controler")
 
     def on_error(self):
 
