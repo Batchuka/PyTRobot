@@ -1,11 +1,12 @@
-# exemplo → from make_database import MySQL
-
+from .robot import Robot
+from .state import State
+from .config import Config
+from .transaction import Transaction
+from .utils import *
 """
+imports do framework  ↑
+imports do usuário    ↓
 """
-from framework.robot import Robot, State
-from framework.config import Config
-from framework.transaction import Transaction
-from framework.utils import *
 
 
 @apply_decorator_to_all_methods(handle_exceptions)

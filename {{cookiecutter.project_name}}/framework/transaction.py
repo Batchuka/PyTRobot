@@ -2,7 +2,7 @@ from typing import List, Optional
 import logging
 """
 """
-from config import Config
+from .config import Config
 
 
 class Transaction:
@@ -33,13 +33,13 @@ class Transaction:
             Transaction.number -= 1
             if Transaction.data:
                 Transaction.item = Transaction.data.pop(0)
-                print("Item processado:", Transaction.item)
+                logging.info("Item processado: %s", Transaction.item)
                 if Transaction.number == 0:
-                    print("Todos os itens foram processados.")
+                    logging.info("Todos os itens foram processados.")
             else:
-                print("Todos os itens foram processados.")
+                logging.info("Todos os itens foram processados.")
         else:
-            print("Nenhum item para processar.")
+            logging.info("Nenhum item para processar.")
 
     @staticmethod
     def get_current_item() -> Optional[dict]:
@@ -62,8 +62,8 @@ class Transaction:
 
 if __name__ == '__main__':
 
-    Config.load_config()
-    Config.set_config()
+    Config.load_configuration()
+    Config.set_assets()
 
     # Exemplo de uso
     items_to_process = [{"item_id": 1}, {"item_id": 2}, {"item_id": 3}]
@@ -71,4 +71,3 @@ if __name__ == '__main__':
 
     while not Transaction.is_last_transaction():
         Transaction.process_item()
-        logging.INFO(Transaction.get_current_item())

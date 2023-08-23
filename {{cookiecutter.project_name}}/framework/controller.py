@@ -1,10 +1,14 @@
-
+from .robot import Robot
+from .state import State
+from .config import Config
+from .transaction import Transaction
+from .utils import *
 """
+imports do framework  ↑
+imports do usuário    ↓
 """
-from framework.robot import Robot, State
-from framework.config import Config
-from framework.transaction import Transaction
-from framework.utils import *
+from make_database import MakeDatabaseConfig, MysqlDB
+from make_aws import Queue
 
 
 @apply_decorator_to_all_methods(handle_exceptions)
@@ -17,13 +21,14 @@ class Controller(Robot):
 
     def on_entry(self):
 
-        # lógicas para iniciar o controler
-        print("lógicas para iniciar o controler")
+        # Inicia tudo que precisará para executar a tarefa do Controller
+        Config.set_class(MakeDatabaseConfig)
+        self.mysql_hub = MysqlDB('host', 'user', 'password', 'database2')
+        self.queue_verifica_radar = Queue('queue_url', 'region')
 
     def execute(self):
 
-        # lógicas alvo do controler
-        print("lógicas alvo do controler")
+        Transaction
 
     def on_error(self):
 
@@ -31,4 +36,12 @@ class Controller(Robot):
 
     def on_exit(self):
 
-        self.next_state = State.CONTROLLER
+        # Define your logic to determine the next state
+        if True:
+            self.next_state = State.CONTROLLER
+        elif False:
+            self.next_state = State.FINISHER
+        elif False:
+            self.next_state = State.PERFORMER
+        else:
+            self.next_state = State.DISPATCHER

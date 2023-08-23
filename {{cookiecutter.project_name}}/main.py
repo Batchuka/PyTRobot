@@ -3,9 +3,8 @@ from framework import *
 
 def run():
 
-    Config.load_config()
+    Config.load_configuration()
     Config.set_assets()
-    Config.set_config()
     robot = Starter()
 
     while True:
@@ -21,21 +20,21 @@ def run():
                 # Se NÂO HOUVER exceções "on_exit" define o "next_state"
                 robot.on_exit()
                 # Método da super classe para atualizar a instância
-                robot = eval(robot.next_state.value+"()")
+                robot = go_next_state(robot.next_state)
 
             elif robot.status == False:
 
                 # Se HOUVER exceções "on_error" define o "next_state"
                 robot.on_error()
                 # Método da super classe para atualizar a instância
-                robot = eval(robot.next_state.value+"()")
+                robot = go_next_state(robot.next_state)
 
         elif robot.status == False:
 
             # Se HOUVER exceções "on_error" define o "next_state"
             robot.on_error()
             # Método da super classe para atualizar a instância
-            robot = eval(robot.next_state.value+"()")
+            robot = go_next_state(robot.next_state)
 
 
 # é possível configurar valores na Bag

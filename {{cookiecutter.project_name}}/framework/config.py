@@ -13,12 +13,18 @@ class Environment(Enum):
 
 
 class Config:
-    PARAMS = {}
+    PARAMS = {
+        'retry_attempts': 3,
+        'debug_mode': False,
+        'log_level': 'info',
+        'medium_sleep': 5,
+        'large_sleep': 10
+    }
     CONSTANTS = {}
     ASSETS = {}
 
     @staticmethod
-    def load_config():
+    def load_configuration(path=None):
         """
         Carrega e filtra as configurações de um arquivo .config.
 
@@ -31,8 +37,11 @@ class Config:
         """
 
         # Obter o diretório do arquivo .py que invocou a função
-        calling_directory = inspect.stack()[2].filename
-        calling_directory = os.path.dirname(calling_directory)
+        if path is None:
+            calling_directory = inspect.stack()[2].filename
+            calling_directory = os.path.dirname(calling_directory)
+        else:
+            calling_directory = path
 
         # Procurar o primeiro arquivo .properties no diretório
         for file_name in os.listdir(calling_directory):
@@ -94,7 +103,7 @@ class Config:
                 print(f"Module {package_name} not found. Skipping...")
 
     @staticmethod
-    def set_config():
+    def set_global():
 
         # Configuração básica do logging
         logging.basicConfig(level=logging.INFO)
@@ -116,8 +125,13 @@ class Config:
         # Aplicar o formato de log personalizado ao logger padrão
         logging.getLogger().handlers[0].setFormatter(formatter)
 
+    @staticmethod
+    def set_class(target_class):
+        for attr_name, new_value in Config.PARAMS.items():
+            setattr(target_class, attr_name, new_value)
+
 
 if __name__ == '__main__':
 
-    Config.load_config()
-    Config.set_config()
+    Config.load_configuration()
+    Config.set_global()

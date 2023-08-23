@@ -1,14 +1,6 @@
 from typing import Any
-from enum import Enum
-
-
-class State(Enum):
-    DEFAULT = None
-    STARTER = 'Starter'
-    CONTROLLER = 'Controller'
-    DISPATCHER = 'Dispatcher'
-    PERFORMER = 'Performer'
-    FINISHER = 'Finisher'
+"""
+"""
 
 
 class Robot:
@@ -19,7 +11,7 @@ class Robot:
 
     def __init__(self):
         self._status = False
-        self._current_state = State.DEFAULT
+        self._current_state = None
         self._next_state = None
 
     def __repr__(self) -> str:
@@ -43,6 +35,7 @@ class Robot:
 
     @current_state.setter
     def current_state(self, value):
+        from .state import State
         if isinstance(value, State):
             self._current_state = value
         else:
@@ -55,6 +48,7 @@ class Robot:
 
     @next_state.setter
     def next_state(self, value):
+        from .state import State
         if isinstance(value, State):
             self._next_state = value
         else:
