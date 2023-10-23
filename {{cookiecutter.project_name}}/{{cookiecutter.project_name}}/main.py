@@ -1,10 +1,10 @@
-from framework import *
+from .framework import Starter, Logger, Config, go_next_state
 
 
 def run():
 
-    Config.load_configuration()
-    Config.set_assets()
+    Config.init_all_settings()
+    Logger.setup()
     robot = Starter()
 
     while True:
@@ -37,6 +37,5 @@ def run():
             robot = go_next_state(robot.next_state)
 
 
-# é possível configurar valores na Bag
 if __name__ == "__main__":
     run()

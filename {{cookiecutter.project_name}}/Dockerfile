@@ -1,34 +1,33 @@
-# Use a imagem ECS-optimized Amazon Linux 2 como base
-FROM public.ecr.aws/amazonlinux/amazonlinux:2023
+# Use a imagem do Selenium como base
+FROM selenium/standalone-firefox:latest
 
-# Instala pacotes essenciais (se necessário para o seu projeto)
-RUN yum -y update && \
-    yum -y install python3 python3-pip tar
+# Exponha as portas necessárias
+EXPOSE 4444 7900
 
+# Defina o diretório de trabalho para /home/seluser
+WORKDIR /home/seluser
 
+USER root
 
-# Instale o navegador web e o driver correspondente (por exemplo, Chrome e ChromeDriver)
-# Certifique-se de que o driver esteja no PATH
-# No exemplo abaixo, estamos usando o ChromeDriver para o Chrome
+# Instale pacotes essenciais (se necessário para o seu projeto)
 RUN apt-get update && \
-    apt-get install -y wget unzip && \
-    wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - && \
-    echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list && \
-    apt-get update && \
-    apt-get install -y google-chrome-stable=115.0.5790.102-1 && \
-    wget -O /tmp/chromedriver.zip https://chromedriver.storage.googleapis.com/94.0.4606.41/chromedriver_linux64.zip && \
-    unzip /tmp/chromedriver.zip -d /usr/local/bin/ && \
-    rm /tmp/chromedriver.zip
+    apt-get install -y tar gzip python3-pip && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
+RUN pip install --no-cache-dir awscli
 
-# Define o diretório de trabalho dentro do container
-WORKDIR /app
+# this needs to be added before your pip install line!
+ARG PIP_INDEX_URL
 
-# Copia os arquivos do projeto para o diretório de trabalho do container
-COPY . /app
+# Copie o conteúdo do diretório 'dist' para o contêiner
+COPY dist /home/seluser/dist
 
-# Instala as dependências do projeto (se você tem um requirements.txt)
-RUN pip3 install --no-cache-dir -r requirements.txt
+# Instale todos os arquivos do diretório 'dist'
+RUN pip install /home/seluser/dist/*
 
-# Define o comando padrão a ser executado ao iniciar o container
-CMD ["python3", "seu_script.py"]
+# Copie o conteúdo do diretório 'dist' para o contêiner
+COPY run.sh /home/seluser/
+
+# Executar o script 'run.sh' quando o contêiner for iniciado
+CMD ["/bin/bash", "/home/seluser/run.sh"]

@@ -8,3 +8,14 @@ venv/
 
 # vscode stuff
 # .vscode/
+
+# tox stuff
+.tox/
+
+# build stuff
+build/
+**/build/
+*.egg-info/
+**/*.egg-info/
+dist/
+**/dist/
