@@ -36,10 +36,17 @@ class Config:
         "medium": "5",
         "large": "10"
     }
-    mysql_rpa = ("192.168.1.9", "rpa", "H3ll0_w0R1d", "rpa")
+    s3_path_certidoes = None
+    api011_endpoint = None
+    keycloack_client_id = None
+    keycloack_secret_key = None
+    keycloack_keycloak_url = None
+    keycloack_realm = None
+
 
     @staticmethod
     def init_all_settings():
+
         # Initialize the AWS Systems Manager Parameter Store client
         ssm_client = boto3.client('ssm')
 

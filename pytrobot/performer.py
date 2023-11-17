@@ -1,13 +1,7 @@
 from .robot import Robot
 from .state import State
 from .common import *
-"""
-imports do framework  ↑
-imports do usuário    ↓
-"""
-from make_web_automation import Firefox
-import time
-
+from functools import wraps
 
 @apply_decorator_to_all_methods(handle_exceptions)
 class Performer(Robot):
@@ -16,28 +10,36 @@ class Performer(Robot):
         super().__init__()
         self.current_state = State.PERFORMER
 
-    def on_entry(self):
-        print("VOU ESPERAR 5 SEGUNDOS")
-        for i in [1, 2, 3, 4, 5]:
-            time.sleep(1)
-            print(i)
-        self.browser = Firefox(download_directory='/home/seluser/temp',
-                               headless=True)
+    @staticmethod
+    def on_entry(func):
+        @wraps(func)
+        def wrapper(self, *args, **kwargs):
+            print(f"Executing on_entry for function {func.__name__}")
+            return func(self, *args, **kwargs)
+        return wrapper
 
-    def execute(self):
-        self.navigate_to_objective()
-        delete_all_temp_files()
+    @staticmethod
+    def execute(func):
+        @wraps(func)
+        def wrapper(self, *args, **kwargs):
+            print(f"Executing execute for function {func.__name__}")
+            return func(self, *args, **kwargs)
+        return wrapper
 
-    def navigate_to_objective(self):
+    @staticmethod
+    def on_exit(func):
+        @wraps(func)
+        def wrapper(self, *args, **kwargs):
+            print(f"Executing on_exit for function {func.__name__}")
+            self.next_state = State.HANDLER
+            return func(self, *args, **kwargs)
+        return wrapper
 
-        self.browser.open('http://the-internet.herokuapp.com/')
-        self.browser.click_by_link_text('File Download')
-        # ← este objeto pode não estar no html, procure por outro arquivo.
-        self.browser.click_by_link_text('sample.png')
-        self.browser.close_all_firefox_processes()
-
-    def on_exit(self):
-        self.next_state = State.HANDLER
-
-    def on_error(self):
-        self.next_state = State.FINISHER
+    @staticmethod
+    def on_error(func):
+        @wraps(func)
+        def wrapper(self, *args, **kwargs):
+            print(f"Executing on_error for function {func.__name__}")
+            self.next_state = State.FINISHER
+            return func(self, *args, **kwargs)
+        return wrapper

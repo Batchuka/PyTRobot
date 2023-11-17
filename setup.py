@@ -1,16 +1,16 @@
 from setuptools import setup, find_packages
+from pathlib import Path
+from setecutilities import __version__
 
 setup(
-    name='{{cookiecutter.project_name}}',
-    version='1.0.0',
-    author='your-name',
-    author_email='your-email',
-    description='your-description',
-    long_description='',  # Pode ser um arquivo README.md
-    # Indica o tipo do conteúdo da long_description
+    name='pytrobot',
+    version=__version__,
+    author='Batchuka',
+    author_email='https://github.com/Batchuka',
+    long_description=(Path(__file__).parent / "README.md").read_text(),
     long_description_content_type='text/markdown',
-    url='',  # URL do repositório da biblioteca
-    packages=find_packages(),  # Encontra automaticamente todos os pacotes Python do projeto
-    install_requires=[
-    ]
+    url='https://github.com/Batchuka/PoG-PyTRobot-framework', 
+    packages=find_packages(
+        exclude=["tests", "*.tests", "*.tests.*", "tests.*"]),
+    install_requires=[]
 )

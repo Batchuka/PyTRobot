@@ -1,11 +1,7 @@
 from .robot import Robot
 from .state import State
 from .common import *
-"""
-imports do framework  ↑
-imports do usuário    ↓
-"""
-
+from functools import wraps
 
 @apply_decorator_to_all_methods(handle_exceptions)
 class Dispatcher(Robot):
@@ -14,23 +10,36 @@ class Dispatcher(Robot):
         super().__init__()
         self.current_state = State.DISPATCHER
 
-    def on_entry(self):
-        Logger.log(
-            "imagine a instancia de algo usado para enriquecimento do dataset")
+    @staticmethod
+    def on_entry(func):
+        @wraps(func)
+        def wrapper(self, *args, **kwargs):
+            print(f"Executing on_entry for function {func.__name__}")
+            return func(self, *args, **kwargs)
+        return wrapper
 
-    def execute(self):
-        # lógicas alvo do dispatcher
-        Logger.log("imagine uma lógica para enriquecer de fato")
-        if Robot.transaction_data is None:
-            raise ValueError("There is not Transaction Data")
-        self.update()
+    @staticmethod
+    def execute(func):
+        @wraps(func)
+        def wrapper(self, *args, **kwargs):
+            print(f"Executing execute for function {func.__name__}")
+            return func(self, *args, **kwargs)
+        return wrapper
 
-    def update(self):
-        for item in Robot.transaction_data:
-            item["LOG"] = "teste"
+    @staticmethod
+    def on_exit(func):
+        @wraps(func)
+        def wrapper(self, *args, **kwargs):
+            print(f"Executing on_exit for function {func.__name__}")
+            self.next_state = State.HANDLER
+            return func(self, *args, **kwargs)
+        return wrapper
 
-    def on_exit(self):
-        self.next_state = State.HANDLER
-
-    def on_error(self):
-        self.next_state = State.FINISHER
+    @staticmethod
+    def on_error(func):
+        @wraps(func)
+        def wrapper(self, *args, **kwargs):
+            print(f"Executing on_error for function {func.__name__}")
+            self.next_state = State.FINISHER
+            return func(self, *args, **kwargs)
+        return wrapper

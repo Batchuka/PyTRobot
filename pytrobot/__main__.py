@@ -1,4 +1,6 @@
-from .framework import Starter, Logger, Config, go_next_state
+from common import Config, Logger
+from starter import Starter
+from state import go_next_state
 
 
 def run():

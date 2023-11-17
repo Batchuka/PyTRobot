@@ -1,9 +1,7 @@
-from .robot import Robot
+# pytrobot/__init__.py
+
 from .starter import Starter
-from .common import Logger
-from .common import Config
-from .state import go_next_state
-# from .controller import Controller
-# from .dispatcher import Dispatcher
-# from .performer import Performer
-# from .finisher import Finisher
+from .dispatcher import Dispatcher
+from .performer import Performer
+
+__all__ = ['Starter', 'Dispatcher', 'Performer']
