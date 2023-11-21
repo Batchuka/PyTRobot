@@ -1,7 +1,7 @@
 from .robot import Robot
 from .state import State
-from .common import *
-from functools import wraps
+from .utils import *
+from .user_functions import FunctionRegistry
 
 @apply_decorator_to_all_methods(handle_exceptions)
 class Dispatcher(Robot):
@@ -10,36 +10,36 @@ class Dispatcher(Robot):
         super().__init__()
         self.current_state = State.DISPATCHER
 
-    @staticmethod
-    def on_entry(func):
-        @wraps(func)
-        def wrapper(self, *args, **kwargs):
-            print(f"Executing on_entry for function {func.__name__}")
-            return func(self, *args, **kwargs)
-        return wrapper
+    def on_entry(self):
+        if str(self) == "Robot.State.DISPATCHER":
+            func = FunctionRegistry.get(State.DISPATCHER, 'on_entry')
+            value = func[0]()
+            return value
+        else:
+            FunctionRegistry.register(State.DISPATCHER, 'on_entry', self)
 
-    @staticmethod
-    def execute(func):
-        @wraps(func)
-        def wrapper(self, *args, **kwargs):
-            print(f"Executing execute for function {func.__name__}")
-            return func(self, *args, **kwargs)
-        return wrapper
+    def execute(self):
+        if str(self) == "Robot.State.DISPATCHER":
+            func = FunctionRegistry.get(State.DISPATCHER, 'execute')
+            value = func[0]()
+            return value
+        else:
+            FunctionRegistry.register(State.DISPATCHER, 'execute', self)
 
-    @staticmethod
-    def on_exit(func):
-        @wraps(func)
-        def wrapper(self, *args, **kwargs):
-            print(f"Executing on_exit for function {func.__name__}")
-            self.next_state = State.HANDLER
-            return func(self, *args, **kwargs)
-        return wrapper
+    def on_exit(self):
+        Robot.next_state = State.HANDLER
+        # if str(self) == "Robot.State.DISPATCHER":
+        #     func = FunctionRegistry.get(State.DISPATCHER, 'on_exit')
+        #     func[0]()
+        #     Robot.next_state = State.HANDLER
+        # else:
+        #     FunctionRegistry.register(State.DISPATCHER, 'on_exit', self)
 
-    @staticmethod
-    def on_error(func):
-        @wraps(func)
-        def wrapper(self, *args, **kwargs):
-            print(f"Executing on_error for function {func.__name__}")
-            self.next_state = State.FINISHER
-            return func(self, *args, **kwargs)
-        return wrapper
+    def on_error(self):
+        Robot.next_state = State.FINISHER
+        # if str(self) == "Robot.State.DISPATCHER":
+        #     func = FunctionRegistry.get(State.DISPATCHER, 'on_error')
+        #     func[0]()
+        #     Robot.next_state = State.FINISHER
+        # else:
+        #     FunctionRegistry.register(State.DISPATCHER, 'on_error', self)

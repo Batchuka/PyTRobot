@@ -1,17 +1,7 @@
 from .robot import Robot
 from .state import State
-from .common import *
-
-class StateFunctionsRegistry:
-    _functions = {state: {'on_entry': [], 'execute': [], 'on_exit': [], 'on_error': []} for state in State}
-
-    @classmethod
-    def register_function(cls, state, function_type, func):
-        cls._functions[state][function_type].append(func)
-
-    @classmethod
-    def get_functions(cls, state, function_type):
-        return cls._functions[state][function_type]
+from .utils import *
+from .user_functions import FunctionRegistry
 
 @apply_decorator_to_all_methods(handle_exceptions)
 class Starter(Robot):
@@ -20,22 +10,36 @@ class Starter(Robot):
         super().__init__()
         self.current_state = State.STARTER
 
-    @staticmethod
-    def on_entry(func):
-        StateFunctionsRegistry.register_function(State.STARTER, 'on_entry', func)
-        return func
+    def on_entry(self):
+        if str(self) == "Robot.State.STARTER":
+            func = FunctionRegistry.get(State.STARTER, 'on_entry')
+            value = func[0]()
+            return value
+        else:
+            FunctionRegistry.register(State.STARTER, 'on_entry', self)
 
-    @staticmethod
-    def execute(func):
-        StateFunctionsRegistry.register_function(State.STARTER, 'execute', func)
-        return func
+    def execute(self):
+        if str(self) == "Robot.State.STARTER":
+            func = FunctionRegistry.get(State.STARTER, 'execute')
+            value = func[0]()
+            return value
+        else:
+            FunctionRegistry.register(State.STARTER, 'execute', self)
 
-    @staticmethod
-    def on_exit(func):
-        StateFunctionsRegistry.register_function(State.STARTER, 'on_exit', func)
+    def on_exit(self):
         Robot.next_state = State.HANDLER
+        # if str(self) == "Robot.State.STARTER":
+        #     func = FunctionRegistry.get(State.STARTER, 'on_exit')
+        #     func[0]()
+        #     Robot.next_state = State.HANDLER
+        # else:
+        #     FunctionRegistry.register(State.STARTER, 'on_exit', self)
 
-    @staticmethod
-    def on_error(func):
-        StateFunctionsRegistry.register_function(State.STARTER, 'on_error', func)
+    def on_error(self):
         Robot.next_state = State.FINISHER
+        # if str(self) == "Robot.State.STARTER":
+        #     func = FunctionRegistry.get(State.STARTER, 'on_error')
+        #     func[0]()
+        #     Robot.next_state = State.FINISHER
+        # else:
+        #     FunctionRegistry.register(State.STARTER, 'on_error', self)

@@ -12,5 +12,8 @@ setup(
     url='https://github.com/Batchuka/PoG-PyTRobot-framework', 
     packages=find_packages(
         exclude=["tests", "*.tests", "*.tests.*", "tests.*"]),
-    install_requires=[]
+    install_requires=[
+        "boto3",
+        "pandas"
+    ]
 )

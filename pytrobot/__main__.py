@@ -1,12 +1,12 @@
-from common import Config, Logger
-from starter import Starter
-from state import go_next_state
-
+try:
+    from .starter import Starter
+    from .state import go_next_state
+except ImportError:
+    from starter import Starter
+    from state import go_next_state
 
 def run():
 
-    Config.init_all_settings()
-    Logger.setup()
     robot = Starter()
 
     while True:
@@ -37,7 +37,6 @@ def run():
             robot.on_error()
             # Método da super classe para atualizar a instância
             robot = go_next_state(robot.next_state)
-
 
 if __name__ == "__main__":
     run()

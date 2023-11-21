@@ -3,5 +3,188 @@
 from .starter import Starter
 from .dispatcher import Dispatcher
 from .performer import Performer
+from .handler import Handler
+from .finisher import Finisher
 
-__all__ = ['Starter', 'Dispatcher', 'Performer']
+from .__main__ import run
+
+__all__ = ['Config','Starter', 'Dispatcher', 'Performer', 'Handler', 'Finisher']
+
+
+
+
+
+def print_pytrobot():
+    print("  _____        _______          _")
+    print(" |  __ \__   _|__   __|        | |     o   _")
+    print(" | |__) \ \ / /  | |_ ___  ___ | |__  _|_ | |__")
+    print(" |  ___/ \   /   | | V __|/ _ \|  _ \/   \|  __|")
+    print(" | |      | |    | |  /  | |_| | |_)( * * ) |")
+    print(" |_|      |_|    |_|__|   \___/|____/\---/|_|")
+    print(" ____________________________________________")
+    print("|____________________________________________|")
+    print("  -- Transactional State Robot for Python --")
+    print("               Copyright © 2023")
+    print("\n\n")
+
+print_pytrobot()
+
+import logging
+import builtins
+
+class Logger:
+    handle = None
+
+    @staticmethod
+    def setup():
+        if Logger.handle is None:
+            Logger.handle = logging.getLogger('pytrobot')
+            Logger.handle.setLevel(
+                logging.DEBUG if Config.debug_mode else logging.INFO)
+
+            formatter = logging.Formatter(
+                "%(asctime)s  %(levelname)s  %(message)s", datefmt="%d-%m-%Y %H:%M:%S")
+            handler = logging.StreamHandler()
+            handler.setFormatter(formatter)
+            Logger.handle.addHandler(handler)
+
+    @staticmethod
+    def log(message, level=logging.INFO):
+        Logger.setup()
+        Logger.handle.log(level, message)  # type: ignore
+
+def pytrobot_print(*args, **kwargs):
+    message = " ".join(map(str, args))
+    Logger.log(message, level=kwargs.get('level', logging.INFO))
+
+# Substituir a função print padrão
+builtins.print = pytrobot_print
+
+
+
+
+import boto3
+import os
+import configparser
+import inspect
+
+def find_calling_directory():
+    # Obtém a pilha de chamadas
+    pilha_chamadas = inspect.stack()[3:]
+
+    # Itera sobre os frames na pilha
+    for frame_info in pilha_chamadas:
+        caminho_arquivo = frame_info.filename
+
+        # Verifica se o caminho do arquivo é válido e não é especial
+        if caminho_arquivo and not caminho_arquivo.startswith('<'):
+            # Retorna o diretório do arquivo
+            return os.path.dirname(caminho_arquivo)
+
+    return None
+
+
+
+class Config:
+    debug_mode = True
+    retry_attempts = 3
+    log_level = "info"
+    sleep = {
+        "medium": "5",
+        "large": "10"
+    }
+
+
+    @staticmethod
+    def load_properties_from_ssm():
+
+        # Initialize the AWS Systems Manager Parameter Store client
+        ssm_client = boto3.client('ssm')
+
+        # Specify the folder in SSM where the parameters are located
+        ssm_folder = '/path/to/your/folder/'
+
+        # Use the dir() function to get all attributes of the Config class
+        Config.load_properties_from_file()
+
+        attributes = Config.__getattribute__
+
+        for attribute in attributes:
+            # Check if the attribute starts with '__' (internal attributes) or is not a string
+            if attribute.startswith('__') or not isinstance(getattr(Config, attribute), str):
+                continue
+
+            # Build the full name of the parameter in SSM
+            parameter_name = f'{ssm_folder}{attribute}'
+
+            try:
+                # Use the get_parameter method to fetch the parameter's value
+                response = ssm_client.get_parameter(
+                    Name=parameter_name,
+                    WithDecryption=True  # Set to True if the parameter is encrypted and needs decryption
+                )
+
+                # The response contains the parameter's value
+                parameter_value = response['Parameter']['Value']
+
+                # Set the value as a static class attribute
+                setattr(Config, attribute, parameter_value)
+                print(
+                    f'The value of parameter {parameter_name} is: {parameter_value}')
+
+            except ssm_client.exceptions.ParameterNotFound:
+                print(f'The parameter {parameter_name} was not found.')
+            except Exception as e:
+                print(
+                    f'An error occurred while fetching parameter {parameter_name}: {str(e)}')
+
+    @classmethod
+    def load_properties_from_file(cls, path=None):
+        """
+        Carrega e filtra as configurações de um arquivo .properties.
+
+        O método procura um arquivo .properties no diretório do arquivo .py que o invocou
+        e lê as configurações relevantes para os atributos da classe Config.
+
+        :param path: Caminho opcional para o diretório.
+        :return: None
+        :raises FileNotFoundError: Se nenhum arquivo .properties for encontrado no diretório.
+        """
+
+        # Obter o diretório do arquivo .py que invocou a função
+        if path is None:
+            calling_directory = find_calling_directory()
+        else:
+            calling_directory = path
+
+        # Procurar o primeiro arquivo .properties no diretório
+        for file_name in os.listdir(calling_directory):
+            if file_name.endswith(".properties"):
+                config_file = os.path.join(calling_directory, file_name) # type:ignore
+                break
+        else:
+            raise FileNotFoundError(
+                "Nenhum arquivo .properties encontrado no diretório raiz do projeto.")
+
+        # Ler o arquivo .properties e carregar os atributos da classe Config
+        config_parser = configparser.ConfigParser()
+        config_parser.read(config_file)
+
+        for section in config_parser.sections():
+            for key, value in config_parser.items(section):
+                # Defina os atributos da classe Config dinamicamente
+                setattr(cls, key.upper(), value)
+
+
+
+
+
+pytrobot_env = os.getenv("PYTROBOT_ENV")
+if pytrobot_env == "local":
+    # Lógica para ambiente de desenvolvimento
+    Config.load_properties_from_file()
+elif pytrobot_env == "ssm":
+    # Lógica para ambiente de operações
+    Config.load_properties_from_ssm()
+else:
+    raise ValueError(f"Valor desconhecido para PYTROBOT_ENV: {pytrobot_env}. Deve ser 'local' ou 'ssm'.")
