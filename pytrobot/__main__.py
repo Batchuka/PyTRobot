@@ -40,3 +40,9 @@ def run():
 
 if __name__ == "__main__":
     run()
+
+"""
+→ Tenho planos para os métodos 'on'. O objeto será instanciar coisas neles 
+que de alguma forma fiquem guardadas no estado e possam ser recuperadas 
+pelo usuário fora.
+"""

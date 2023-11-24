@@ -2,6 +2,7 @@ from .robot import Robot
 from .state import State
 from .utils import *
 from .user_functions import FunctionRegistry
+from .transaction import Transaction
 
 @apply_decorator_to_all_methods(handle_exceptions)
 class Handler(Robot):
@@ -24,19 +25,18 @@ class Handler(Robot):
     def execute(self):
 
         if str(self) == "Robot.State.HANDLER":
-            func = FunctionRegistry.get(State.HANDLER, 'execute')
-            value = func[0]()
 
             # Inicia o dataset da transação se não estiver iniciado
-            if Robot.transaction_number == 0:
-                Robot.set_transaction_data(value)
-                # se o dataset precisar de algum enriquecimento, use 'Dispatcher'
+            if Transaction.number == 0:
+                func = FunctionRegistry.get(State.HANDLER, 'execute')
+                value = func[0]()
+                Transaction.set_data(value)
                 self.go_dispatcher = True
                 return
 
             # Lógica de obtenção do novo item da transação
-            if (Robot.transaction_number <= len(Robot.transaction_data)):
-                Robot.get_transaction_item()
+            if (Transaction.number <= len(Transaction.data)):
+                Transaction.get_item()
                 self.go_performer = True
 
         else:
