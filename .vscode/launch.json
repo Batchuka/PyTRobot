@@ -1,15 +1,16 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
         {
             "name": "Main",
             "type": "python",
             "request": "launch",
-            "program": "/home/seluser/PoG-PyTRobot-framework/pytrobot/__main__.py",
+            "program": "${workspaceFolder}/pytrobot/__main__.py",
             "console": "integratedTerminal",
+            "args": [
+                "run",
+                "/home/seluser/wmt-bot005-emitir-certidoes-due-diligence/wmt_bot005_emitir_certidoes_due_diligence"
+            ],
             "justMyCode": true,
             "cwd": "${workspaceFolder}"
         }

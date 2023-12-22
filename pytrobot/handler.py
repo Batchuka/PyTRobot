@@ -15,12 +15,14 @@ class Handler(Robot):
         self.go_performer: bool = False
 
     def on_entry(self):
-        if str(self) == "Robot.State.HANDLER":
-            func = FunctionRegistry.get(State.HANDLER, 'on_entry')
-            value = func[0]()
-            return value
-        else:
-            FunctionRegistry.register(State.HANDLER, 'on_entry', self)
+        pass
+
+        # if str(self) == "Robot.State.HANDLER":
+        #     func = FunctionRegistry.get(State.HANDLER, 'on_entry')
+        #     value = func[0]()
+        #     return value
+        # else:
+        #     FunctionRegistry.register(State.HANDLER, 'on_entry', self)
 
     def execute(self):
 

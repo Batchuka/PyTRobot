@@ -1,9 +1,5 @@
-try:
-    from .starter import Starter
-    from .state import go_next_state
-except ImportError:
-    from starter import Starter
-    from state import go_next_state
+from pytrobot.starter import Starter
+from pytrobot.state import go_next_state
 
 import sys
 
@@ -42,10 +38,10 @@ def run(dir):
 
 
 def entrypoint() -> None:
-    if len(sys.argv) != 2:
+    if len(sys.argv) != 3:
         print("Usage: trt <directory>")
     else:
-        run(sys.argv[1])
+        run(sys.argv[2])
 
 if __name__ == '__main__':  
     entrypoint()
