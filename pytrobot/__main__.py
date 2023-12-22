@@ -5,9 +5,11 @@ except ImportError:
     from starter import Starter
     from state import go_next_state
 
-def run():
+import sys
 
-    robot = Starter()
+def run(dir):
+
+    robot = Starter(dir)
 
     while True:
 
@@ -38,9 +40,15 @@ def run():
             # Método da super classe para atualizar a instância
             robot = go_next_state(robot.next_state)
 
-if __name__ == "__main__":
-    run()
 
+def entrypoint() -> None:
+    if len(sys.argv) != 2:
+        print("Usage: trt <directory>")
+    else:
+        run(sys.argv[1])
+
+if __name__ == '__main__':  
+    entrypoint()
 """
 → Tenho planos para os métodos 'on'. O objeto será instanciar coisas neles 
 que de alguma forma fiquem guardadas no estado e possam ser recuperadas 

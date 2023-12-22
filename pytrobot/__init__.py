@@ -7,8 +7,6 @@ from .handler import Handler
 from .finisher import Finisher
 from .transaction import Transaction
 
-from .__main__ import run
-
 __all__ = ['Assets','Starter', 'Dispatcher', 'Performer', 'Handler', 'Finisher', 'Transaction']
 
 
@@ -180,5 +178,7 @@ if pytrobot_prop == "LOCAL":
 elif pytrobot_prop == "SSM":
     # Lógica para ambiente de operações
     Assets.load_properties_from_ssm()
+elif pytrobot_prop == "TEST":
+    pass
 else:
     raise ValueError(f"Valor desconhecido para PYTROBOT_PROP: {pytrobot_prop}. Deve ser 'LOCAL' ou 'SSM'.")
