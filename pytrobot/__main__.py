@@ -1,9 +1,12 @@
+import sys
+import os
+
 from pytrobot.starter import Starter
 from pytrobot.state import go_next_state
 
-import sys
+user = os.path.join(os.getcwd(), 'user')
 
-def run(dir):
+def run(dir=user):
 
     robot = Starter(dir)
 
@@ -39,12 +42,17 @@ def run(dir):
 
 def entrypoint() -> None:
     if len(sys.argv) != 3:
-        print("Usage: trt <directory>")
+        print("Usage: trt <command> <directory>")
     else:
-        run(sys.argv[2])
+        command = sys.argv[1]
+        if command == 'run':
+            run(sys.argv[2])
+        else:
+            print(f"Unknown command: {command}")
 
-if __name__ == '__main__':  
+if __name__ == '__main__':
     entrypoint()
+    
 """
 → Tenho planos para os métodos 'on'. O objeto será instanciar coisas neles 
 que de alguma forma fiquem guardadas no estado e possam ser recuperadas 

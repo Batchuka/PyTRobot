@@ -1,6 +1,14 @@
+# pytrobot/setup.py
 from setuptools import setup, find_packages
 from pathlib import Path
 from __init__ import __version__
+
+def get_install_requires():
+    requirements_path = Path(__file__).parent / "requirements.txt"
+    if requirements_path.exists():
+        with open(requirements_path, "r") as requirements_file:
+            return requirements_file.read().splitlines()
+    return []
 
 setup(
     name='pytrobot',
@@ -12,10 +20,7 @@ setup(
     url='https://github.com/Batchuka/PoG-PyTRobot-framework',
     packages=find_packages(
         exclude=["tests", "*.tests", "*.tests.*", "tests.*"]),
-    install_requires=[
-        "boto3",
-        "pandas"
-    ],
+    install_requires=get_install_requires(),
     entry_points={
         'console_scripts': [
             'trt = pytrobot.__main__:entrypoint',

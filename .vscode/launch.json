@@ -13,6 +13,15 @@
             ],
             "justMyCode": true,
             "cwd": "${workspaceFolder}"
+        },
+        {
+            "name": "Tasks",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/tasks.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}"
         }
     ]
 }

@@ -29,7 +29,6 @@ class Starter(Robot):
         else:
             raise ValueError(f"Valor desconhecido para PYTROBOT_PROP: {pytrobot_prop}. Deve ser 'LOCAL' ou 'SSM'.")
         
-
     def execute(self):
         if self.user_dir:
             try:
