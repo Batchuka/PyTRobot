@@ -1,7 +1,5 @@
-try:
-    from .state import State
-except ImportError:
-    from state import State
+from pytrobot.framework.state import State
+
 
 class FunctionRegistry:
     _functions = {state: {'on_entry': [], 'execute': [], 'on_exit': [], 'on_error': []} for state in State}

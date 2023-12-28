@@ -1,8 +1,8 @@
-from .robot import Robot
-from .state import State
-from .utils import *
-from .user_functions import FunctionRegistry
-from .transaction import Transaction
+from pytrobot.framework.robot import Robot
+from pytrobot.framework.state import State
+from pytrobot.framework.utils import *
+from pytrobot.framework.user_functions import FunctionRegistry
+from pytrobot.framework.transaction import Transaction
 
 @apply_decorator_to_all_methods(handle_exceptions)
 class Handler(Robot):

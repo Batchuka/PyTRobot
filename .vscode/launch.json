@@ -18,7 +18,7 @@
             "name": "Tasks",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/tasks.py",
+            "program": "${workspaceFolder}/pytrobot/tasks.py",
             "console": "integratedTerminal",
             "justMyCode": true,
             "cwd": "${workspaceFolder}"

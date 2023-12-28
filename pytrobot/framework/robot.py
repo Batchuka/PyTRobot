@@ -1,7 +1,4 @@
-try:
-    from .state import State
-except ImportError:
-    from state import State
+from pytrobot.framework.state import State
 
 class Robot:
     """

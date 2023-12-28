@@ -1,11 +1,10 @@
-import importlib.util
 import sys
 
-from pytrobot.robot import Robot
-from pytrobot.state import State
-from pytrobot.utils import *
-from pytrobot.assets import Assets
-from pytrobot.user_functions import FunctionRegistry
+from pytrobot.framework.robot import Robot
+from pytrobot.framework.state import State
+from pytrobot.framework.utils import *
+from pytrobot.framework.assets import Assets
+from pytrobot.framework.user_functions import FunctionRegistry
 
 @apply_decorator_to_all_methods(handle_exceptions)
 class Starter(Robot):

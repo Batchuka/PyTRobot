@@ -1,7 +1,7 @@
 # pytrobot/setup.py
 from setuptools import setup, find_packages
 from pathlib import Path
-from __init__ import __version__
+from pytrobot.__init__ import __version__
 
 def get_install_requires():
     requirements_path = Path(__file__).parent / "requirements.txt"
@@ -23,7 +23,7 @@ setup(
     install_requires=get_install_requires(),
     entry_points={
         'console_scripts': [
-            'trt = pytrobot.__main__:entrypoint',
+            'trt = pytrobot.__init__:program.run',
         ],
     }
 )

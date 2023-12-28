@@ -1,7 +1,7 @@
-from .robot import Robot
-from .state import State
-from .utils import *
-from .user_functions import FunctionRegistry
+from pytrobot.framework.robot import Robot
+from pytrobot.framework.state import State
+from pytrobot.framework.utils import *
+from pytrobot.framework.user_functions import FunctionRegistry
 
 @apply_decorator_to_all_methods(handle_exceptions)
 class Finisher(Robot):
