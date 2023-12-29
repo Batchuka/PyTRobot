@@ -4,18 +4,53 @@ import re
 import sys
 import shutil
 import subprocess
-import time
 
 from invoke import task, context, Collection, Program #type:ignore
 
 @task
 def build(c, user_dir):
 
-    project_name = input("Enter Project Name:")
-    version = input("Enter Version:")
+    try:
 
-    construct_user_project(user_dir, project_name, version)
+        project_name = input("Enter Project Name:")
+        version = input("Enter Version:")
 
+        construct_user_project(user_dir, project_name, version)
+
+        # Encontrar o executável do Python
+        python_executable = shutil.which("python") or shutil.which("python3")
+
+        if python_executable is None:
+            raise SystemError("No Known Python executable found.")
+
+        # Obtém o diretório atual
+        current_directory = os.getcwd()
+
+        # Muda para o diretório '.trt/'
+        os.chdir(".trt")
+
+        # Executa o comando 'python -m build .'
+        os.system(f"{python_executable} -m build .")
+
+        # Volta para o diretório original
+        os.chdir(current_directory)
+
+    except Exception as e:
+
+        print(f"Error on build : {e}")
+        handle_error(user_dir)
+    
+
+
+def construct_user_project(user_dir, project_name, version):
+
+    remove_all_trt(user_dir)
+
+    copy_pytrobot_logic(user_dir, project_name)
+    copy_user_logic(user_dir, project_name)
+
+    extract_imports(user_dir)
+    create_setup_py(user_dir, project_name, version)
 
 def handle_error(user_dir):
 
@@ -35,16 +70,6 @@ def remove_all_trt(user_dir):
     target_user_dir = os.path.join(user_dir, ".trt")
     if os.path.exists(target_user_dir):
         shutil.rmtree(target_user_dir)
-
-def construct_user_project(user_dir, project_name, version):
-
-    remove_all_trt(user_dir)
-
-    copy_pytrobot_logic(user_dir, project_name)
-    copy_user_logic(user_dir, project_name)
-
-    extract_imports(user_dir)
-    create_setup_py(user_dir, project_name, version)
 
 def copy_pytrobot_logic(user_dir, project_name):
 
@@ -106,10 +131,6 @@ def copy_user_logic(user_dir, project_name):
             with open(file_path, 'w') as f:
                 f.write(adjusted_content)
     
-
-
-
-
 def ignore_func(dir, files):
     return [f for f in files if f == '.trt' or f == '__pycache__']
 
@@ -154,7 +175,6 @@ def extract_imports(user_dir):
         for library, version in sorted(dependencies.items()):
             requirements_file.write(f"{library}=={version}\n")
 
-
 def create_setup_py(user_dir, project_name, version):
     setup_py_path = os.path.join(user_dir, ".trt", "setup.py")
     requirements_txt_path = os.path.join(user_dir, ".trt", "requirements.txt")
@@ -177,6 +197,7 @@ def create_setup_py(user_dir, project_name, version):
             f"    install_requires={requirements_content},\n"  # Inclui as dependências do requirements.txt
             f")\n"
         )
+
 
 if __name__ == '__main__':
     c = context.Context()
