@@ -1,8 +1,8 @@
 import sys
 import os
 
-from framework.starter import Starter
-from framework.state import go_next_state
+from pytrobot.framework.starter import Starter
+from pytrobot.framework.state import go_next_state
 
 user = os.path.join(os.getcwd(), 'user')
 

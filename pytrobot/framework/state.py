@@ -12,10 +12,10 @@ class State(Enum):
 
 def create_instance_for_state(state):
 
-    from framework.handler import Handler
-    from framework.dispatcher import Dispatcher
-    from framework.performer import Performer
-    from framework.finisher import Finisher
+    from pytrobot.framework.handler import Handler
+    from pytrobot.framework.dispatcher import Dispatcher
+    from pytrobot.framework.performer import Performer
+    from pytrobot.framework.finisher import Finisher
 
     if state == State.HANDLER:
         return Handler()
