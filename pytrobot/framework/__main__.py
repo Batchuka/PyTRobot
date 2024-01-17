@@ -1,11 +1,14 @@
-from .framework import Starter, Logger, Config, go_next_state
+import sys
+import os
 
+from pytrobot.framework.starter import Starter
+from pytrobot.framework.state import go_next_state
 
-def run():
+user = os.path.join(os.getcwd(), 'user')
 
-    Config.init_all_settings()
-    Logger.setup()
-    robot = Starter()
+def run(dir=user):
+
+    robot = Starter(dir)
 
     while True:
 
@@ -37,5 +40,21 @@ def run():
             robot = go_next_state(robot.next_state)
 
 
-if __name__ == "__main__":
-    run()
+def entrypoint() -> None:
+    if len(sys.argv) != 3:
+        print("Usage: trt <command> <directory>")
+    else:
+        command = sys.argv[1]
+        if command == 'run':
+            run(sys.argv[2])
+        else:
+            print(f"Unknown command: {command}")
+
+if __name__ == '__main__':
+    entrypoint()
+    
+"""
+→ Tenho planos para os métodos 'on'. O objeto será instanciar coisas neles 
+que de alguma forma fiquem guardadas no estado e possam ser recuperadas 
+pelo usuário fora.
+"""

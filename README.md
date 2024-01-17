@@ -1,34 +1,27 @@
-#  PyTRobot — Robô Transacional com Python
+# VARIÁVEIS DE AMBIENTE
 
-## Visão geral
----
+## Assets via .properties
 
-O projeto é um state pattern baseado em Dispatcher e Performer. O objetivo é fornecer um scaffold para uma automação python transacional.
+Para o uso desse framework, você precisa definir os *Assets* em *.properties*. O properties será 'preenchido' de três formas:
 
-## Estados
----
+1. SSM   → Serviço AWS SSM, onde as variáveis no .properties devem ter o mesmo nome que no serviço;
+2. LOCAL → O framework irá considerar os valores que estão no próprio arquivo;
 
-O robô possui cinco estados: **Stater**, **Handler**, **Publisher**, **Performer**, **Finisher**;
+A maneira de parametrizar um ou outro é via variáveis de ambiente! Ou seja, você precisa configurar uma variável de ambiente chamada *PYTROBOT_PROP*
 
-Cada um desses estados implementa a superclasse *Robot*, por isso recomendo que passe um tempo identificando como ela funciona. Além de ser classe mãe, que abriga o construtor:
+## Modo de execução
 
-- ***status***: quando alguma exceção ocorre, ela é armazenada nesse atributo que é boolean. Essa informação é usada para controlar o fluxo do robô;
-- ***current_state***: este atributo é definido pela classe que o herda. Cada instancia deve assinar esse atributo com seu próprio estado;
-- ***next_state***: este atributo é determinado pelos métodos 'on_exit()' e 'on_error()' de cada instância que herda 'Robot'. Defina o próximo estado conforme sua necessidade;
+Você tem poder para definir o modo de execução de seu robô. Para isso, configure a variável de ambiente *PYTROBOT_ENV* das seguintes maneiras:
 
-ela também é classe estática que abriga os atributos:
+- DEV : irá para o fluxo de desenvolvimento;
+- OPS : irá para o fluxo de produção.
 
-- ***transaction_number***: usado para armazenar o número da transação corrente globalmente;
-- ***transaction_item***: usado para conter a unidade transacional corrente globalmente;
-- ***transaction_data***: usado para armazenar todas as unidades transacionais que devem ser processadas no job;
+# SNIPPETS
 
+## Adicionando variável de ambiente
 
-## State
----
-
-
-
-## Common
----
-
-
+```linux
+nano ~/.bashrc
+export NOME_DA_VARIAVEL="valor_da_variavel"
+source ~/.bashrc
+```

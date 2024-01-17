@@ -1,6 +1,4 @@
 from enum import Enum
-"""
-"""
 
 
 class State(Enum):
@@ -14,15 +12,12 @@ class State(Enum):
 
 def create_instance_for_state(state):
 
-    from .starter import Starter
-    from .handler import Handler
-    from .dispatcher import Dispatcher
-    from .performer import Performer
-    from .finisher import Finisher
+    from pytrobot.framework.handler import Handler
+    from pytrobot.framework.dispatcher import Dispatcher
+    from pytrobot.framework.performer import Performer
+    from pytrobot.framework.finisher import Finisher
 
-    if state == State.STARTER:
-        return Starter()
-    elif state == State.HANDLER:
+    if state == State.HANDLER:
         return Handler()
     elif state == State.DISPATCHER:
         return Dispatcher()
