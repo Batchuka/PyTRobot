@@ -40,7 +40,7 @@ class TrueTable:
         for rule in self.rules:
             if rule.evaluate():
                 return rule.result_state
-        return current_state  # Se nenhuma regra se aplicar, mantenha o estado atual
+        return current_state
 
 # Exemplo de Uso:
 true_table = TrueTable()

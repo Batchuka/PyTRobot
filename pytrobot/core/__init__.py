@@ -2,53 +2,86 @@
 
 import logging
 import builtins
-
 from pytrobot.core.states import *
-from pytrobot.core.true_table import Transaction
-from pytrobot.core.assets_manager import Assets
+from pytrobot.core.transitions import *
+from pytrobot.core.assets import Assets
 
-__all__ = ['Assets', 'Starter', 'Dispatcher', 'Performer', 'Handler', 'Finisher', 'Transaction']
+__all__ = ['PyTRobot']
 
-
-def print_pytrobot():
-    print("  _____        _______          _")
-    print(" |  __ \__   _|__   __|        | |     o   _")
-    print(" | |__) \ \ / /  | |_ ___  ___ | |__  _|_ | |__")
-    print(" |  ___/ \   /   | | V __|/ _ \|  _ \/   \|  __|")
-    print(" | |      | |    | |  /  | |_| | |_)( * * ) |")
-    print(" |_|      |_|    |_|__|   \___/|____/\---/|_|")
-    print(" ____________________________________________")
-    print("|____________________________________________|")
-    print("  -- Transactional State Robot for Python --")
-    print("               Copyright © 2023")
-    print("\n\n")
-
-print_pytrobot()
-
+def print_pytrobot_banner():
+    """Exibe o banner do pytrobot."""
+    banner_lines = [
+        "  _____        _______          _",
+        " |  __ \__   _|__   __|        | |     o   _",
+        " | |__) \ \ / /  | |_ ___  ___ | |__  _|_ | |__",
+        " |  ___/ \ V /   | | V __|/ _ \|  _ \/   \|  __|",
+        " | |      | |    | |  /  | |_| | |_)( * * ) |",
+        " |_|      |_|    |_|__|   \___/|____/\---/|_|",
+        " ____________________________________________",
+        "|____________________________________________|",
+        "  -- Transactional State Robot for Python --",
+        "               Copyright © 2023",
+        "\n\n"
+    ]
+    print("\n".join(banner_lines))
 
 class Logger:
-    handle = None
+    """Um logger personalizado para o pytrobot."""
+    _instance = None
+
+    @classmethod
+    def get_instance(cls):
+        if cls._instance is None:
+            cls._instance = cls._setup_logger()
+        return cls._instance
 
     @staticmethod
-    def setup():
-        if Logger.handle is None:
-            Logger.handle = logging.getLogger('pytrobot')
-            Logger.handle.setLevel(logging.INFO)
+    def _setup_logger():
+        logger = logging.getLogger('pytrobot')
+        logger.setLevel(logging.INFO)
 
-            formatter = logging.Formatter(
-                "%(asctime)s  %(levelname)s  %(message)s", datefmt="%d-%m-%Y %H:%M:%S")
-            handler = logging.StreamHandler()
-            handler.setFormatter(formatter)
-            Logger.handle.addHandler(handler)
+        formatter = logging.Formatter("%(asctime)s  %(levelname)s  %(message)s", datefmt="%d-%m-%Y %H:%M:%S")
+        handler = logging.StreamHandler()
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
+        return logger
 
     @staticmethod
     def log(message, level=logging.INFO):
-        Logger.setup()
-        Logger.handle.log(level, message)  # type: ignore
+        logger = Logger.get_instance()
+        logger.log(level, message)
 
 def pytrobot_print(*args, **kwargs):
+    """Função print personalizada para redirecionar para o logger."""
     message = " ".join(map(str, args))
     Logger.log(message, level=kwargs.get('level', logging.INFO))
 
-# Substituir a função print padrão
-builtins.print = pytrobot_print
+class PyTRobot:
+    """Classe principal do pytrobot, implementada como um Singleton."""
+    _instance = None
+
+    def __new__(cls, *args, **kwargs):
+        if not cls._instance:
+            cls._instance = super(PyTRobot, cls).__new__(cls)
+        return cls._instance
+
+    def __init__(self):
+        # Se esta for a primeira instanciação, continue com a inicialização
+        if not hasattr(self, '_initialized'):
+            self._initialize()
+
+    def _initialize(self):
+        """Inicializa o PyTRobot."""
+
+        print_pytrobot_banner()
+
+        # Substituir a função print padrão do Python pela função pytrobot_print
+        builtins.print = pytrobot_print
+
+        # Aqui deve ser adicionada a lógica de inicialização do PyTRobot
+        # Por exemplo, instanciar classes do usuário, injetar dependências, etc.
+
+        self._initialized = True
+
+# Exemplo de uso do PyTRobot
+pytrobot_instance = PyTRobot()
