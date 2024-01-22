@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from enum import Enum
 
-from decorators import apply_decorator_to_all_methods, handle_exceptions
+from pytrobot.core.decorators import apply_decorator_to_all_methods, handle_exceptions
 
 class State(Enum):
     STARTER = 1

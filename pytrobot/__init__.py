@@ -2,7 +2,7 @@
 
 from invoke import Program, Collection, Argument #type:ignore
 from pytrobot import tasks
-__version__ = '2.0.0'
+__version__ = '3.0.0'
 
 class MyProgram(Program):
     def core_args(self):

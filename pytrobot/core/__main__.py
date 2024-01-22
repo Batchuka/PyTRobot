@@ -2,13 +2,14 @@ import sys
 import os
 
 from pytrobot.core.states import *
-from pytrobot.core.true_table import get_next_state
+from pytrobot.core.transitions import get_next_state
 
 user = os.path.join(os.getcwd(), 'user')
 
 
-def run(dir=user):
-    state = Starter(dir)
+def run():
+
+    
 
     while True:
         state.on_entry()

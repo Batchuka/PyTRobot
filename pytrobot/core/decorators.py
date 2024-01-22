@@ -1,5 +1,21 @@
 import logging
-import os
+
+from pytrobot.core.transitions import TransitionRegistry
+
+
+def State(cls):
+    registry[cls.__name__] = cls
+    return cls
+
+
+def Tool(cls):
+    registry[cls.__name__] = cls
+    return cls
+
+
+def Action(cls):
+    registry[cls.__name__] = cls
+    return cls
 
 
 def handle_exceptions(func):
@@ -53,29 +69,3 @@ def apply_decorator_to_all_methods(decorator):
 
     return class_decorator
 
-
-def delete_all_temp_files():
-    """
-    Exclui todos os arquivos no diretório temporário, exceto 'placeholder.txt'.
-    """
-
-    temp_directory = '/home/seluser/temp'
-
-    # Verifica se o diretório temporário existe
-    if os.path.exists(temp_directory) and os.path.isdir(temp_directory):
-        # Obtém a lista de arquivos no diretório temporário
-        files = os.listdir(temp_directory)
-
-        for file in files:
-            # Verifica se o arquivo é diferente de 'placeholder.txt'
-            if file != 'placeholder.txt':
-                file_path = os.path.join(temp_directory, file)
-                # Verifica se o caminho é um arquivo
-                if os.path.isfile(file_path):
-                    # Exclui o arquivo
-                    os.remove(file_path)
-                    #Logger.log(f"Deleted file: {file_path}")
-                    print(f"Deleted file: {file_path}")
-    else:
-        # Logger.log(f"Temporary directory '{temp_directory}' not found")
-        print(f"Temporary directory '{temp_directory}' not found")

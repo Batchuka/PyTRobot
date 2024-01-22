@@ -3,6 +3,17 @@ from abc import ABC, abstractmethod
 from pytrobot.core.states import *
 
 
+class TransitionRegistry:
+    def __init__(self):
+        self._registry = {}
+
+    def register(self, cls):
+        self._registry[cls.__name__] = cls
+        return cls
+
+    def get_class(self, class_name):
+        return self._registry.get(class_name)
+
 class Variable:
     def __init__(self, name, value=False):
         self.name = name
@@ -42,13 +53,3 @@ class TrueTable:
                 return rule.result_state
         return current_state
 
-# Exemplo de Uso:
-true_table = TrueTable()
-true_table.add_variable('doc_downloaded', False)
-doc_downloaded_condition = Condition(true_table.variables['doc_downloaded'])
-transition_rule = Rule([doc_downloaded_condition], 'HANDLER')
-true_table.add_rule(transition_rule)
-
-# Avaliar e obter o próximo estado
-current_state = 'STARTER'
-next_state = true_table.get_next_state(current_state)
