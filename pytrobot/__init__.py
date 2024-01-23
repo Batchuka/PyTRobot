@@ -1,17 +1,13 @@
 # pytrobot/__init__.py
 
-from invoke import Program, Collection, Argument #type:ignore
-from pytrobot import tasks
+# API para o desenvolvedor implementar
+from pytrobot.core import PyTRobot, State, Action, Tool, Transition
+from pytrobot.core.states.base_state import BaseState
+from pytrobot.core.actions.base_action import BaseAction
+from pytrobot.core.tools.base_tool import BaseTool
+
+# Definição dos elementos da API que serão publicamente acessíveis ao importar 'pytrobot'
+__all__ = ['PyTRobot', 'Transition', 'State', 'Action', 'Tool', 'BaseState', 'BaseAction', 'BaseTool']
+
+# Versão do pacote
 __version__ = '3.0.0'
-
-class MyProgram(Program):
-    def core_args(self):
-        core_args = super().core_args()
-        extra_args = [
-            Argument(names=('build', 'b'), help="Build the pytrobot project")
-            # Adicione mais argumentos conforme necessário
-        ]
-        return core_args + extra_args
-
-# Crie uma instância do seu programa personalizado
-program = MyProgram(namespace=Collection.from_module(tasks), version=__version__)

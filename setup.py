@@ -22,7 +22,7 @@ setup(
     install_requires=get_install_requires(),
     entry_points={
         'console_scripts': [
-            'trt = pytrobot.__init__:program.run',
+            'trt=pytrobot.cli.main:program.run',
         ],
     }
 )

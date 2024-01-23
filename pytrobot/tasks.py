@@ -3,202 +3,180 @@ import os
 import re
 import sys
 import shutil
+import argparse
 import subprocess
 
 from invoke import task, context, Collection, Program #type:ignore
+    
+@task
+def new(c, path="."):
+    # Pergunta o nome do projeto ao usuário
+    project_name = input("Por favor, insira o nome do novo projeto PyTRobot: ")
+
+    # Se 'path' é '.', usa o diretório atual, caso contrário, o caminho fornecido.
+    project_path = os.path.join(path if path != "." else os.getcwd(), project_name)
+
+    # Verifica se o diretório do projeto já existe
+    if os.path.exists(project_path):
+        print(f"O diretório '{project_path}' já existe. Por favor, escolha um nome diferente ou remova o diretório existente.")
+        return
+
+    # Caminho para o diretório de scaffold/template
+    template_path = os.path.join(os.path.dirname(__file__), 'scaffold')
+
+    # Copia o scaffold para o novo diretório do projeto
+    shutil.copytree(template_path, project_path)
+    
+    # Cria um arquivo requirements.txt vazio
+    requirements_path = os.path.join(project_path, 'requirements.txt')
+    with open(requirements_path, 'w') as requirements_file:
+        requirements_file.write("# Adicione aqui suas dependências\n")
+
+    # Cria um ambiente virtual dentro do diretório do projeto
+    subprocess.run([sys.executable, '-m', 'venv', os.path.join(project_path, 'venv')])
+
+    print(f"Projeto '{project_name}' criado com sucesso em: {project_path}")
+    print(f"Para ativar o ambiente virtual, navegue até '{project_path}' e execute:")
+    print(f"'source venv/bin/activate' no Unix ou macOS, ou 'venv\\Scripts\\activate' no Windows.")
+
 
 @task
-def build(c, user_dir):
+def build(c, path=None):
 
-    try:
+    user_dir = path or os.getcwd()
+    project_name = os.path.basename(user_dir)
+    trt_dir = os.path.join(user_dir, ".trt", project_name)
+    version = input("Enter Version: ")
 
-        project_name = input("Enter Project Name:")
-        version = input("Enter Version:")
+    # Step 1: Clean previous build and create new
+    remove_previous_build(user_dir)
+    os.makedirs(trt_dir)
 
-        construct_user_project(user_dir, project_name, version)
+    # Step 2: Copy all logic
+    copy_user_logic_to_build(user_dir, trt_dir)
+    copy_core_logic_to_build(trt_dir)
 
-        # Encontrar o executável do Python
-        python_executable = shutil.which("python") or shutil.which("python3")
+    # Step 3: Adjust import in all files
+    adjust_imports_to_build(trt_dir, project_name)
 
-        if python_executable is None:
-            raise SystemError("No Known Python executable found.")
+    # Step 4: Build the package
+    create_setup_py(trt_dir, project_name, version)
+    build_package(trt_dir)
 
-        # Obtém o diretório atual
-        current_directory = os.getcwd()
+    print(f"Build successful for {project_name} version {version}")
 
-        # Muda para o diretório '.trt/'
-        os.chdir(".trt")
+def remove_previous_build(user_dir):
+    trt_dir = os.path.join(user_dir, ".trt")
+    if os.path.exists(trt_dir):
+        shutil.rmtree(trt_dir)
 
-        # Executa o comando 'python -m build .'
-        os.system(f"{python_executable} -m build .")
+def copy_user_logic_to_build(user_dir, trt_dir):
+    resources_dir = os.path.join(user_dir, "resources")
+    shutil.copytree(resources_dir, os.path.join(trt_dir, "resources"))
+    src_dir = os.path.join(user_dir, "src")
+    for subdir in ['actions', 'tools', 'states']:
+        src_subdir = os.path.join(src_dir, subdir)
+        if os.path.exists(src_subdir):
+            dest_subdir = os.path.join(trt_dir, subdir)
+            shutil.copytree(src_subdir, dest_subdir)
+    
+    # Copia o arquivo 'requirements.txt'
+    requirements_src = os.path.join(user_dir, "requirements.txt")
+    requirements_dest = os.path.join(user_dir, ".trt", "requirements.txt")
+    if os.path.exists(requirements_src):
+        shutil.copy(requirements_src, requirements_dest)
+    else:
+        raise FileNotFoundError("O arquivo 'requirements.txt' não foi encontrado no diretório do usuário.")
 
-        # Volta para o diretório original
-        os.chdir(current_directory)
+def copy_core_logic_to_build(trt_dir):
 
-    except Exception as e:
+    core_dir = os.path.join(os.path.dirname(__file__), "core")
+    
+    # Lista de subdiretórios conhecidos para serem copiados como pacotes
+    known_subdirs = ['actions', 'tools', 'states', 'data']
+    
+    # Primeiro, copie os subdiretórios conhecidos
+    for subdir in known_subdirs:
+        core_subdir = os.path.join(core_dir, subdir)
+        if os.path.exists(core_subdir):
+            dest_subdir = os.path.join(trt_dir, subdir)
+            # Copie os arquivos base se o diretório já não foi copiado antes
+            if not os.path.exists(dest_subdir):
+                shutil.copytree(core_subdir, dest_subdir)
+            else:
+                # Copia apenas os arquivos .py (e possivelmente outros) para o diretório existente
+                for file in os.listdir(core_subdir):
+                    if file.endswith('.py'):
+                        shutil.copy(os.path.join(core_subdir, file), dest_subdir)
+    
+    # Depois, copie os arquivos restantes diretamente para o diretório raiz do projeto
+    for item in os.listdir(core_dir):
+        item_path = os.path.join(core_dir, item)
+        if os.path.isfile(item_path) and item_path.endswith('.py') and item not in known_subdirs:
+            shutil.copy(item_path, trt_dir)
 
-        print(f"Error on build : {e}")
-        handle_error(user_dir)
+def adjust_imports_to_build(trt_dir, project_name):
+    
+    for root, _, files in os.walk(trt_dir):
+        for file in files:
+            if file.endswith('.py'):
+                file_path = os.path.join(root, file)
+                with open(file_path, 'r') as f:
+                    content = f.read()
+
+                # Ajusta os imports que iniciam com 'pytrobot.core'
+                content = re.sub(r'pytrobot\.core', f'{project_name}', content)
+
+                # Ajusta os imports de módulos do pytrobot
+                content = re.sub(r'from pytrobot import Action,', 
+                                 f'from {project_name} import Action\nfrom {project_name}.actions.base_action import', content)
+                content = re.sub(r'from pytrobot import State,', 
+                                 f'from {project_name} import State\nfrom {project_name}.states.base_state import', content)
+                content = re.sub(r'from pytrobot import Tool,', 
+                                 f'from {project_name} import Tool\nfrom {project_name}.tools.base_tool import', content)
+
+                # Escreve o conteúdo ajustado de volta no arquivo
+                with open(file_path, 'w') as f:
+                    f.write(content)
+
+def create_setup_py(trt_dir, project_name, version):
+
+    parent_dir = os.path.dirname(trt_dir)
+    setup_path = os.path.join(parent_dir, "setup.py")
+    requirements_path = os.path.join(parent_dir, "requirements.txt")
     
 
+    with open(requirements_path, 'r') as req_file:
+        requirements = req_file.readlines()
+        requirements = [req.strip() for req in requirements]
 
-def construct_user_project(user_dir, project_name, version):
 
-    remove_all_trt(user_dir)
+    with open(setup_path, 'w') as setup_file:
+        setup_file.write(f"""
+from setuptools import setup, find_packages
 
-    copy_pytrobot_logic(user_dir, project_name)
-    copy_user_logic(user_dir, project_name)
+setup(
+    name='{project_name}',
+    version='{version}',
+    packages=find_packages(),
+    include_package_data=True,
+    install_requires={requirements},
+    entry_points={{
+        'console_scripts': [
+            'trt-run={project_name}.__main__:entrypoint'
+        ]
+    }}
+)
+""")
 
-    extract_imports(user_dir)
-    create_setup_py(user_dir, project_name, version)
-
-def handle_error(user_dir):
-
-    c = context.Context()
-    remove_all_trt(user_dir)
-    sys.exit(1)  # Encerra o programa com código de saída 1 em caso de erro
-
-def get_python_files(directory):
-    python_files = []
-    for root, _, files in os.walk(directory):
-        for file in files:
-            if file.endswith(".py"):
-                python_files.append(os.path.join(root, file))
-    return python_files
-
-def remove_all_trt(user_dir):
-    target_user_dir = os.path.join(user_dir, ".trt")
-    if os.path.exists(target_user_dir):
-        shutil.rmtree(target_user_dir)
-
-def copy_pytrobot_logic(user_dir, project_name):
-
-    pytrobot_source_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "framework")
-    pytrobot_target_dir = os.path.join(user_dir, ".trt", project_name)
-
-    # Copiar a estrutura do diretório
-    shutil.copytree(src=pytrobot_source_dir, dst=pytrobot_target_dir, ignore=shutil.ignore_patterns("__pycache__"))
-
-    # Regex para encontrar os imports que seguem o padrão "from pytrobot <qualquer import> import "
-    import_regex = re.compile(r"from pytrobot\.framework\.(\w+)")
-
-    # Percorrer todos os arquivos no diretório
-    for root, _, files in os.walk(pytrobot_target_dir):
-        for file in files:
-            file_path = os.path.join(root, file)
-
-            # Ler o conteúdo do arquivo
-            with open(file_path, 'r') as f:
-                content = f.read()
-
-            # Substituir os imports no conteúdo
-            adjusted_content = import_regex.sub(fr"from {project_name}", content)
-
-            # Escrever o conteúdo ajustado de volta ao arquivo
-            with open(file_path, 'w') as f:
-                f.write(adjusted_content)
-
-def copy_user_logic(user_dir, project_name):
-    target_user_dir = os.path.join(user_dir, ".trt", project_name, "user")
-
-    # Copiar a estrutura do diretório
-    shutil.copytree(src=user_dir, dst=target_user_dir, ignore=ignore_func)
-
-    # Regex para encontrar os imports que seguem o padrão "from <base_from> <qualquer import> import "
-    base_from = os.path.basename(os.path.normpath(user_dir))
-    last_regex = re.compile(fr"from {re.escape(base_from)}(\S*)[^\n]*import [^\n]*")
-    import_regex_1 = re.compile(fr"from {re.escape(base_from)}\.(\w+)")
-    import_regex_2 = re.compile(r"from pytrobot\.framework")
-
-    # Percorrer todos os arquivos no diretório
-    for root, _, files in os.walk(target_user_dir):
-        for file in files:
-            file_path = os.path.join(root, file)
-
-            # Ler o conteúdo do arquivo
-            with open(file_path, 'r') as f:
-                content = f.read()
-
-            # Encontrar o último componente do import
-            last_match = last_regex.search(content)
-            last_component = last_match.group(1) if last_match else None
-
-            # Substituir os imports no conteúdo
-            adjusted_content = import_regex_1.sub(fr"from {project_name}.user{last_component}", content)
-            adjusted_content = import_regex_2.sub(fr"from {project_name}", adjusted_content)
-
-            # Escrever o conteúdo ajustado de volta ao arquivo
-            with open(file_path, 'w') as f:
-                f.write(adjusted_content)
-    
-def ignore_func(dir, files):
-    return [f for f in files if f == '.trt' or f == '__pycache__']
-
-def extract_imports(user_dir):
-    user_files = get_python_files(os.path.join(user_dir, ".trt"))
-    
-    # Etapa 2: Identificar todos os imports feitos pelo usuário
-    unique_imports = set()
-    for file_path in user_files:
-        with open(file_path, "r") as file:
-            content = file.read()
-
-        lines = content.split("\n")
-        for line in lines:
-            if line.startswith("import ") or line.startswith("from "):
-                parts = line.split()
-                library_name = parts[1] if len(parts) > 1 else ""
-                library_name = library_name.split(".")[0]
-                unique_imports.add(library_name)
-
-    # Etapa 3: Descartar valores repetidos
-    unique_imports = list(unique_imports)
-
-    # Etapa 4 e 5: Verificar a versão e criar requirements.txt
-    dependencies = {}
-    for library_name in unique_imports:
-        try:
-            __import__(library_name)
-            version = subprocess.check_output(
-                ["pip", "show", library_name], universal_newlines=True
-            )
-            version = version.split("\n")[1].split(":")[1].strip()
-            dependencies[library_name] = version
-        except ImportError as e:
-            print(f"Ignorando import de objeto específico: {library_name} — {e}")
-        except subprocess.CalledProcessError:
-            print(f"Ignorando pacote sem versão especificada: {library_name}")
-
-    # Adicionar dependências ao requirements.txt
-    requirements_path = os.path.join(user_dir, ".trt", "requirements.txt")
-    with open(requirements_path, "w") as requirements_file:
-        for library, version in sorted(dependencies.items()):
-            requirements_file.write(f"{library}=={version}\n")
-
-def create_setup_py(user_dir, project_name, version):
-    setup_py_path = os.path.join(user_dir, ".trt", "setup.py")
-    requirements_txt_path = os.path.join(user_dir, ".trt", "requirements.txt")
-
-    with open(requirements_txt_path, "r") as requirements_file:
-        requirements_content = requirements_file.read().strip().splitlines()
-
-    with open(setup_py_path, "w") as setup_file:
-        setup_file.write(
-            f"from setuptools import setup, find_packages\n\n"
-            f"setup(\n"
-            f"    name='{project_name}',\n"
-            f"    version='{version}',\n"
-            f"    packages=find_packages(),\n"
-            f"    entry_points={{\n"
-            f"        'console_scripts': [\n"
-            f"            'trt-run={project_name}.__main__:run'\n"
-            f"        ]\n"
-            f"    }},\n"
-            f"    install_requires={requirements_content},\n"  # Inclui as dependências do requirements.txt
-            f")\n"
-        )
+def build_package(trt_dir):
+    parent_dir = os.path.dirname(trt_dir)
+    python_executable = shutil.which("python") or shutil.which("python3")
+    if python_executable is None:
+        raise SystemError("No Known Python executable found.")
+    subprocess.run([python_executable, '-m', 'build', parent_dir], check=True)
 
 
 if __name__ == '__main__':
     c = context.Context()
-    build(c,'/home/seluser/wmt-bot005-emitir-certidoes-due-diligence/wmt_bot005_emitir_certidoes_due_diligence')
+    build(c,'/home/seluser/user/bot1')
