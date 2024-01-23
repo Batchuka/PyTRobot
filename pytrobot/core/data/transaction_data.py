@@ -1,7 +1,7 @@
 from pandas import DataFrame
 
 
-class Transaction:
+class TransactionData:
     number: int = 0
     item: dict = {}
     data: DataFrame = DataFrame()
@@ -15,9 +15,9 @@ class Transaction:
 
         :param data: some untyped dataset representing the items to be processed in the job.
         """
-        Transaction.data = data
-        Transaction.number= 1
-        Transaction.item = {}
+        TransactionData.data = data
+        TransactionData.number= 1
+        TransactionData.item = {}
 
     @staticmethod
     def get_item():
@@ -28,12 +28,12 @@ class Transaction:
 
         :return: The dictionary representing the processed item or None if no item is being processed.
         """
-        if not Transaction.data.empty:
-            number = len(Transaction.data) - Transaction.number
-            Transaction.item = Transaction.data.iloc[number].to_dict()
-            print(f"Transaction {Transaction.number} | item {Transaction.item}")
-            Transaction.number += 1
-            return Transaction.item
+        if not TransactionData.data.empty:
+            number = len(TransactionData.data) - TransactionData.number
+            TransactionData.item = TransactionData.data.iloc[number].to_dict()
+            print(f"Transaction {TransactionData.number} | item {TransactionData.item}")
+            TransactionData.number += 1
+            return TransactionData.item
         else:
             raise ValueError('No items to process.')
     
@@ -44,9 +44,9 @@ class Transaction:
 
         :param updated_item: The dictionary representing the updated item.
         """
-        if Transaction.number > 0:
-            number = len(Transaction.data) - Transaction.number
-            Transaction.data.iloc[number] = item
-            print(f"Transaction {Transaction.number} | item updated: {item}")
+        if TransactionData.number > 0:
+            number = len(TransactionData.data) - TransactionData.number
+            TransactionData.data.iloc[number] = item
+            print(f"Transaction {TransactionData.number} | item updated: {item}")
         else:
             raise ValueError('Transaction not started. Call set_data() first.')

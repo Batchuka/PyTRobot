@@ -1,7 +1,6 @@
 # pytrobot/setup.py
 from setuptools import setup, find_packages
 from pathlib import Path
-from pytrobot.__init__ import __version__
 
 def get_install_requires():
     requirements_path = Path(__file__).parent / "requirements.txt"
@@ -12,7 +11,7 @@ def get_install_requires():
 
 setup(
     name='pytrobot',
-    version=__version__,
+    version='3.0.0',
     author='Batchuka',
     author_email='https://github.com/Batchuka',
     long_description=(Path(__file__).parent / "README.md").read_text(),
@@ -23,7 +22,7 @@ setup(
     install_requires=get_install_requires(),
     entry_points={
         'console_scripts': [
-            'trt = pytrobot.__init__:program.run',
+            'trt=pytrobot.cli.main:program.run',
         ],
     }
 )
