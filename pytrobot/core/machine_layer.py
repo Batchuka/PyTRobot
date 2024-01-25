@@ -1,5 +1,5 @@
 # pytrobot/core/machine.py
-from pytrobot.core.states.starter import Starter
+from pytrobot.core.states.starter_state import _StarterState
 from pytrobot.core.states.base_state import BaseState
 
 class StateTransitionError(Exception):
@@ -24,7 +24,7 @@ class MachineLayer:
         self.objects_layer = objects_layer
         self.dataset_layer = dataset_layer
         self.true_table = TrueTable()
-        self.current_state: BaseState = Starter()
+        self.current_state: BaseState = _StarterState()
 
 
     def get_next_state(self, current_state: BaseState) -> BaseState:

@@ -26,7 +26,19 @@ class PyTRobot:
         PyTRobot.objects_layer = ObjectsLayer()
         PyTRobot.machine_layer = MachineLayer(self.objects_layer, self.dataset_layer)
         self._initialized = True
-    
+
+    def _register_core_states(self):
+        from pytrobot.core.states.starter_state import _StarterState
+        from pytrobot.core.states.finisher_state import _FinisherState
+        State(_StarterState)
+        if PyTRobot._first_state_name:
+            Transition('_StarterState', PyTRobot._first_state_name, '_FinisherState')(_StarterState)
+        else:
+            # Transição padrão se nenhum estado inicial foi definido
+            Transition('_StarterState', '_FinisherState', '_FinisherState')(_StarterState)
+        State(_FinisherState)
+        Transition('_FinisherState', '_FinisherState', '_FinisherState')(_FinisherState)
+
     @staticmethod
     def get_objects_layer():
         if PyTRobot.objects_layer is None:
@@ -38,6 +50,10 @@ class PyTRobot:
         if PyTRobot.machine_layer is None:
             raise Exception("PyTRobot não foi inicializado corretamente.")
         return PyTRobot.machine_layer
+
+    @classmethod
+    def set_first_state(cls, state_name):
+        cls._first_state_name = state_name
 
     def start(self):
         self.machine_layer.run()
@@ -80,3 +96,6 @@ def Transition(current_state_name, next_state_on_success_name, next_state_on_fai
         return cls
     return decorator
 
+def First(cls):
+    PyTRobot.set_first_state(cls.__name__)
+    return cls
