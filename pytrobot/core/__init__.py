@@ -1,7 +1,7 @@
 # pytrobot/__init__.py
 import builtins
 from pytrobot.core.dataset_layer import DatasetLayer
-from pytrobot.core.object_layer import ObjectsLayer
+from pytrobot.core.object_layer import ObjectLayer
 from pytrobot.core.machine_layer import MachineLayer
 from pytrobot.core.utils import print_pytrobot_banner, pytrobot_print
 
@@ -23,8 +23,8 @@ class PyTRobot:
         print_pytrobot_banner()
         builtins.print = pytrobot_print
         PyTRobot.dataset_layer = DatasetLayer()
-        PyTRobot.objects_layer = ObjectsLayer()
-        PyTRobot.machine_layer = MachineLayer(self.objects_layer, self.dataset_layer)
+        PyTRobot.object_layer = ObjectLayer()
+        PyTRobot.machine_layer = MachineLayer(self.object_layer, self.dataset_layer)
         self._initialized = True
 
     def _register_core_states(self):
@@ -39,11 +39,16 @@ class PyTRobot:
         State(_FinisherState)
         Transition('_FinisherState', '_FinisherState', '_FinisherState')(_FinisherState)
 
+    def start(self):
+        self.machine_layer.run()
+
+    # Métodos de acesso para os decoradores
+
     @staticmethod
-    def get_objects_layer():
-        if PyTRobot.objects_layer is None:
+    def get_object_layer():
+        if PyTRobot.object_layer is None:
             raise Exception("PyTRobot não foi inicializado corretamente.")
-        return PyTRobot.objects_layer
+        return PyTRobot.object_layer
     
     @staticmethod
     def get_machine_layer():
@@ -55,28 +60,27 @@ class PyTRobot:
     def set_first_state(cls, state_name):
         cls._first_state_name = state_name
 
-    def start(self):
-        self.machine_layer.run()
+# Decoradores
 
 def State(cls):
-    if PyTRobot.objects_layer is None:
+    if PyTRobot.object_layer is None:
         raise Exception("PyTRobot não foi inicializado corretamente. A camada de objetos está inacessível.")
-    objects_layer = PyTRobot.get_objects_layer()
-    objects_layer.register_state(cls)
+    object_layer = PyTRobot.get_object_layer()
+    object_layer.register_state(cls)
     return cls
 
 def Tool(cls):
-    if PyTRobot.objects_layer is None:
+    if PyTRobot.object_layer is None:
         raise Exception("PyTRobot não foi inicializado corretamente. A camada de objetos está inacessível.")
-    objects_layer = PyTRobot.get_objects_layer()
-    objects_layer.register_tool(cls)
+    object_layer = PyTRobot.get_object_layer()
+    object_layer.register_tool(cls)
     return cls
 
 def Action(cls):
-    if PyTRobot.objects_layer is None:
+    if PyTRobot.object_layer is None:
         raise Exception("PyTRobot não foi inicializado corretamente. A camada de objetos está inacessível.")
-    objects_layer = PyTRobot.get_objects_layer()
-    objects_layer.register_action(cls)
+    object_layer = PyTRobot.get_object_layer()
+    object_layer.register_action(cls)
     return cls
 
 def Transition(current_state_name, next_state_on_success_name, next_state_on_failure_name):

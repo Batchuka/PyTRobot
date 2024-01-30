@@ -20,12 +20,11 @@ class TrueTable:
         return None
 
 class MachineLayer:
-    def __init__(self, objects_layer, dataset_layer):
-        self.objects_layer = objects_layer
+    def __init__(self, object_layer, dataset_layer):
+        self.object_layer = object_layer
         self.dataset_layer = dataset_layer
         self.true_table = TrueTable()
         self.current_state: BaseState = _StarterState()
-
 
     def get_next_state(self, current_state: BaseState) -> BaseState:
         status = self.current_state._status
@@ -34,7 +33,8 @@ class MachineLayer:
         if not state_name:
             raise StateTransitionError(f"Não foi possível determinar o próximo estado a partir de {current_state.__class__.__name__} com status {status}")
 
-        next_state = self.objects_layer.create_object(state_name)
+        #TODO: Não existe o método 'create_object' em object_layer
+        next_state = self.object_layer.create_object(state_name)
         if not next_state:
             raise StateTransitionError(f"Não foi possível criar o estado {state_name}")
 

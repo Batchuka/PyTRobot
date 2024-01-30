@@ -1,6 +1,6 @@
 # pytrobot/core/objects.py
 
-class ObjectsLayer:
+class ObjectLayer:
     _instance = None
 
     @classmethod
@@ -11,7 +11,7 @@ class ObjectsLayer:
 
     def __init__(self):
         if self._instance is not None:
-            raise ValueError("ObjectsLayer já foi instanciada!")
+            raise ValueError("ObjectLayer já foi instanciada!")
         self._registry = {}
 
     def register_state(self, cls):
