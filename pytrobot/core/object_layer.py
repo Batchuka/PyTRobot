@@ -1,27 +1,31 @@
 # pytrobot/core/objects.py
 
-class ObjectsLayer:
-    _instance = None
-
-    @classmethod
-    def get_instance(cls):
-        if cls._instance is None:
-            cls._instance = cls()
-        return cls._instance
-
+class ObjectsRegister:
     def __init__(self):
-        if self._instance is not None:
-            raise ValueError("ObjectsLayer já foi instanciada!")
         self._registry = {}
 
-    def register_state(self, cls):
-        self._registry[cls.__name__] = cls
-        return cls
+    def register(self, name, obj):
+        if name in self._registry:
+            raise ValueError(f"Objeto com nome '{name}' já registrado.")
+        self._registry[name] = obj
 
-    def register_tool(self, cls):
-        self._registry[cls.__name__] = cls
-        return cls
-    
-    def register_action(self, cls):
-        self._registry[cls.__name__] = cls
-        return cls
+    def get(self, name):
+        return self._registry.get(name, None)
+
+    def is_registered(self, name):
+        return name in self._registry
+
+
+class AccessObjectLayer:
+    def __init__(self, pytrobot_instance):
+        self.pytrobot_instance = pytrobot_instance
+
+    def register(self, object_cls):
+        self.pytrobot_instance.objects_register.register(object_cls.__name__, object_cls)
+        return object_cls
+
+    def get(self, name):
+        return self.pytrobot_instance.objects_register.get(name)
+
+    def is_registered(self, name):
+        return name in self.pytrobot_instance.objects_register._registry
