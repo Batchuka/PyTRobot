@@ -12,7 +12,7 @@ class _StarterState(BaseState):
         pass
 
     def on_exit(self):
-        pass
+        self._status = True
 
     def on_error(self):
-        pass
+        self._status = False

@@ -4,9 +4,13 @@ class BaseTool(ABC):
     """
     Classe abstrata base para todas as ferramentas no PyTRobot.
     """
-    def __init__(self):
+    def __init__(self, access_dataset_layer):
+        self.access_dataset_layer = access_dataset_layer
         self._data = None
         self._status = None
+    
+    def get_asset(self, asset_name):
+        return self.access_dataset_layer.config_data.get_asset(asset_name)
 
     @property
     def data(self):

@@ -1,21 +1,19 @@
 
-
 from abc import ABC, abstractmethod
-
 
 class BaseAction(ABC):
     """
     Classe abstrata base para todas as ações no PyTRobot.
     """
-    def __init__(self, objects_layer, dataset_layer):
-        self.objects_layer = objects_layer
-        self.dataset_layer = dataset_layer
+    def __init__(self, access_object_layer, access_dataset_layer):
+        self.access_object_layer = access_object_layer
+        self.access_dataset_layer = access_dataset_layer
 
     def get_tool(self, tool_class):
-        return self.objects_layer.get_tool(tool_class)
+        return self.access_object_layer.get(tool_class)
     
-    def get_config_asset(self, asset_name):
-        return self.dataset_layer.config_data.get_asset(asset_name)
+    def get_asset(self, asset_name):
+        return self.access_dataset_layer.config_data.get_asset(asset_name)
 
     @abstractmethod
     def perform(self):
