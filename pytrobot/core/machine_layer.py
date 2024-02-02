@@ -14,7 +14,10 @@ class TrueTable:
         self._transitions[current_state] = {'1': next_state_on_success, '0': next_state_on_failure}
 
     def evaluate_next_state(self, current_state, status):
-        # Retorna o próximo estado com base no status atual
+
+        if not isinstance(status, bool):
+            raise ValueError(f"'status' deve ser um valor booleano, recebido: {type(status)}")
+
         if current_state in self._transitions:
             return self._transitions[current_state][str(int(status))]
         return None
@@ -27,18 +30,19 @@ class StateMachine:
 
     def get_next_state(self) -> BaseState:
         status = self.current_state._status
-        state_name = self.access_machine_layer.evaluate_next_state(self.current_state.__class__.__name__, status)
+        next_state_name = self.access_machine_layer.evaluate_next_state(self.current_state.__class__.__name__, status)
 
-        if not state_name:
+        if not next_state_name:
             raise StateTransitionError(f"Não foi possível determinar o próximo estado a partir de {self.current_state.__class__.__name__} com status {status}")
 
-        next_state_class = self.access_object_layer.get(state_name)
-        if not next_state_class:
-            raise StateTransitionError(f"Não foi possível encontrar a classe do estado {state_name}")
+        next_state_class = self.access_object_layer.get(next_state_name)
 
-        # Criar a nova instância do estado
-        next_state = next_state_class(self.access_object_layer, self.access_machine_layer)
-        return next_state
+        if not next_state_class:
+            raise StateTransitionError(f"Não foi possível encontrar a classe do estado {next_state_name}")
+
+        next_state_instance = next_state_class(self.access_object_layer, self.access_machine_layer)
+
+        return next_state_instance
 
     def run(self):
         while self.current_state is not None:
@@ -47,10 +51,10 @@ class StateMachine:
             try:
                 self.current_state.execute()
                 self.current_state.on_exit()
-            except:
-                self.current_state.on_error()
+            except Exception as e:
+                self.current_state.on_error(e)
 
-            self.current_state = self.get_next_state()
+            self.current_state = self.access_machine_layer.get_next_state()
 
 class AccessMachineLayer:
     def __init__(self, pytrobot_instance):
@@ -64,3 +68,6 @@ class AccessMachineLayer:
 
     def evaluate_next_state(self, current_state_name, status):
         return self.pytrobot_instance.true_table.evaluate_next_state(current_state_name, status)
+    
+    def get_next_state(self):
+        return self.pytrobot_instance.state_machine.get_next_state()

@@ -1,8 +1,6 @@
 from pytrobot.core.states.base_state import BaseState
 
 class _FinisherState(BaseState):
-    def __init__(self):
-        self._status = None
 
     def execute(self):
         pass

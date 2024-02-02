@@ -1,13 +1,16 @@
 from abc import ABC, abstractmethod
 
 class BaseTool(ABC):
-    """
-    Classe abstrata base para todas as ferramentas no PyTRobot.
-    """
-    def __init__(self, access_dataset_layer):
+
+    def __str__(self) -> str:
+        return f"Tool {self.__class__.__name__}"
+
+    def __init__(self, access_object_layer, access_dataset_layer):
+        self.access_object_layer = access_object_layer
         self.access_dataset_layer = access_dataset_layer
         self._data = None
         self._status = None
+        self.create()
     
     def get_asset(self, asset_name):
         return self.access_dataset_layer.config_data.get_asset(asset_name)
@@ -27,10 +30,11 @@ class BaseTool(ABC):
     @status.setter
     def status(self, value):
         self._status = value
+    
+    @abstractmethod
+    def create(self):
+        pass
 
     @abstractmethod
     def use(self):
-        """
-        Método para usar a ferramenta.
-        """
         pass
