@@ -3,7 +3,6 @@ from pytrobot.core.states.starter_state import _StarterState
 from pytrobot.core.states.base_state import BaseState
 
 class StateTransitionError(Exception):
-    """Exceção personalizada para erros na transição de estados."""
     pass
 
 class TrueTable:
@@ -23,7 +22,8 @@ class TrueTable:
         return None
 
 class StateMachine:
-    def __init__(self, access_object_layer, access_machine_layer):
+    def __init__(self, access_dataset_layer, access_object_layer, access_machine_layer):
+        self.access_dataset_layer = access_dataset_layer
         self.access_object_layer = access_object_layer
         self.access_machine_layer = access_machine_layer
         self.current_state: BaseState = _StarterState()
@@ -40,7 +40,7 @@ class StateMachine:
         if not next_state_class:
             raise StateTransitionError(f"Não foi possível encontrar a classe do estado {next_state_name}")
 
-        next_state_instance = next_state_class(self.access_object_layer, self.access_machine_layer)
+        next_state_instance = next_state_class(self.access_dataset_layer, self.access_object_layer)
 
         return next_state_instance
 

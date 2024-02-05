@@ -1,6 +1,6 @@
 # pytrobot/core/dataset_layer/dataset.py
 import os
-import configparser
+import importlib.util
 import boto3
 from pandas import DataFrame
 
@@ -9,29 +9,38 @@ class ConfigData:
     def __init__(self):
         self.config = {}
 
-    def load_config(self, path, env):
-        self._load_properties_from_file(path, env)
-        self._load_properties_from_ssm()
+    def load_config(self, resources_path):
+        """Carrega as configurações do arquivo 'config.py' localizado no diretório 'resources' especificado."""
+        config_path = os.path.join(resources_path, 'config.py')
+        
+        if not os.path.exists(config_path):
+            raise FileNotFoundError(f"Arquivo de configuração não encontrado em: {config_path}")
 
-    def _load_properties_from_file(self, path, env):
-        config_file = os.path.join(path, '.config')
-        if not os.path.exists(config_file):
-            raise FileNotFoundError(f".config file not found in {path}")
+        spec = importlib.util.spec_from_file_location("config", config_path)
+        config = importlib.util.module_from_spec(spec) # type: ignore
+        spec.loader.exec_module(config) # type: ignore
 
-        parser = configparser.ConfigParser()
-        parser.read(config_file)
+        # Carrega as configurações do módulo 'config' para o dicionário 'config'
+        for attr in dir(config):
+            if attr.isupper():
+                self.config[attr.lower()] = getattr(config, attr)
 
-        for section in parser.sections():
-            if section == env:
-                for key, value in parser.items(section):
-                    self.config[key.lower()] = value
+    def load_assets_from_config(self, config_module_path, env):
+        try:
+            config_module = __import__(config_module_path, fromlist=[env])
+            env_config = getattr(config_module, env, {})
+            for key, value in env_config.items():
+                self.config[key.lower()] = value
+        except ModuleNotFoundError:
+            raise FileNotFoundError(f"Configuration module '{config_module_path}' not found.")
+        except AttributeError:
+            raise ValueError(f"Environment '{env}' not found in the configuration module.")
 
-    def _load_properties_from_ssm(self):
+    def load_assets_from_ssm(self):
+        # Assumindo que você quer manter essa funcionalidade
         ssm_client = boto3.client('ssm')
-
         for key in self.config:
             parameter_name = key.replace("_", "/")
-
             try:
                 response = ssm_client.get_parameter(
                     Name=parameter_name,
@@ -47,7 +56,8 @@ class ConfigData:
                 print(f"An error occurred while fetching parameter {parameter_name}: {str(e)}")
 
     def get_asset(self, name):
-        return self.config.get(name, None)
+        return self.config.get(name.lower(), None)
+
 
 
 class TransactionData:
@@ -87,6 +97,9 @@ class TransactionData:
 class AccessDatasetLayer:
     def __init__(self, pytrobot_instance):
         self.pytrobot_instance = pytrobot_instance
+
+    def get_asset(self, name):
+        return self.pytrobot_instance.config_data.get_asset(name)
 
     def get_config_data(self):
         return self.pytrobot_instance.config_data

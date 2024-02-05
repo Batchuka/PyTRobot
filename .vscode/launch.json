@@ -2,19 +2,6 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Main",
-            "type": "python",
-            "request": "launch",
-            "program": "${workspaceFolder}/pytrobot/__main__.py",
-            "console": "integratedTerminal",
-            "args": [
-                "run",
-                "/home/seluser/wmt-bot005-emitir-certidoes-due-diligence/wmt_bot005_emitir_certidoes_due_diligence"
-            ],
-            "justMyCode": true,
-            "cwd": "${workspaceFolder}"
-        },
-        {
             "name": "Tasks",
             "type": "python",
             "request": "launch",

@@ -16,20 +16,22 @@ class PyTRobot:
         return cls._instance
 
     def __init__(self):
-        self._first_state_name = None
+        self._first_state_name: str = ''
+        self._resources: str = ''
         if not hasattr(self, '_initialized'):
             self._initialize()
             
     def _initialize(self):
         print_pytrobot_banner()
         builtins.print = pytrobot_print
+        access_dataset_layer = self.create_access_dataset_layer()
         access_object_layer = self.create_access_object_layer()
         access_machine_layer = self.create_access_machine_layer()
 
         # Inicializa os novos atributos
         self.config_data = ConfigData()
         self.true_table = TrueTable()
-        self.state_machine = StateMachine(access_object_layer, access_machine_layer)
+        self.state_machine = StateMachine(access_dataset_layer, access_object_layer, access_machine_layer)
         self.objects_register = ObjectsRegister()
         self._initialized = True
 

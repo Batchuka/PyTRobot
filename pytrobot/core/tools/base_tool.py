@@ -10,10 +10,10 @@ class BaseTool(ABC):
         self.access_dataset_layer = access_dataset_layer
         self._data = None
         self._status = None
-        self.create()
+        self.initialize()
     
     def get_asset(self, asset_name):
-        return self.access_dataset_layer.config_data.get_asset(asset_name)
+        return self.access_dataset_layer.get_asset(asset_name)
 
     @property
     def data(self):
@@ -30,11 +30,10 @@ class BaseTool(ABC):
     @status.setter
     def status(self, value):
         self._status = value
-    
-    @abstractmethod
-    def create(self):
-        pass
 
     @abstractmethod
-    def use(self):
+    def initialize():
+        """
+        Use este método para inicializar a classe. Não utilize o '__init__'
+        """
         pass

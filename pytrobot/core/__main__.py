@@ -15,13 +15,15 @@ def entrypoint():
     if command == 'run':
 
         robot = PyTRobot()
+        base_path = pathlib.Path(directory)
 
-        src_path = pathlib.Path(directory)
+        src_path = base_path
+        resources_path = base_path / "resources"
 
+        # Adiciona o caminho do diretório src ao sys.path para importação dos módulos do usuário
         sys.path.insert(0, str(src_path))
 
-        print(sys.path)
-
+        # Verifica se o diretório src existe e tenta importar o __init__.py dele
         if src_path.exists():
             init_file = src_path / "src" / "__init__.py"
             if init_file.exists():
@@ -30,7 +32,16 @@ def entrypoint():
                 raise ImportError("O arquivo __init__.py é obrigatório no diretório src.")
         else:
             raise FileNotFoundError("Diretório src não encontrado.")
+        
+        # Verifica se o diretório resources existe e o adiciona no PyTRobot
+        if resources_path.exists():
+            robot._resources = resources_path.as_posix()
+            robot.config_data.load_config(resources_path.as_posix())
+        else:
+            raise FileNotFoundError("Diretório resources não encontrado ou não especificado corretamente.")
+        
         robot._register_core_states()
         robot.start()
+
     else:
         print(f"Unknown command: {command}")
