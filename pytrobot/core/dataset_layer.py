@@ -23,7 +23,7 @@ class ConfigData:
         # Carrega as configurações do módulo 'config' para o dicionário 'config'
         for attr in dir(config):
             if attr.isupper():
-                self.config[attr.lower()] = getattr(config, attr)
+                self.config[attr] = getattr(config, attr)
 
     def load_assets_from_config(self, config_module_path, env):
         try:
@@ -37,7 +37,7 @@ class ConfigData:
             raise ValueError(f"Environment '{env}' not found in the configuration module.")
 
     def load_assets_from_ssm(self):
-        # Assumindo que você quer manter essa funcionalidade
+        
         ssm_client = boto3.client('ssm')
         for key in self.config:
             parameter_name = key.replace("_", "/")
