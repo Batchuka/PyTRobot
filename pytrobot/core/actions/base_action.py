@@ -16,6 +16,7 @@ class BaseAction(ABC):
         return tool
     
     def get_asset(self, asset_name):
+        value = self.access_dataset_layer.get_asset(asset_name)
         return self.access_dataset_layer.get_asset(asset_name)
 
     @abstractmethod

@@ -56,7 +56,7 @@ class ConfigData:
                 print(f"An error occurred while fetching parameter {parameter_name}: {str(e)}")
 
     def get_asset(self, name):
-        return self.config.get(name.lower(), None)
+        return self.config.get(name, None)
 
 
 

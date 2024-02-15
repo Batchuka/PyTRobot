@@ -15,9 +15,9 @@ def debug_entrypoint(command='run', directory=None):
 
 def auto_import_classes(directory):
     """
-    Scan the actions, tools and states directories within src_directory,
+    Scan the actions, tools, and states directories within src_directory,
     and automatically writes the necessary imports to the __init__.py files
-    corresponding.
+    corresponding, but only for classes decorated with @Action, @Tool, or @State.
     """
     for subdir in ['actions', 'tools', 'states']:
         init_file_path = pathlib.Path(directory) / 'src' / subdir / '__init__.py'
@@ -26,10 +26,15 @@ def auto_import_classes(directory):
             for py_file in py_files:
                 file_path = pathlib.Path(directory) / 'src' / subdir / py_file
                 with open(file_path, 'r') as file:
-                    content = file.read()
-                    # Encontra a definição da classe
-                    match = re.search(r'class (\w+)', content)
-                    if match:
-                        class_name = match.group(1)  # Pega o nome da classe
-                        import_statement = f"from src.{subdir}.{py_file[:-3]} import {class_name}\n"
-                        init_file.write(import_statement)
+                    content = file.readlines()
+                    for index, line in enumerate(content):
+                        if re.match(r'@(Action|Tool|State)', line.strip()):
+                            # Encontra a próxima definição de classe após o decorador
+                            for class_line in content[index:]:
+                                class_match = re.search(r'class (\w+)', class_line)
+                                if class_match:
+                                    class_name = class_match.group(1)  # Pega o nome da classe
+                                    import_statement = f"from src.{subdir}.{py_file[:-3]} import {class_name}\n"
+                                    init_file.write(import_statement)
+                                    break  # Sai do loop interno após encontrar a classe decorada
+                            break  # Sai do loop externo após processar o arquivo atual
