@@ -9,6 +9,11 @@ class ObjectsRegister:
             raise ValueError(f"Objeto com nome '{name}' já registrado.")
         self._registry[name] = {"object": obj, "is_instance": is_instance}
 
+    def register_instance(self, name, obj, is_instance=True):
+        if name in self._registry:
+            raise ValueError(f"Objeto com nome '{name}' já registrado.")
+        self._registry[name] = {"object": obj, "is_instance": is_instance}
+
     def get(self, name):
         entry = self._registry.get(name)
         if entry and not entry["is_instance"]:
@@ -35,11 +40,17 @@ class AccessObjectLayer:
     def __init__(self, pytrobot_instance):
         self.pytrobot_instance = pytrobot_instance
 
-    def register(self, object_cls_or_instance, is_instance=False):
-        name = object_cls_or_instance.__class__.__name__ if is_instance else object_cls_or_instance.__name__
-        self.pytrobot_instance.objects_register.register(name, object_cls_or_instance, is_instance)
-        return object_cls_or_instance
+    def register(self, object_cls):
+        name = object_cls.__class__.__name__
+        self.pytrobot_instance.objects_register.register(name, object_cls)
+        return object_cls
 
+    def register_instance(self, object__instance):
+        name = object__instance.__class__.__name__ + "_instance"
+        self.pytrobot_instance.objects_register.register_instance(name, object__instance)
+        return object__instance
+
+    
     def get(self, name):
         return self.pytrobot_instance.objects_register.get(name)
 
