@@ -2,7 +2,8 @@ from pytrobot import Tool, BaseTool
 
 @Tool
 class SampleTool(BaseTool):
-    def use(self):
+    
+    def initialize(self):
         # Implementação específica da ferramenta
         print("Using sample tool.")
 

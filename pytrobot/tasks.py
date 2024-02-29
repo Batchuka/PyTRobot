@@ -7,7 +7,32 @@ import argparse
 import subprocess
 
 from invoke import task, context, Collection, Program #type:ignore
-    
+
+scaffold_dir = os.path.join(os.path.dirname(__file__), "scaffold")
+templates = {
+    'tool': 'src/tools/sample_tool.py',
+    'action': 'src/actions/sample_action.py',
+    'state': 'src/states/sample_state.py'
+}
+
+@task
+def tool(c, path="."):
+    template_file = templates['tool']
+    shutil.copy(os.path.join(scaffold_dir, template_file), path)
+    print(f"New tool created at: {os.path.join(path, template_file)}")
+
+@task
+def action(c, path="."):
+    template_file = templates['action']
+    shutil.copy(os.path.join(scaffold_dir, template_file), path)
+    print(f"New action created at: {os.path.join(path, template_file)}")
+
+@task
+def state(c, path="."):
+    template_file = templates['state']
+    shutil.copy(os.path.join(scaffold_dir, template_file), path)
+    print(f"New state created at: {os.path.join(path, template_file)}")
+
 @task
 def new(c, path="."):
     # Pergunta o nome do projeto ao usuário

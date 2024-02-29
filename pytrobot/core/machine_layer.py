@@ -46,13 +46,13 @@ class StateMachine:
 
     def run(self):
         while self.current_state is not None:
-            self.current_state.on_entry()
 
             try:
-                self.current_state.execute()
-                self.current_state.on_exit()
+                self.current_state._on_entry()
+                self.current_state._execute()
+                self.current_state._on_exit()
             except Exception as e:
-                self.current_state.on_error(e)
+                self.current_state._on_error(e)
 
             self.current_state = self.access_machine_layer.get_next_state()
 

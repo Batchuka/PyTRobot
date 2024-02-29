@@ -2,6 +2,11 @@ from pytrobot import Action, BaseAction
 
 @Action
 class SampleAction(BaseAction):
+
+    def prepare(self):
+        # Implementação específica da ação
+        print("Preparing sample action.")
+    
     def perform(self):
         # Implementação específica da ação
         print("Performing sample action.")
