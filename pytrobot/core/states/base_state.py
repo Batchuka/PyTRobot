@@ -1,5 +1,10 @@
 from abc import ABC, abstractmethod
 
+RED = '\033[91m'
+GREEN = '\033[92m'
+YELLOW = '\033[93m'
+RESET = '\033[0m'
+BLUE = '\033[94m'
 
 class BaseState(ABC):
 
@@ -11,10 +16,11 @@ class BaseState(ABC):
         self.access_object_layer = access_object_layer
         self._status = None
 
-    def get_action(self, action_class):
-        action = self.access_object_layer.get(action_class)
-        action = action(self.access_dataset_layer, self.access_object_layer)
-        return action
+    # #DEPRICATED
+    # def __get_action(self, action_class):
+    #     action = self.access_object_layer.get(action_class)
+    #     action = action(self.access_dataset_layer, self.access_object_layer)
+    #     return action
 
     def get_tool(self, tool_class):
         tool = self.access_object_layer.get(tool_class)
@@ -23,13 +29,19 @@ class BaseState(ABC):
 
     def get_tool_i(self, tool_instance):
         tool = self.access_object_layer.get_instance(tool_instance)
-        # tool = tool(self.access_object_layer, self.access_dataset_layer)
         return tool
 
-    def register_tool_i(self, tool_instance):
+    def reg_tool_i(self, tool_instance):
         self.access_object_layer.register_instance(tool_instance)
         return tool_instance
     
+    def create_tdata(self, name, columns, data=None):
+        return self.access_dataset_layer.create_transaction_data(name, columns)
+    
+    def get_tdata(self, transaction_data_name):
+        tdata = self.access_dataset_layer.get_transaction_data(transaction_data_name)
+        return tdata
+
     def get_asset(self, asset_name):
         return self.access_dataset_layer.get_asset(asset_name)
 
@@ -50,7 +62,7 @@ class BaseState(ABC):
         pass
 
     def _execute(self):
-        print(f"=====> Executando : {self.__class__.__name__}")
+        print(f"{BLUE} ===== Executando ===== {self.__class__.__name__} {RESET}")
         method = getattr(self, 'execute', None)
         if method:
             method()
@@ -58,7 +70,7 @@ class BaseState(ABC):
             raise NotImplementedError("O método 'execute' deve ser implementado pela subclasse.")
 
     def _on_entry(self):
-        print(f"=====> Iniciando : {self.__class__.__name__}")
+        print(f"{BLUE} ===== Iniciando ====== {self.__class__.__name__} {RESET}")
         method = getattr(self, 'on_entry', None)
         if method:
             method()
@@ -67,7 +79,7 @@ class BaseState(ABC):
 
     def _on_exit(self):
         self._status = True
-        print(f"=====> Sucesso no : {self.__class__.__name__}")
+        print(f"{BLUE} ===== Sucesso ======== {self.__class__.__name__} {RESET}")
         method = getattr(self, 'on_exit', None)
         if method:
             method()
@@ -77,7 +89,7 @@ class BaseState(ABC):
 
     def _on_error(self, error):
         self._status = False
-        print(f"=====> Falha no : {self.__class__.__name__}")
+        print(f"{RED} ===== Falha ========== {self.__class__.__name__} \n {error}{RESET} ")
         method = getattr(self, 'on_error', None)
         if method:
             method(error)

@@ -1,5 +1,13 @@
 # pytrobot/core/objects.py
 
+
+"""
+TODO : ObjectsRegister talvez seja desnecessário. Talvez seja possível concentrar
+tudo em 'AccessObjectLayer'. Eu percebi também que não precisa de métodos para registrar
+instancias. Usar a mesma metodologia que use no dataset_layer
+"""
+
+
 class ObjectsRegister:
     def __init__(self):
         self._registry = {}

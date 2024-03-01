@@ -59,44 +59,48 @@ class ConfigData:
         return self.config.get(name, None)
 
 
-
 class TransactionData:
-    def __init__(self, columns):
-        self.data = DataFrame(columns=columns)
-        self.current_index = 0
+    def __init__(self, name, columns):
+        self.__name = name
+        self.columns = ['ID'] + columns  # ID é a primeira coluna
+        self.data = {column: [] for column in self.columns}  # Dicionário de listas para cada coluna
+        self.next_id = 1  # Autoincremento para o ID
 
-    def add_row(self, row_values):
-        if len(row_values) != len(self.data.columns):
-            raise ValueError("Número de valores não corresponde ao número de colunas.")
+    def add_column(self, column_name):
+        if column_name in self.data:
+            raise ValueError(f"A coluna '{column_name}' já existe.")
+        self.data[column_name] = []
 
-        self.data.iloc[self.current_index] = row_values
-        self.current_index += 1
+    def add_row(self, **kwargs):
+        for column in self.columns:
+            if column == 'ID':
+                self.data[column].append(self.next_id)
+                continue
+            self.data[column].append(kwargs.get(column, None))
+        self.next_id += 1
 
-    def current(self):
-        if self.current_index < len(self.data):
-            return self.data.iloc[self.current_index]
-        else:
-            raise IndexError("Index out of range")
+    def get_column(self, column_name):
+        if column_name not in self.data:
+            raise ValueError(f"A coluna '{column_name}' não existe.")
+        return self.data[column_name]
 
-    def update(self, updated_item):
-        if self.current_index < len(self.data):
-            self.data.iloc[self.current_index] = updated_item
-        else:
-            raise IndexError("Index out of range")
+    def set_column_value(self, column_name, index, value):
+        if column_name not in self.data:
+            raise ValueError(f"A coluna '{column_name}' não existe.")
+        if index >= len(self.data['ID']):
+            raise IndexError("O índice está fora do alcance dos dados existentes.")
+        self.data[column_name][index] = value
 
-    def next_item(self):
-        if self.current_index < len(self.data) - 1:
-            self.current_index += 1
-        else:
-            raise IndexError("No more items in transaction")
-
-    def reset(self):
-        self.current_index = 0
-
+    def get_row(self, index):
+        if index >= self.next_id:
+            raise IndexError("O índice está fora do alcance dos dados existentes.")
+        return {column: self.data[column][index] for column in self.columns}
 
 class AccessDatasetLayer:
+
     def __init__(self, pytrobot_instance):
         self.pytrobot_instance = pytrobot_instance
+        self.tdata_reg = {}
 
     def get_asset(self, name):
         return self.pytrobot_instance.config_data.get_asset(name)
@@ -104,14 +108,15 @@ class AccessDatasetLayer:
     def get_config_data(self):
         return self.pytrobot_instance.config_data
 
-    def get_transaction_data(self):
-        return self.pytrobot_instance.transaction_data
+    def create_transaction_data(self, name, columns):
+        if name in self.tdata_reg:
+            raise ValueError(f"TransactionData com o nome '{name}' já existe.")
+        tdata = TransactionData(name=name, columns=columns)
+        self.tdata_reg[name] = tdata
+        return tdata
 
-    def update_transaction_data(self, data):
-        self.get_transaction_data().set_data(data)
-
-    def process_next_transaction_item(self):
-        return self.get_transaction_data().get_item()
-
-    def update_transaction_item(self, item):
-        self.get_transaction_data().update(item)
+    def get_transaction_data(self, name):
+        if name in self.tdata_reg:
+            return self.tdata_reg[name]
+        else:
+            raise KeyError(f"TransactionData com o nome '{name}' não existe.")
