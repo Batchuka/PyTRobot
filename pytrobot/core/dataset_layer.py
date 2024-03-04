@@ -2,7 +2,6 @@
 import os
 import importlib.util
 import boto3
-from pandas import DataFrame
 
 
 class ConfigData:

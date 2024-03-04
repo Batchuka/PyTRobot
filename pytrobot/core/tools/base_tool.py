@@ -5,8 +5,7 @@ class BaseTool(ABC):
     def __str__(self) -> str:
         return f"Tool {self.__class__.__name__}"
 
-    def __init__(self, access_object_layer, access_dataset_layer):
-        self.access_object_layer = access_object_layer
+    def __init__(self, access_dataset_layer):
         self.access_dataset_layer = access_dataset_layer
         self._data = None
         self._status = None

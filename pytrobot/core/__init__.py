@@ -1,10 +1,15 @@
 # pytrobot/__init__.py
 import builtins
+import warnings
 from pytrobot.core.dataset_layer import ConfigData, TransactionData, AccessDatasetLayer
 from pytrobot.core.machine_layer import StateMachine, TrueTable, AccessMachineLayer
 from pytrobot.core.object_layer import ObjectsRegister, AccessObjectLayer
 from pytrobot.core.utils import print_pytrobot_banner, pytrobot_print
 
+
+class PyTRobotNotInitializedException(Exception):
+    """Exceção para ser levantada quando o PyTRobot não está instanciado."""
+    pass
 
 class PyTRobot:
     """Classe principal do pytrobot, implementada como um Singleton."""
@@ -63,14 +68,18 @@ class PyTRobot:
     @classmethod
     def get_instance(cls):
         if cls._instance is None:
-            raise Exception("PyTRobot não foi inicializado.")
+            raise PyTRobotNotInitializedException("PyTRobot object is not initialized.")
         return cls._instance
 
     @classmethod
     def add_object_on_registry(cls, registry_cls):
-        instance = cls.get_instance()
-        instance.objects_register.register(registry_cls.__name__, registry_cls)
-        return instance.objects_register
+        try:
+            instance = cls.get_instance()
+            instance.objects_register.register(registry_cls.__name__, registry_cls)
+            return instance.objects_register
+        except PyTRobotNotInitializedException as e:
+            warnings.warn(str(f"{e} : Your objects will not be registered"), RuntimeWarning)
+            
 
     @classmethod
     def add_transition_on_true_table(cls, current_state_name, next_state_on_success_name, next_state_on_failure_name):
