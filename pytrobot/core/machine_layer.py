@@ -35,7 +35,7 @@ class StateMachine:
         if not next_state_name:
             raise StateTransitionError(f"Não foi possível determinar o próximo estado a partir de {self.current_state.__class__.__name__} com status {status}")
 
-        next_state_class = self.access_object_layer.get(next_state_name)
+        next_state_class = self.access_object_layer._get(next_state_name)["object"]
 
         if not next_state_class:
             raise StateTransitionError(f"Não foi possível encontrar a classe do estado {next_state_name}")

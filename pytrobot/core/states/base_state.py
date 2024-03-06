@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 
+
 RED = '\033[91m'
 GREEN = '\033[92m'
 YELLOW = '\033[93m'
@@ -15,28 +16,23 @@ class BaseState(ABC):
         self.access_dataset_layer = access_dataset_layer
         self.access_object_layer = access_object_layer
         self._status = None
-
-    # #DEPRICATED
-    # def __get_action(self, action_class):
-    #     action = self.access_object_layer.get(action_class)
-    #     action = action(self.access_dataset_layer, self.access_object_layer)
-    #     return action
-
-    def get_tool(self, tool_class):
-        tool = self.access_object_layer.get(tool_class)
-        tool = tool(self.access_object_layer, self.access_dataset_layer)
-        return tool
-
-    def get_tool_i(self, tool_instance):
-        tool = self.access_object_layer.get_instance(tool_instance)
-        return tool
-
-    def reg_tool_i(self, tool_instance):
-        self.access_object_layer.register_instance(tool_instance)
-        return tool_instance
     
     def create_tdata(self, name, columns, data=None):
         return self.access_dataset_layer.create_transaction_data(name, columns)
+
+    def get_tool(self, class_name):
+        entry = self.access_object_layer._get(class_name)
+
+        if entry is None:
+            raise ValueError(f"Tool {class_name} not registered.")
+
+        if not entry["is_instance"]:
+            object = entry["object"]
+            instance = object(self.access_dataset_layer) 
+            self.access_object_layer.register(class_name, instance, is_instance=True)
+            return instance
+        else:
+            return entry["object"]
     
     def get_tdata(self, transaction_data_name):
         tdata = self.access_dataset_layer.get_transaction_data(transaction_data_name)

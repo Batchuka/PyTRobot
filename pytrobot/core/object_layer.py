@@ -1,69 +1,56 @@
 # pytrobot/core/objects.py
 
 
-"""
-TODO : ObjectsRegister talvez seja desnecessário. Talvez seja possível concentrar
-tudo em 'AccessObjectLayer'. Eu percebi também que não precisa de métodos para registrar
-instancias. Usar a mesma metodologia que use no dataset_layer
-"""
-
-
 class ObjectsRegister:
     def __init__(self):
         self._registry = {}
 
-    def register(self, name, obj, is_instance=False):
+    def register(self, name, object_cls, instance=None, is_instance=False):
+        """
+        Registra ou atualiza uma referência à classe no registro.
+        'is_instance' é usado para indicar se a referência é uma instância ou uma classe.
+        Os objetos são registrados como referências de classe por padrão (is_instance=False).
+        Se um objeto com o mesmo nome já estiver registrado, o registro é atualizado.
+        """
+        # Verifica se o objeto já está registrado e decide se deve atualizar ou criar um novo registro
         if name in self._registry:
-            raise ValueError(f"Objeto com nome '{name}' já registrado.")
-        self._registry[name] = {"object": obj, "is_instance": is_instance}
+            # Atualiza apenas 'instance' e 'is_instance', mantendo 'object' como está
+            self._registry[name]["instance"] = instance
+            self._registry[name]["is_instance"] = is_instance
+            print(f"Registro para '{name}' atualizado com nova instância.")
+        else:
+            # Cria um novo registro
+            self._registry[name] = {"object": object_cls, "instance": instance, "is_instance": is_instance}
 
-    def register_instance(self, name, obj, is_instance=True):
-        if name in self._registry:
-            raise ValueError(f"Objeto com nome '{name}' já registrado.")
-        self._registry[name] = {"object": obj, "is_instance": is_instance}
-
-    def get(self, name):
+    """ NOTE
+    Nunca altere esse método, ele é ativamente utilizado pela máquina de estados.
+    """
+    def _get(self, name):
         entry = self._registry.get(name)
-        if entry and not entry["is_instance"]:
-            return entry["object"]
-        return None
+        # if entry and not entry["is_instance"]:
+        #     return entry
+        # return None
+        if not entry:
+            raise ValueError("This object is not registered")
+        return entry
 
-    def get_instance(self, name):
-        entry = self._registry.get(name)
-        if entry and entry["is_instance"]:
-            return entry["object"]
-        return None
-
-    def is_registered(self, name):
-        return name in self._registry
-    
-    def is_instance(self, name):
-        entry = self._registry.get(name, None)
-        if entry is not None:
-            return entry["is_instance"]
-        return False
 
 
 class AccessObjectLayer:
     def __init__(self, pytrobot_instance):
         self.pytrobot_instance = pytrobot_instance
 
-    def register(self, object_cls):
-        name = object_cls.__class__.__name__
-        self.pytrobot_instance.objects_register.register(name, object_cls)
+    def register(self, object_cls, instance, is_instance):
+        if is_instance:
+            name = object_cls
+        else:
+            name = object_cls.__class__.__name__
+        self.pytrobot_instance.objects_register.register(name, object_cls=object_cls, instance=instance, is_instance=is_instance)
         return object_cls
 
-    def register_instance(self, object__instance):
-        name = object__instance.__class__.__name__ + "_instance"
-        self.pytrobot_instance.objects_register.register_instance(name, object__instance)
-        return object__instance
+    """ NOTE
+    Nunca altere esse método, ele é ativamente utilizado pela máquina de estados.
+    """
+    def _get(self, name):
+        return self.pytrobot_instance.objects_register._get(name)
 
-    
-    def get(self, name):
-        return self.pytrobot_instance.objects_register.get(name)
-
-    def get_instance(self, name):
-        return self.pytrobot_instance.objects_register.get_instance(name)
-
-    def is_registered(self, name):
-        return name in self.pytrobot_instance.objects_register._registry
