@@ -88,6 +88,6 @@ class BaseState(ABC):
         print(f"{RED} ===== Falha ========== {self.__class__.__name__} \n {error}{RESET} ")
         method = getattr(self, 'on_error', None)
         if method:
-            method(error)
+            return method(error)
         else:
             raise NotImplementedError(f"O método 'on_error' deve ser implementado pela subclasse. Erro: {error}")

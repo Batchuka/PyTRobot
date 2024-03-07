@@ -31,20 +31,27 @@ class StateMachine:
     def get_next_state(self) -> BaseState:
         status = self.current_state._status
         next_state_name = self.access_machine_layer.evaluate_next_state(self.current_state.__class__.__name__, status)
-
         if not next_state_name:
             raise StateTransitionError(f"Não foi possível determinar o próximo estado a partir de {self.current_state.__class__.__name__} com status {status}")
-
         next_state_class = self.access_object_layer._get(next_state_name)["object"]
-
         if not next_state_class:
             raise StateTransitionError(f"Não foi possível encontrar a classe do estado {next_state_name}")
-
         next_state_instance = next_state_class(self.access_dataset_layer, self.access_object_layer)
-
         return next_state_instance
 
+    def reset_current_state(self):
+        current_state_name = self.current_state.__class__.__name__
+        current_state_class = self.access_object_layer._get(current_state_name)["object"]
+        if not current_state_class:
+            raise StateTransitionError(f"Não foi possível encontrar a classe do estado {current_state_name} para reiniciar")
+        self.current_state = current_state_class(self.access_dataset_layer, self.access_object_layer)
+        self.current_state._on_entry()
+
+    """ NOTE
+    This is the state machine. Be careful when changing things here.
+    """
     def run(self):
+
         while self.current_state is not None:
 
             try:
@@ -52,8 +59,12 @@ class StateMachine:
                 self.current_state._execute()
                 self.current_state._on_exit()
             except Exception as e:
-                self.current_state._on_error(e)
-
+                reset_flag = self.current_state._on_error(e)
+                if reset_flag:
+                    #self.current_state = self.access_machine_layer.reset_current_state()
+                    continue  # Reiniciar o loop para evitar a chamada de get_next_state neste ciclo
+                    # FIXME: temporáriamente colocarei uma verificação de reset (que será um evento futuramente)
+            
             self.current_state = self.access_machine_layer.get_next_state()
 
 class AccessMachineLayer:
@@ -71,3 +82,6 @@ class AccessMachineLayer:
     
     def get_next_state(self):
         return self.pytrobot_instance.state_machine.get_next_state()
+
+    def reset_current_state(self):
+        return self.pytrobot_instance.state_machine.reset_current_state()
