@@ -60,7 +60,7 @@ class StateMachine:
                 self.current_state._on_exit()
             except Exception as e:
                 reset_flag = self.current_state._on_error(e)
-                if reset_flag:
+                if reset_flag['reset']:
                     #self.current_state = self.access_machine_layer.reset_current_state()
                     continue  # Reiniciar o loop para evitar a chamada de get_next_state neste ciclo
                     # FIXME: temporáriamente colocarei uma verificação de reset (que será um evento futuramente)
