@@ -58,12 +58,15 @@ class ConfigData:
         return self.config.get(name, None)
 
 
+"""TODO
+É possível limpar bastante essa classe usando getter e setter no 'row' e 'column'
+"""
+
 class TransactionData:
     def __init__(self, name, columns):
         self.__name = name
-        self.columns = ['ID'] + columns  # ID é a primeira coluna
+        self.columns = columns  # Removida a adição automática de 'ID' como primeira coluna
         self.data = {column: [] for column in self.columns}  # Dicionário de listas para cada coluna
-        self.next_id = 1  # Autoincremento para o ID
 
     def add_column(self, column_name):
         if column_name in self.data:
@@ -71,29 +74,37 @@ class TransactionData:
         self.data[column_name] = []
 
     def add_row(self, **kwargs):
+        # Garante que todas as colunas sejam fornecidas
         for column in self.columns:
-            if column == 'ID':
-                self.data[column].append(self.next_id)
-                continue
-            self.data[column].append(kwargs.get(column, None))
-        self.next_id += 1
+            if column not in kwargs:
+                raise ValueError(f"Valor para a coluna '{column}' não fornecido.")
+            self.data[column].append(kwargs[column])
 
     def get_column(self, column_name):
         if column_name not in self.data:
             raise ValueError(f"A coluna '{column_name}' não existe.")
         return self.data[column_name]
 
-    def set_column_value(self, column_name, index, value):
-        if column_name not in self.data:
-            raise ValueError(f"A coluna '{column_name}' não existe.")
-        if index >= len(self.data['ID']):
-            raise IndexError("O índice está fora do alcance dos dados existentes.")
-        self.data[column_name][index] = value
-
     def get_row(self, index):
-        if index >= self.next_id:
+        if any(len(self.data[column]) <= index for column in self.columns):
             raise IndexError("O índice está fora do alcance dos dados existentes.")
         return {column: self.data[column][index] for column in self.columns}
+
+    def update_row(self, find_by_column, find_value, **kwargs):
+        if find_by_column not in self.columns:
+            raise ValueError(f"A coluna '{find_by_column}' não existe.")
+
+        try:
+            row_index = self.data[find_by_column].index(find_value)
+        except ValueError:
+            print(f"Valor {find_value} não encontrado na coluna '{find_by_column}'.")
+            return
+
+        for column_name, value in kwargs.items():
+            if column_name in self.data:
+                self.data[column_name][row_index] = value
+            else:
+                print(f"A coluna '{column_name}' não existe.")
 
 class AccessDatasetLayer:
 

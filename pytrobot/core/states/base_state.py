@@ -32,7 +32,7 @@ class BaseState(ABC):
             self.access_object_layer.register(class_name, instance, is_instance=True)
             return instance
         else:
-            return entry["object"]
+            return entry["instance"]
     
     def get_tdata(self, transaction_data_name):
         tdata = self.access_dataset_layer.get_transaction_data(transaction_data_name)
