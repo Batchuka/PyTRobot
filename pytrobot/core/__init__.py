@@ -83,14 +83,20 @@ class PyTRobot:
 
     @classmethod
     def add_transition_on_true_table(cls, current_state_name, next_state_on_success_name, next_state_on_failure_name):
-        instance = cls.get_instance()
-        instance.true_table.add_transition(current_state_name, next_state_on_success_name, next_state_on_failure_name)
-        return instance.true_table
+        try:
+            instance = cls.get_instance()
+            instance.true_table.add_transition(current_state_name, next_state_on_success_name, next_state_on_failure_name)
+            return instance.true_table
+        except PyTRobotNotInitializedException as e:
+            warnings.warn(str(f"{e} : Your objects will not be registered"), RuntimeWarning)
 
     @classmethod
     def set_first_state(cls, state_name):
-        instance = cls.get_instance()
-        instance._first_state_name = state_name
+        try:
+            instance = cls.get_instance()
+            instance._first_state_name = state_name
+        except PyTRobotNotInitializedException as e:
+            warnings.warn(str(f"{e} : Your objects will not be registered"), RuntimeWarning)
 
 # Decoradores
 
