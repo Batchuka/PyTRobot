@@ -64,9 +64,16 @@ class ConfigData:
 
 class TransactionData:
     def __init__(self, name, columns):
+        if not columns:
+            raise ValueError("A lista de colunas não pode estar vazia.")
         self.__name = name
-        self.columns = columns  # Removida a adição automática de 'ID' como primeira coluna
-        self.data = {column: [] for column in self.columns}  # Dicionário de listas para cada coluna
+        self.columns = columns
+        self.data = {column: [] for column in self.columns}
+
+    def __iter__(self):
+        num_rows = len(self.data[self.columns[0]])
+        for i in range(num_rows):
+            yield self.get_row(i)
 
     def add_column(self, column_name):
         if column_name in self.data:
@@ -74,11 +81,14 @@ class TransactionData:
         self.data[column_name] = []
 
     def add_row(self, **kwargs):
-        # Garante que todas as colunas sejam fornecidas
+        # Verifica se o valor na primeira coluna já existe
+        first_column_values = self.data[self.columns[0]]
+        if kwargs[self.columns[0]] in first_column_values:
+            print(f"Aviso: Valor '{kwargs[self.columns[0]]}' na coluna '{self.columns[0]}' já existe e será ignorado.")
+            return
+
         for column in self.columns:
-            if column not in kwargs:
-                raise ValueError(f"Valor para a coluna '{column}' não fornecido.")
-            self.data[column].append(kwargs[column])
+            self.data[column].append(kwargs.get(column, None))
 
     def get_column(self, column_name):
         if column_name not in self.data:
@@ -86,7 +96,7 @@ class TransactionData:
         return self.data[column_name]
 
     def get_row(self, index):
-        if any(len(self.data[column]) <= index for column in self.columns):
+        if index >= len(self.data[self.columns[0]]):
             raise IndexError("O índice está fora do alcance dos dados existentes.")
         return {column: self.data[column][index] for column in self.columns}
 
@@ -129,4 +139,5 @@ class AccessDatasetLayer:
         if name in self.tdata_reg:
             return self.tdata_reg[name]
         else:
-            raise KeyError(f"TransactionData com o nome '{name}' não existe.")
+            print(f"TransactionData com o nome '{name}' não existe.")
+            return None

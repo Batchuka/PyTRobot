@@ -16,6 +16,8 @@ class BaseState(ABC):
         self.access_dataset_layer = access_dataset_layer
         self.access_object_layer = access_object_layer
         self._status = None
+        self.retry_counter = 0
+        self.reset = False
     
     def create_tdata(self, name, columns, data=None):
         return self.access_dataset_layer.create_transaction_data(name, columns)
@@ -88,6 +90,13 @@ class BaseState(ABC):
         print(f"{RED} ===== Falha ========== {self.__class__.__name__} \n {error}{RESET} ")
         method = getattr(self, 'on_error', None)
         if method:
+            if self.retry_counter > 0:
+                self.retry_counter -= 1
+                print(f"Tentativa falhou. Restam {self.retry_counter} tentativas.")
+                self.reset = True
+            else:
+                print("Número máximo de tentativas alcançado.")
+                self.reset = False
             return method(error)
         else:
             raise NotImplementedError(f"O método 'on_error' deve ser implementado pela subclasse. Erro: {error}")

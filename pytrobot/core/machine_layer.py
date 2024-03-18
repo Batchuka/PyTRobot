@@ -59,8 +59,8 @@ class StateMachine:
                 self.current_state._execute()
                 self.current_state._on_exit()
             except Exception as e:
-                reset_flag = self.current_state._on_error(e)
-                if reset_flag['reset']:
+                self.current_state._on_error(e)
+                if self.current_state.reset:
                     continue
             
             self.current_state = self.access_machine_layer.get_next_state()
