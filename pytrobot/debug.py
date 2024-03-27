@@ -15,11 +15,11 @@ def debug_entrypoint(command='run', directory=None):
 
 def auto_import_classes(directory):
     """
-    Scan the actions, tools, and states directories within src_directory,
+    Scan the tools and states directories within src_directory,
     and automatically writes the necessary imports to the __init__.py files
     corresponding, but only for classes decorated with @Action, @Tool, or @State.
     """
-    for subdir in ['actions', 'tools', 'states']:
+    for subdir in ['tools', 'states']:
         init_file_path = pathlib.Path(directory) / 'src' / subdir / '__init__.py'
         with open(init_file_path, 'w') as init_file:
             py_files = [f for f in os.listdir(pathlib.Path(directory) / 'src' / subdir) if f.endswith('.py') and f != '__init__.py']
