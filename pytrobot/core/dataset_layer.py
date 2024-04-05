@@ -57,6 +57,14 @@ class ConfigData:
     def get_asset(self, name):
         return self.config.get(name, None)
 
+    def set_asset(self, name, value):
+
+        if name in self.config:
+            print(f"The value of '{name}' has been updated in the config.")
+        else:
+            print(f"The name '{name}' was modified in the config.")
+        self.config[name] = value
+
 
 """TODO
 É possível limpar bastante essa classe usando getter e setter no 'row' e 'column'
@@ -124,6 +132,9 @@ class AccessDatasetLayer:
 
     def get_asset(self, name):
         return self.pytrobot_instance.config_data.get_asset(name)
+
+    def set_asset(self, name, value):
+        return self.pytrobot_instance.config_data.get_asset(name, value)
 
     def get_config_data(self):
         return self.pytrobot_instance.config_data

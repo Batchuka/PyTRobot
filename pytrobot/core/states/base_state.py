@@ -43,6 +43,9 @@ class BaseState(ABC):
     def get_asset(self, asset_name):
         return self.access_dataset_layer.get_asset(asset_name)
 
+    def set_asset(self, asset_name, asset_value):
+        return self.access_dataset_layer.get_asset(asset_name, asset_value)
+
     @abstractmethod
     def execute(self):
         pass
