@@ -3,11 +3,37 @@ import os
 import re
 import sys
 import shutil
-import argparse
 import subprocess
 
 from invoke import task, context, Collection, Program #type:ignore
-    
+
+scaffold_dir = os.path.join(os.path.dirname(__file__), "scaffold")
+templates = {
+    'tool': 'src/tools/sample_tool.py',
+    'state': 'src/states/sample_state.py',
+    'testState': 'tests/test_state.py'
+}
+
+@task
+def tool(c, path="."):
+    template_file = templates['tool']
+    shutil.copy(os.path.join(scaffold_dir, template_file), path)
+    print(f"New tool created at: {os.path.join(path, template_file)}")
+
+
+@task
+def testState(c, path="."):
+    template_file = templates['testState']
+    shutil.copy(os.path.join(scaffold_dir, template_file), path)
+    print(f"New testState created at: {os.path.join(path, template_file)}")
+
+
+@task
+def state(c, path="."):
+    template_file = templates['state']
+    shutil.copy(os.path.join(scaffold_dir, template_file), path)
+    print(f"New state created at: {os.path.join(path, template_file)}")
+
 @task
 def new(c, path="."):
     # Pergunta o nome do projeto ao usuário
@@ -74,7 +100,7 @@ def copy_user_logic_to_build(user_dir, trt_dir):
     resources_dir = os.path.join(user_dir, "resources")
     shutil.copytree(resources_dir, os.path.join(trt_dir, "resources"))
     src_dir = os.path.join(user_dir, "src")
-    for subdir in ['actions', 'tools', 'states']:
+    for subdir in ['tools', 'states']:
         src_subdir = os.path.join(src_dir, subdir)
         if os.path.exists(src_subdir):
             dest_subdir = os.path.join(trt_dir, subdir)
@@ -93,7 +119,7 @@ def copy_core_logic_to_build(trt_dir):
     core_dir = os.path.join(os.path.dirname(__file__), "core")
     
     # Lista de subdiretórios conhecidos para serem copiados como pacotes
-    known_subdirs = ['actions', 'tools', 'states', 'data']
+    known_subdirs = ['tools', 'states', 'data']
     
     # Primeiro, copie os subdiretórios conhecidos
     for subdir in known_subdirs:
@@ -127,9 +153,6 @@ def adjust_imports_to_build(trt_dir, project_name):
                 # Ajusta os imports que iniciam com 'pytrobot.core'
                 content = re.sub(r'pytrobot\.core', f'{project_name}', content)
 
-                # Ajusta os imports de módulos do pytrobot
-                content = re.sub(r'from pytrobot import Action,', 
-                                 f'from {project_name} import Action\nfrom {project_name}.actions.base_action import', content)
                 content = re.sub(r'from pytrobot import State,', 
                                  f'from {project_name} import State\nfrom {project_name}.states.base_state import', content)
                 content = re.sub(r'from pytrobot import Tool,', 

@@ -2,7 +2,6 @@
 import os
 import importlib.util
 import boto3
-from pandas import DataFrame
 
 
 class ConfigData:
@@ -58,60 +57,98 @@ class ConfigData:
     def get_asset(self, name):
         return self.config.get(name, None)
 
+    def set_asset(self, name, value):
 
+        if name in self.config:
+            print(f"The value of '{name}' has been updated in the config.")
+        else:
+            print(f"The name '{name}' was modified in the config.")
+        self.config[name] = value
+
+
+"""TODO
+É possível limpar bastante essa classe usando getter e setter no 'row' e 'column'
+"""
 
 class TransactionData:
-    def __init__(self, columns):
-        self.data = DataFrame(columns=columns)
-        self.current_index = 0
+    def __init__(self, name, columns):
+        if not columns:
+            raise ValueError("A lista de colunas não pode estar vazia.")
+        self.__name = name
+        self.columns = columns
+        self.data = {column: [] for column in self.columns}
 
-    def add_row(self, row_values):
-        if len(row_values) != len(self.data.columns):
-            raise ValueError("Número de valores não corresponde ao número de colunas.")
+    def __iter__(self):
+        num_rows = len(self.data[self.columns[0]])
+        for i in range(num_rows):
+            yield self.get_row(i)
 
-        self.data.iloc[self.current_index] = row_values
-        self.current_index += 1
+    def add_column(self, column_name):
+        if column_name in self.data:
+            raise ValueError(f"A coluna '{column_name}' já existe.")
+        self.data[column_name] = []
 
-    def current(self):
-        if self.current_index < len(self.data):
-            return self.data.iloc[self.current_index]
-        else:
-            raise IndexError("Index out of range")
+    def add_row(self, **kwargs):
+        # Verifica se o valor na primeira coluna já existe
+        first_column_values = self.data[self.columns[0]]
+        if kwargs[self.columns[0]] in first_column_values:
+            print(f"Aviso: Valor '{kwargs[self.columns[0]]}' na coluna '{self.columns[0]}' já existe e será ignorado.")
+            return
 
-    def update(self, updated_item):
-        if self.current_index < len(self.data):
-            self.data.iloc[self.current_index] = updated_item
-        else:
-            raise IndexError("Index out of range")
+        for column in self.columns:
+            self.data[column].append(kwargs.get(column, None))
 
-    def next_item(self):
-        if self.current_index < len(self.data) - 1:
-            self.current_index += 1
-        else:
-            raise IndexError("No more items in transaction")
+    def get_column(self, column_name):
+        if column_name not in self.data:
+            raise ValueError(f"A coluna '{column_name}' não existe.")
+        return self.data[column_name]
 
-    def reset(self):
-        self.current_index = 0
+    def get_row(self, index):
+        if index >= len(self.data[self.columns[0]]):
+            raise IndexError("O índice está fora do alcance dos dados existentes.")
+        return {column: self.data[column][index] for column in self.columns}
 
+    def update_row(self, find_by_column, find_value, **kwargs):
+        if find_by_column not in self.columns:
+            raise ValueError(f"A coluna '{find_by_column}' não existe.")
+
+        try:
+            row_index = self.data[find_by_column].index(find_value)
+        except ValueError:
+            print(f"Valor {find_value} não encontrado na coluna '{find_by_column}'.")
+            return
+
+        for column_name, value in kwargs.items():
+            if column_name in self.data:
+                self.data[column_name][row_index] = value
+            else:
+                print(f"A coluna '{column_name}' não existe.")
 
 class AccessDatasetLayer:
+
     def __init__(self, pytrobot_instance):
         self.pytrobot_instance = pytrobot_instance
+        self.tdata_reg = {}
 
     def get_asset(self, name):
         return self.pytrobot_instance.config_data.get_asset(name)
 
+    def set_asset(self, name, value):
+        return self.pytrobot_instance.config_data.get_asset(name, value)
+
     def get_config_data(self):
         return self.pytrobot_instance.config_data
 
-    def get_transaction_data(self):
-        return self.pytrobot_instance.transaction_data
+    def create_transaction_data(self, name, columns):
+        if name in self.tdata_reg:
+            raise ValueError(f"TransactionData com o nome '{name}' já existe.")
+        tdata = TransactionData(name=name, columns=columns)
+        self.tdata_reg[name] = tdata
+        return tdata
 
-    def update_transaction_data(self, data):
-        self.get_transaction_data().set_data(data)
-
-    def process_next_transaction_item(self):
-        return self.get_transaction_data().get_item()
-
-    def update_transaction_item(self, item):
-        self.get_transaction_data().update(item)
+    def get_transaction_data(self, name):
+        if name in self.tdata_reg:
+            return self.tdata_reg[name]
+        else:
+            print(f"TransactionData com o nome '{name}' não existe.")
+            return None

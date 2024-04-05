@@ -1,5 +1,16 @@
 import logging
 
+"""TODO
+Adicionar essa modificação de cores no logger para dar acesso
+como um recurso.
+"""
+
+RED = '\033[91m'
+GREEN = '\033[92m'
+YELLOW = '\033[93m'
+RESET = '\033[0m'
+BLUE = '\033[94m'
+
 def HandleException(func):
     """
     Um decorator que envolve a função fornecida com tratamento de exceções genéricas.
