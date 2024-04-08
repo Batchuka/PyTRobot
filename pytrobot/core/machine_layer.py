@@ -21,6 +21,18 @@ class TrueTable:
             return self._transitions[current_state][str(int(status))]
         return None
 
+    def update_transition(self, current_state, next_state_on_success=None, next_state_on_failure=None):
+
+        if current_state not in self._transitions:
+            self._transitions[current_state] = {'1': '_FinisherState', '0': '_FinisherState'}
+            print("The state informed doesn't exist. Default '_FinisherState' assigned for success and failure.")
+        
+        if next_state_on_success is not None:
+            self._transitions[current_state]['1'] = next_state_on_success
+        
+        if next_state_on_failure is not None:
+            self._transitions[current_state]['0'] = next_state_on_failure
+
 class StateMachine:
     def __init__(self, access_dataset_layer, access_object_layer, access_machine_layer):
         self.access_dataset_layer = access_dataset_layer

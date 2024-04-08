@@ -79,7 +79,14 @@ class PyTRobot:
             return instance.objects_register
         except PyTRobotNotInitializedException as e:
             warnings.warn(str(f"{e} : Your objects will not be registered"), RuntimeWarning)
-            
+    
+    @classmethod
+    def update_transition(cls, current_state, next_state_on_success=None, next_state_on_failure=None):
+        try:
+            instance = cls.get_instance()
+            instance.true_table.update_transition(current_state, next_state_on_success, next_state_on_failure)
+        except PyTRobotNotInitializedException as e:
+            warnings.warn(str(f"{e} : Your objects will not be registered"), RuntimeWarning)
 
     @classmethod
     def add_transition_on_true_table(cls, current_state_name, next_state_on_success_name, next_state_on_failure_name):
@@ -105,10 +112,6 @@ def State(cls):
     return cls
 
 def Tool(cls):
-    PyTRobot.add_object_on_registry(cls)
-    return cls
-
-def Action(cls):
     PyTRobot.add_object_on_registry(cls)
     return cls
 
