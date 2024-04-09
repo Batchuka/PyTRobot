@@ -78,6 +78,7 @@ class StateMachine:
             self.current_state = self.access_machine_layer.get_next_state()
 
 class AccessMachineLayer:
+
     def __init__(self, pytrobot_instance):
         self.pytrobot_instance = pytrobot_instance
     
@@ -95,3 +96,17 @@ class AccessMachineLayer:
 
     def reset_current_state(self):
         return self.pytrobot_instance.state_machine.reset_current_state()
+
+    def transition(self, current_state, next_state_on_success=None, next_state_on_failure=None):
+        """
+        Update transition in TrueTable.
+        
+        :param current_state: Current state.
+        :param next_state_on_success: Next state on success.
+        :param next_state_on_failure: Next state on failure.
+        """
+        self.pytrobot_instance.true_table.update_transition(
+            current_state, 
+            next_state_on_success, 
+            next_state_on_failure
+        )

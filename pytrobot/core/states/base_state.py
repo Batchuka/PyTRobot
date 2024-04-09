@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
-
+from pytrobot.core.dataset_layer import AccessDatasetLayer
+from pytrobot.core.object_layer import AccessObjectLayer
+from pytrobot.core.machine_layer import AccessMachineLayer
 
 RED = '\033[91m'
 GREEN = '\033[92m'
@@ -9,12 +11,17 @@ BLUE = '\033[94m'
 
 class BaseState(ABC):
 
+    access_dataset_layer : AccessDatasetLayer
+    access_object_layer : AccessObjectLayer
+    access_machine_layer : AccessMachineLayer
+
     def __str__(self) -> str:
         return f"State {self.__class__.__name__}"
 
-    def __init__(self, access_dataset_layer, access_object_layer):
+    def __init__(self, access_dataset_layer, access_object_layer, access_machine_layer):
         self.access_dataset_layer = access_dataset_layer
         self.access_object_layer = access_object_layer
+        self.access_machine_layer = access_machine_layer
         self._status = None
         self.retry_counter = 0
         self.reset = False
@@ -44,7 +51,22 @@ class BaseState(ABC):
         return self.access_dataset_layer.get_asset(asset_name)
 
     def set_asset(self, asset_name, asset_value):
-        return self.access_dataset_layer.get_asset(asset_name, asset_value)
+        return self.access_dataset_layer.set_asset(asset_name, asset_value)
+
+    def transition(self, current_state, next_state_on_success=None, next_state_on_failure=None):
+        """
+        Update transition in TrueTable.
+        
+        :param current_state: Current state.
+        :param next_state_on_success: Next state on success.
+        :param next_state_on_failure: Next state on failure.
+        """
+        current_state_name = self.__class__.__name__
+        self.access_machine_layer.transition(
+            current_state=current_state_name,
+            next_state_on_success=next_state_on_success,
+            next_state_on_failure=next_state_on_failure
+        )
 
     @abstractmethod
     def execute(self):
