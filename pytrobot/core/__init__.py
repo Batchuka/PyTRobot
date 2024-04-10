@@ -1,9 +1,9 @@
 # pytrobot/__init__.py
 import builtins
 import warnings
-from pytrobot.core.dataset_layer import ConfigData, TransactionData, AccessDatasetLayer
-from pytrobot.core.machine_layer import StateMachine, TrueTable, AccessMachineLayer
-from pytrobot.core.object_layer import ObjectsRegister, AccessObjectLayer
+from pytrobot.core.dataset_layer import ConfigData, TransactionData
+from pytrobot.core.machine_layer import StateMachine, TrueTable
+from pytrobot.core.object_layer import ObjectsRegister
 from pytrobot.core.utils import print_pytrobot_banner, pytrobot_print
 
 
@@ -104,6 +104,87 @@ class PyTRobot:
             instance._first_state_name = state_name
         except PyTRobotNotInitializedException as e:
             warnings.warn(str(f"{e} : Your objects will not be registered"), RuntimeWarning)
+
+class AccessMachineLayer:
+
+    def __init__(self, pytrobot_instance):
+        self.pytrobot_instance = pytrobot_instance
+    
+    def get_current_state(self):
+        return self.pytrobot_instance.current_state
+
+    def add_transition(self, current_state, next_state_on_success, next_state_on_failure):
+        self.pytrobot_instance.true_table.add_transition(current_state, next_state_on_success, next_state_on_failure)
+
+    def evaluate_next_state(self, current_state_name, status):
+        return self.pytrobot_instance.true_table.evaluate_next_state(current_state_name, status)
+    
+    def get_next_state(self):
+        return self.pytrobot_instance.state_machine.get_next_state()
+
+    def reset_current_state(self):
+        return self.pytrobot_instance.state_machine.reset_current_state()
+
+    def transition(self, current_state, next_state_on_success=None, next_state_on_failure=None):
+        """
+        Update transition in TrueTable.
+        
+        :param current_state: Current state.
+        :param next_state_on_success: Next state on success.
+        :param next_state_on_failure: Next state on failure.
+        """
+        self.pytrobot_instance.true_table.update_transition(
+            current_state, 
+            next_state_on_success, 
+            next_state_on_failure
+        )
+
+class AccessObjectLayer:
+    def __init__(self, pytrobot_instance):
+        self.pytrobot_instance = pytrobot_instance
+
+    def register(self, object_cls, instance, is_instance):
+        if is_instance:
+            name = object_cls
+        else:
+            name = object_cls.__class__.__name__
+        self.pytrobot_instance.objects_register.register(name, object_cls=object_cls, instance=instance, is_instance=is_instance)
+        return object_cls
+
+    """ NOTE
+    Nunca altere esse método, ele é ativamente utilizado pela máquina de estados.
+    """
+    def _get(self, name):
+        return self.pytrobot_instance.objects_register._get(name)
+
+class AccessDatasetLayer:
+
+    def __init__(self, pytrobot_instance):
+        self.pytrobot_instance = pytrobot_instance
+        self.tdata_reg = {}
+
+    def get_asset(self, name):
+        return self.pytrobot_instance.config_data.get_asset(name)
+
+    def set_asset(self, name, value):
+        return self.pytrobot_instance.config_data.get_asset(name, value)
+
+    def get_config_data(self):
+        return self.pytrobot_instance.config_data
+
+    def create_transaction_data(self, name, columns):
+        if name in self.tdata_reg:
+            raise ValueError(f"TransactionData com o nome '{name}' já existe.")
+        tdata = TransactionData(name=name, columns=columns)
+        self.tdata_reg[name] = tdata
+        return tdata
+
+    def get_transaction_data(self, name):
+        if name in self.tdata_reg:
+            return self.tdata_reg[name]
+        else:
+            print(f"TransactionData com o nome '{name}' não existe.")
+            return None
 
 # Decoradores
 

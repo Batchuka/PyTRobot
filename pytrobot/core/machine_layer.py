@@ -77,36 +77,36 @@ class StateMachine:
             
             self.current_state = self.access_machine_layer.get_next_state()
 
-class AccessMachineLayer:
+# class AccessMachineLayer:
 
-    def __init__(self, pytrobot_instance):
-        self.pytrobot_instance = pytrobot_instance
+#     def __init__(self, pytrobot_instance):
+#         self.pytrobot_instance = pytrobot_instance
     
-    def get_current_state(self):
-        return self.pytrobot_instance.current_state
+#     def get_current_state(self):
+#         return self.pytrobot_instance.current_state
 
-    def add_transition(self, current_state, next_state_on_success, next_state_on_failure):
-        self.pytrobot_instance.true_table.add_transition(current_state, next_state_on_success, next_state_on_failure)
+#     def add_transition(self, current_state, next_state_on_success, next_state_on_failure):
+#         self.pytrobot_instance.true_table.add_transition(current_state, next_state_on_success, next_state_on_failure)
 
-    def evaluate_next_state(self, current_state_name, status):
-        return self.pytrobot_instance.true_table.evaluate_next_state(current_state_name, status)
+#     def evaluate_next_state(self, current_state_name, status):
+#         return self.pytrobot_instance.true_table.evaluate_next_state(current_state_name, status)
     
-    def get_next_state(self):
-        return self.pytrobot_instance.state_machine.get_next_state()
+#     def get_next_state(self):
+#         return self.pytrobot_instance.state_machine.get_next_state()
 
-    def reset_current_state(self):
-        return self.pytrobot_instance.state_machine.reset_current_state()
+#     def reset_current_state(self):
+#         return self.pytrobot_instance.state_machine.reset_current_state()
 
-    def transition(self, current_state, next_state_on_success=None, next_state_on_failure=None):
-        """
-        Update transition in TrueTable.
+#     def transition(self, current_state, next_state_on_success=None, next_state_on_failure=None):
+#         """
+#         Update transition in TrueTable.
         
-        :param current_state: Current state.
-        :param next_state_on_success: Next state on success.
-        :param next_state_on_failure: Next state on failure.
-        """
-        self.pytrobot_instance.true_table.update_transition(
-            current_state, 
-            next_state_on_success, 
-            next_state_on_failure
-        )
+#         :param current_state: Current state.
+#         :param next_state_on_success: Next state on success.
+#         :param next_state_on_failure: Next state on failure.
+#         """
+#         self.pytrobot_instance.true_table.update_transition(
+#             current_state, 
+#             next_state_on_success, 
+#             next_state_on_failure
+#         )

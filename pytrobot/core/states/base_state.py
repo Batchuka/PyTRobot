@@ -1,13 +1,11 @@
 from abc import ABC, abstractmethod
-from pytrobot.core.dataset_layer import AccessDatasetLayer
-from pytrobot.core.object_layer import AccessObjectLayer
-from pytrobot.core.machine_layer import AccessMachineLayer
+from pytrobot.core import AccessMachineLayer, AccessObjectLayer, AccessDatasetLayer
 
-RED = '\033[91m'
-GREEN = '\033[92m'
-YELLOW = '\033[93m'
-RESET = '\033[0m'
-BLUE = '\033[94m'
+RED     = '\033[91m'
+GREEN   = '\033[92m'
+YELLOW  = '\033[93m'
+RESET   = '\033[0m'
+BLUE    = '\033[94m'
 
 class BaseState(ABC):
 
