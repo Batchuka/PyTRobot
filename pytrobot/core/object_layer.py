@@ -34,23 +34,3 @@ class ObjectsRegister:
             raise ValueError("This object is not registered")
         return entry
 
-
-
-# class AccessObjectLayer:
-#     def __init__(self, pytrobot_instance):
-#         self.pytrobot_instance = pytrobot_instance
-
-#     def register(self, object_cls, instance, is_instance):
-#         if is_instance:
-#             name = object_cls
-#         else:
-#             name = object_cls.__class__.__name__
-#         self.pytrobot_instance.objects_register.register(name, object_cls=object_cls, instance=instance, is_instance=is_instance)
-#         return object_cls
-
-#     """ NOTE
-#     Nunca altere esse método, ele é ativamente utilizado pela máquina de estados.
-#     """
-#     def _get(self, name):
-#         return self.pytrobot_instance.objects_register._get(name)
-

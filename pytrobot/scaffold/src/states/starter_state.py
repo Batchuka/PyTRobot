@@ -1,4 +1,4 @@
-from pytrobot.core.states.base_state import BaseState
+from pytrobot.core import BaseState
 
 class _StarterState(BaseState):
     

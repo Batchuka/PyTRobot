@@ -124,31 +124,3 @@ class TransactionData:
             else:
                 print(f"A coluna '{column_name}' não existe.")
 
-# class AccessDatasetLayer:
-
-#     def __init__(self, pytrobot_instance):
-#         self.pytrobot_instance = pytrobot_instance
-#         self.tdata_reg = {}
-
-#     def get_asset(self, name):
-#         return self.pytrobot_instance.config_data.get_asset(name)
-
-#     def set_asset(self, name, value):
-#         return self.pytrobot_instance.config_data.get_asset(name, value)
-
-#     def get_config_data(self):
-#         return self.pytrobot_instance.config_data
-
-#     def create_transaction_data(self, name, columns):
-#         if name in self.tdata_reg:
-#             raise ValueError(f"TransactionData com o nome '{name}' já existe.")
-#         tdata = TransactionData(name=name, columns=columns)
-#         self.tdata_reg[name] = tdata
-#         return tdata
-
-#     def get_transaction_data(self, name):
-#         if name in self.tdata_reg:
-#             return self.tdata_reg[name]
-#         else:
-#             print(f"TransactionData com o nome '{name}' não existe.")
-#             return None
