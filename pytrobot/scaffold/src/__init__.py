@@ -1,3 +1,4 @@
 # DO NOT CHANGE THIS
-import src.tools
-import src.states
+from pytrobot.scaffold.src.starter_state import _StarterState
+from pytrobot.scaffold.src.finisher_state import _FinisherState
+from pytrobot.scaffold.src.sample_state import SampleState

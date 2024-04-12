@@ -4,6 +4,7 @@ class StateTransitionError(Exception):
     pass
 
 class TrueTable:
+    
     def __init__(self):
         self._transitions = {}  # Dicionário para armazenar as transições
 
@@ -33,31 +34,35 @@ class TrueTable:
 
 class StateMachine:
 
-    def __init__(self, access_dataset_layer, access_object_layer, access_machine_layer):
+    def __init__(self, access_dataset_layer, access_objects_layer, access_machine_layer):
         from pytrobot.core import BaseState
-        from pytrobot.scaffold.src.states.starter_state import _StarterState
+        from pytrobot.scaffold.src.starter_state import _StarterState
         self.access_dataset_layer = access_dataset_layer
-        self.access_object_layer = access_object_layer
+        self.access_objects_layer = access_objects_layer
         self.access_machine_layer = access_machine_layer
         self.current_state : BaseState = _StarterState()
 
     def get_next_state(self):
         status = self.current_state._status
         next_state_name = self.access_machine_layer.evaluate_next_state(self.current_state.__class__.__name__, status)
+        
         if not next_state_name:
             raise StateTransitionError(f"Não foi possível determinar o próximo estado a partir de {self.current_state.__class__.__name__} com status {status}")
-        next_state_class = self.access_object_layer._get(next_state_name)["object"]
+        
+        next_state_class = self.access_objects_layer._get(next_state_name)["object"]
+        
         if not next_state_class:
             raise StateTransitionError(f"Não foi possível encontrar a classe do estado {next_state_name}")
-        next_state_instance = next_state_class(self.access_dataset_layer, self.access_object_layer)
+
+        next_state_instance = next_state_class(self.access_dataset_layer, self.access_objects_layer, self.access_machine_layer)
         return next_state_instance
 
     def reset_current_state(self):
         current_state_name = self.current_state.__class__.__name__
-        current_state_class = self.access_object_layer._get(current_state_name)["object"]
+        current_state_class = self.access_objects_layer._get(current_state_name)["object"]
         if not current_state_class:
             raise StateTransitionError(f"Não foi possível encontrar a classe do estado {current_state_name} para reiniciar")
-        self.current_state = current_state_class(self.access_dataset_layer, self.access_object_layer)
+        self.current_state = current_state_class(self.access_dataset_layer, self.access_objects_layer)
         self.current_state._on_entry()
 
     """ NOTE

@@ -37,19 +37,19 @@ class PyTRobot:
         print_pytrobot_banner()
         builtins.print = pytrobot_print
         access_dataset_layer = self.create_access_dataset_layer()
-        access_object_layer = self.create_access_object_layer()
+        access_objects_layer = self.create_access_objects_layer()
         access_machine_layer = self.create_access_machine_layer()
 
         # Inicializa os novos atributos
         self.config_data = ConfigData()
         self.true_table = TrueTable()
-        self.state_machine = StateMachine(access_dataset_layer, access_object_layer, access_machine_layer)
         self.objects_register = ObjectsRegister()
+        self.state_machine = StateMachine(access_dataset_layer, access_objects_layer, access_machine_layer)
         self._initialized = True
 
     def _register_core_states(self):
-        from pytrobot.scaffold.src.states.starter_state import _StarterState
-        from pytrobot.scaffold.src.states.finisher_state import _FinisherState
+        from pytrobot.scaffold.src.starter_state import _StarterState
+        from pytrobot.scaffold.src.finisher_state import _FinisherState
         State(_StarterState)
         if self._first_state_name:
             Transition('_StarterState', self._first_state_name, '_FinisherState')(_StarterState)
@@ -64,8 +64,8 @@ class PyTRobot:
     def create_access_dataset_layer(self):
         return AccessDatasetLayer(self)
 
-    def create_access_object_layer(self):
-        return AccessObjectLayer(self)
+    def create_access_objects_layer(self):
+        return AccessObjectsLayer(self)
 
     def create_access_machine_layer(self):
         return AccessMachineLayer(self)
@@ -146,7 +146,7 @@ class AccessMachineLayer:
             next_state_on_failure
         )
 
-class AccessObjectLayer:
+class AccessObjectsLayer:
     def __init__(self, pytrobot_instance):
         self.pytrobot_instance = pytrobot_instance
 
@@ -196,7 +196,7 @@ class AccessDatasetLayer:
 class BaseState(ABC):
 
     access_dataset_layer : AccessDatasetLayer
-    access_object_layer : AccessObjectLayer
+    access_object_layer : AccessObjectsLayer
     access_machine_layer : AccessMachineLayer
 
     def __str__(self) -> str:
@@ -212,20 +212,6 @@ class BaseState(ABC):
     
     def create_tdata(self, name, columns, data=None):
         return self.access_dataset_layer.create_transaction_data(name, columns)
-
-    def get_tool(self, class_name):
-        entry = self.access_object_layer._get(class_name)
-
-        if entry is None:
-            raise ValueError(f"Tool {class_name} not registered.")
-
-        if not entry["is_instance"]:
-            object = entry["object"]
-            instance = object(self.access_dataset_layer) 
-            self.access_object_layer.register(class_name, instance, is_instance=True)
-            return instance
-        else:
-            return entry["instance"]
     
     def get_tdata(self, transaction_data_name):
         tdata = self.access_dataset_layer.get_transaction_data(transaction_data_name)
@@ -277,6 +263,13 @@ class BaseState(ABC):
             raise NotImplementedError("O método 'execute' deve ser implementado pela subclasse.")
 
     def _on_entry(self):
+        """
+        NOTE : Que tal se tudo que eu criar de objeto no 'on_entry' ficar salvo
+        e for devida e automaticamente gerenciado? Ao criar TransactionDatas, eu 
+        posso deixar elas no pool de objetos do Framework e simplesmente recupera-las.
+        A mesma coisa para a instancia de qualquer outro objeto.
+        """
+
         print(f"{BLUE} ===== Iniciando ====== {self.__class__.__name__} {RESET}")
         method = getattr(self, 'on_entry', None)
         if method:
@@ -310,29 +303,9 @@ class BaseState(ABC):
         else:
             raise NotImplementedError(f"O método 'on_error' deve ser implementado pela subclasse. Erro: {error}")
 
-class BaseTool(ABC):
-
-    def __str__(self) -> str:
-        return f"Tool {self.__class__.__name__}"
-
-    def __init__(self, *args, **kwargs):
-        self.initialize(*args, **kwargs)
-    
-    @abstractmethod
-    def initialize(self, *args, **kwargs):
-        """
-        Use este método para inicializar a classe. Não utilize o '__init__'
-        Passe qualquer argumento necessário para a classe aqui.
-        """
-        pass
-
 # Decoradores
 
 def State(cls):
-    PyTRobot.add_object_on_registry(cls)
-    return cls
-
-def Tool(cls):
     PyTRobot.add_object_on_registry(cls)
     return cls
 
