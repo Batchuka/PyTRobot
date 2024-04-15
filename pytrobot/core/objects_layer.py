@@ -1,4 +1,4 @@
-# pytrobot/core/objects.py
+# pytrobot/core/objects_layer.py
 
 
 class ObjectsRegister:

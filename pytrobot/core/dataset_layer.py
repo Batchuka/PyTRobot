@@ -3,8 +3,15 @@ import os
 import importlib.util
 import boto3
 
+class Singleton(type):
+    _instance = None
 
-class ConfigData:
+    def __call__(cls, *args, **kwargs):
+        if not cls._instance:
+            cls._instance = super(Singleton, cls).__call__(*args, **kwargs)
+        return cls._instance
+
+class ConfigData(metaclass=Singleton):
     def __init__(self):
         self.config = {}
 
@@ -65,18 +72,20 @@ class ConfigData:
             print(f"The name '{name}' was modified in the config.")
         self.config[name] = value
 
+class TransactionData(metaclass=Singleton):
+    _initialized = False
 
-"""TODO
-É possível limpar bastante essa classe usando getter e setter no 'row' e 'column'
-"""
-
-class TransactionData:
-    def __init__(self, name, columns):
-        if not columns:
-            raise ValueError("A lista de colunas não pode estar vazia.")
-        self.__name = name
-        self.columns = columns
-        self.data = {column: [] for column in self.columns}
+    def __init__(self, columns=None):
+        
+        if not self._initialized:
+            if columns is None:
+                raise ValueError("Colunas devem ser fornecidas na primeira inicialização.")
+            self.columns = columns
+            self.data = {column: [] for column in self.columns}
+            self._initialized = True
+        else:
+            if columns is not None:
+                print("Aviso: As colunas só podem ser configuradas na inicialização.")
 
     def __iter__(self):
         num_rows = len(self.data[self.columns[0]])
@@ -123,4 +132,3 @@ class TransactionData:
                 self.data[column_name][row_index] = value
             else:
                 print(f"A coluna '{column_name}' não existe.")
-

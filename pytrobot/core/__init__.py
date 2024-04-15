@@ -3,7 +3,7 @@ import builtins
 import warnings
 from pytrobot.core.dataset_layer import ConfigData, TransactionData
 from pytrobot.core.machine_layer import StateMachine, TrueTable
-from pytrobot.core.object_layer import ObjectsRegister
+from pytrobot.core.objects_layer import ObjectsRegister
 from pytrobot.core.utils import print_pytrobot_banner, pytrobot_print
 from abc import ABC, abstractmethod
 
@@ -13,6 +13,7 @@ GREEN   = '\033[92m'
 YELLOW  = '\033[93m'
 RESET   = '\033[0m'
 BLUE    = '\033[94m'
+
 
 class PyTRobotNotInitializedException(Exception):
     """Exceção para ser levantada quando o PyTRobot não está instanciado."""
@@ -209,19 +210,14 @@ class BaseState(ABC):
         self._status = None
         self.retry_counter = 0
         self.reset = False
-    
-    def create_tdata(self, name, columns, data=None):
-        return self.access_dataset_layer.create_transaction_data(name, columns)
-    
-    def get_tdata(self, transaction_data_name):
-        tdata = self.access_dataset_layer.get_transaction_data(transaction_data_name)
-        return tdata
 
-    def get_asset(self, asset_name):
-        return self.access_dataset_layer.get_asset(asset_name)
-
-    def set_asset(self, asset_name, asset_value):
-        return self.access_dataset_layer.set_asset(asset_name, asset_value)
+    """TODO: 
+    - Retirar todas as lógicas desnecessárias do BaseState;
+    - Limpar as lógicas das camadas;
+    - Criar uma camada que armazena e trata eventos;
+    - Criar uma camada que lida com WebSocket;
+    
+    """
 
     def transition(self, current_state, next_state_on_success=None, next_state_on_failure=None):
         """
@@ -263,12 +259,6 @@ class BaseState(ABC):
             raise NotImplementedError("O método 'execute' deve ser implementado pela subclasse.")
 
     def _on_entry(self):
-        """
-        NOTE : Que tal se tudo que eu criar de objeto no 'on_entry' ficar salvo
-        e for devida e automaticamente gerenciado? Ao criar TransactionDatas, eu 
-        posso deixar elas no pool de objetos do Framework e simplesmente recupera-las.
-        A mesma coisa para a instancia de qualquer outro objeto.
-        """
 
         print(f"{BLUE} ===== Iniciando ====== {self.__class__.__name__} {RESET}")
         method = getattr(self, 'on_entry', None)
