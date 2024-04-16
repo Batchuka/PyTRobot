@@ -37,15 +37,11 @@ class PyTRobot:
     def _initialize(self):
         print_pytrobot_banner()
         builtins.print = pytrobot_print
-        access_dataset_layer = self.create_access_dataset_layer()
-        access_objects_layer = self.create_access_objects_layer()
-        access_machine_layer = self.create_access_machine_layer()
 
         # Inicializa os novos atributos
         self.config_data = ConfigData()
-        self.true_table = TrueTable()
         self.objects_register = ObjectsRegister()
-        self.state_machine = StateMachine(access_dataset_layer, access_objects_layer, access_machine_layer)
+        self.state_machine = StateMachine(true_table = TrueTable())
         self._initialized = True
 
     def _register_core_states(self):
@@ -196,39 +192,26 @@ class AccessDatasetLayer:
 
 class BaseState(ABC):
 
-    access_dataset_layer : AccessDatasetLayer
-    access_object_layer : AccessObjectsLayer
-    access_machine_layer : AccessMachineLayer
-
     def __str__(self) -> str:
         return f"State {self.__class__.__name__}"
 
-    def __init__(self, access_dataset_layer, access_object_layer, access_machine_layer):
-        self.access_dataset_layer = access_dataset_layer
-        self.access_object_layer = access_object_layer
-        self.access_machine_layer = access_machine_layer
+    def __init__(self, state_operator):
+        self._state_operator = state_operator
         self._status = None
         self.retry_counter = 0
         self.reset = False
 
-    """TODO: 
-    - Retirar todas as lógicas desnecessárias do BaseState;
-    - Limpar as lógicas das camadas;
-    - Criar uma camada que armazena e trata eventos;
-    - Criar uma camada que lida com WebSocket;
-    
-    """
 
     def transition(self, current_state, next_state_on_success=None, next_state_on_failure=None):
         """
-        Update transition in TrueTable.
+        Update transition on time.
         
         :param current_state: Current state.
         :param next_state_on_success: Next state on success.
         :param next_state_on_failure: Next state on failure.
         """
         current_state_name = self.__class__.__name__
-        self.access_machine_layer.transition(
+        self._state_operator(
             current_state=current_state_name,
             next_state_on_success=next_state_on_success,
             next_state_on_failure=next_state_on_failure
