@@ -1,9 +1,6 @@
 from pytrobot.core import BaseState
 
 class _StarterState(BaseState):
-    
-    def __init__(self):
-        self._status = None
 
     def execute(self):
         pass
@@ -12,7 +9,7 @@ class _StarterState(BaseState):
         pass
 
     def on_exit(self):
-        self._status = True
+        pass
 
     def on_error(self):
-        self._status = False
+        pass

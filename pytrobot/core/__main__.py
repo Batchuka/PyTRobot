@@ -29,16 +29,16 @@ def entrypoint():
             if init_file.exists():
                 importlib.import_module("src")
             else:
-                raise ImportError("O arquivo __init__.py é obrigatório no diretório src.")
+                raise ImportError("The __init__.py file is mandatory in the src directory.")
         else:
-            raise FileNotFoundError("Diretório src não encontrado.")
+            raise FileNotFoundError("'src' directory not found.")
         
         # Verifica se o diretório resources existe e o adiciona no PyTRobot
         if resources_path.exists():
             robot._resources = resources_path.as_posix()
             robot.config_data.load_config(resources_path.as_posix())
         else:
-            raise FileNotFoundError("Diretório resources não encontrado ou não especificado corretamente.")
+            raise FileNotFoundError("'resources' directory not found or not specified correctly.")
         
         robot._register_core_states()
         robot.start()
