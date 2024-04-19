@@ -1,15 +1,9 @@
-# pytrobot/core/machine.py
+# pytrobot/core/machine_layer.py
+
+from pytrobot.core.singleton import Singleton
 
 class StateTransitionError(Exception):
     pass
-
-class Singleton(type):
-    _instances = {}
-    def __call__(cls, *args, **kwargs):
-        if cls not in cls._instances:
-            instance = super().__call__(*args, **kwargs)
-            cls._instances[cls] = instance
-        return cls._instances[cls]
 
 class TrueTable(metaclass=Singleton):
     
@@ -38,38 +32,6 @@ class StateMachine(metaclass=Singleton):
         self._next_state_on_success : BaseState
         self._next_state_on_failure : BaseState
 
-    def evaluate_next_state(self):
-
-        if self._current_state is None:
-            raise StateTransitionError("There is no current state defined.")
-
-        current_state_name = self._current_state.__class__.__name__
-        state_info = self._true_table.get_state_info(current_state_name)
-        
-        if not state_info:
-            raise StateTransitionError(f"No registration defined for state {current_state_name}")
-        elif not state_info['success_state']:
-            raise StateTransitionError(f"No 'success_state' defined for state {current_state_name}")
-        elif not state_info['failure_state']:
-            raise StateTransitionError(f"No 'failure_state' defined for state {current_state_name}")
-        
-        success_state_name = state_info['success_state']
-        failure_state_name = state_info['failure_state']
-
-        success_info = self._true_table.get_state_info(success_state_name)
-        failure_info = self._true_table.get_state_info(failure_state_name)
-
-        self._next_state_on_success = success_info['instance']
-        self._next_state_on_failure = failure_info['instance']
-
-    def state_machine_operator(self, state, on_success=False, on_failure=False):
-        if on_success:self.next_state_on_success = state
-        if on_failure:self.next_state_on_failure = state
-
-    def add_state_transition(self, current_state, next_state_on_success, next_state_on_failure):
-        # Quando adicionar estados, passa o operador
-        self._true_table.add_transition(current_state, next_state_on_success, next_state_on_failure, self.state_machine_operator)
-
     @property
     def current_state(self):
         return self._current_state
@@ -90,21 +52,64 @@ class StateMachine(metaclass=Singleton):
     def next_state_on_failure(self, value):
         self._next_state_on_failure = value
 
-    # def set_next_state_on_success(self, state):
-    #     self._next_state_on_success = state
+    def evaluate_next_state(self):
 
-    # def set_next_state_on_failure(self, state):
-    #     self._next_state_on_failure = state
+        if self._current_state is None:
+            raise StateTransitionError("There is no current state defined.")
 
+        current_state_name = self._current_state.__class__.__name__
+        state_info = self._true_table.get_state_info(current_state_name)
+        
+        if not state_info:
+            raise StateTransitionError(f"No registration defined for state {current_state_name}")
+        elif not state_info['success_state']:
+            raise StateTransitionError(f"No 'success_state' defined for state {current_state_name}")
+        elif not state_info['failure_state']:
+            raise StateTransitionError(f"No 'failure_state' defined for state {current_state_name}")
+        
+        # Obtém diretamente as instâncias dos estados de sucesso e falha usando os nomes armazenados
+        success_state_name = state_info['success_state']
+        failure_state_name = state_info['failure_state']
+        success_state_info = self._true_table.get_state_info(success_state_name)
+        failure_state_info = self._true_table.get_state_info(failure_state_name)
+
+        if success_state_info and failure_state_info:
+            self._next_state_on_success = success_state_info['instance']
+            self._next_state_on_failure = failure_state_info['instance']
+        else:
+            raise StateTransitionError("Success or failure state instance not found.")
+
+    def state_machine_operator(self, on_success=None, on_failure=None):
+
+        if on_success:
+            success_state_info = self._true_table.get_state_info(on_success)
+            if success_state_info:
+                self._next_state_on_success = success_state_info['instance']
+            else:
+                raise StateTransitionError(f"State information for '{on_success}' not found in TrueTable for success transition.")
+
+        if on_failure:
+            failure_state_info = self._true_table.get_state_info(on_failure)
+            if failure_state_info:
+                self._next_state_on_failure = failure_state_info['instance']
+            else:
+                raise StateTransitionError(f"State information for '{on_failure}' not found in TrueTable for failure transition.")
+
+    def add_state_transition(self, current_state, next_state_on_success, next_state_on_failure):
+        # Quando adicionar estados, passa o operador
+        self._true_table.add_transition(current_state, next_state_on_success, next_state_on_failure, self.state_machine_operator)
+
+    
     """ NOTE
     This is the state machine. Be careful when changing things here.
     """
 
     def run(self):
 
-        self.evaluate_next_state()
 
         while self.current_state is not None:
+            
+            self.evaluate_next_state()
 
             try:
                 self.current_state._on_entry()

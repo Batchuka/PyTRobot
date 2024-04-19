@@ -1,7 +1,6 @@
 from pytrobot import State, BaseState
 
-# @State
-# @Transition('SampleState', 'StateOnSucess', 'StateOnError')
+# @State('StateOnSucess', 'StateOnError') ← Descomente tudo
 class SampleState(BaseState):
     """
     Um estado inicial de exemplo que pode ser usado como ponto de partida.
