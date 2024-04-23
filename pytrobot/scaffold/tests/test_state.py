@@ -12,7 +12,7 @@ class TestSampleState(unittest.TestCase):
         #self.desktop_tool = DesktopTool()
 
         # Criando o objeto VerificaDiState com mocks
-        self.state = SampleState(None, None, None)
+        self.state = SampleState(None)
 
         # Substituímos get_tool para retornar nossas instâncias reais para teste.
         #self.state.get_tool = lambda tool_name: {'ChromeTool': self.chrome_tool,'DesktopTool': self.desktop_tool}.get(tool_name)
