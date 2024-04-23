@@ -1,8 +1,6 @@
 import unittest
 from pytrobot.core.dataset_layer import TransactionData
-from wmt_registro_di_bot.src.tools.chrome_tool import ChromeTool
-from wmt_registro_di_bot.src.tools.desktop_tool import DesktopTool
-from pytrobot.scaffold.src.states import SampleState
+from pytrobot.scaffold.src.sample_state import SampleState
 
 # Classe de teste unitário
 class TestSampleState(unittest.TestCase):
@@ -14,7 +12,7 @@ class TestSampleState(unittest.TestCase):
         #self.desktop_tool = DesktopTool()
 
         # Criando o objeto VerificaDiState com mocks
-        self.state = SampleState(None, None)
+        self.state = SampleState(None)
 
         # Substituímos get_tool para retornar nossas instâncias reais para teste.
         #self.state.get_tool = lambda tool_name: {'ChromeTool': self.chrome_tool,'DesktopTool': self.desktop_tool}.get(tool_name)

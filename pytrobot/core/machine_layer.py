@@ -1,85 +1,121 @@
-# pytrobot/core/machine.py
-from pytrobot.core.states.starter_state import _StarterState
-from pytrobot.core.states.base_state import BaseState
+# pytrobot/core/machine_layer.py
+
+from pytrobot.core.singleton import Singleton
 
 class StateTransitionError(Exception):
     pass
 
-class TrueTable:
+class TrueTable(metaclass=Singleton):
+    
     def __init__(self):
-        self._transitions = {}  # Dicionário para armazenar as transições
+        self._states = {}
 
-    def add_transition(self, current_state, next_state_on_success, next_state_on_failure):
-        self._transitions[current_state] = {'1': next_state_on_success, '0': next_state_on_failure}
+    def add_transition(self, current_state, next_state_on_success, next_state_on_failure, operator=None):
+        # Assegura que as instâncias dos estados são criadas com acesso ao operador
+        self._states[current_state.__name__] = {
+            'instance': current_state(operator),
+            'success_state': next_state_on_success,
+            'failure_state': next_state_on_failure
+        }
 
-    def evaluate_next_state(self, current_state, status):
+    def get_state_info(self, state_name):
+        return self._states.get(state_name)
 
-        if not isinstance(status, bool):
-            raise ValueError(f"'status' deve ser um valor booleano, recebido: {type(status)}")
+class StateMachine(metaclass=Singleton):
 
-        if current_state in self._transitions:
-            return self._transitions[current_state][str(int(status))]
-        return None
+    def __init__(self, true_table):
+        from pytrobot.core import BaseState
+        from pytrobot.scaffold.src.starter_state import _StarterState
 
-class StateMachine:
-    def __init__(self, access_dataset_layer, access_object_layer, access_machine_layer):
-        self.access_dataset_layer = access_dataset_layer
-        self.access_object_layer = access_object_layer
-        self.access_machine_layer = access_machine_layer
-        self.current_state: BaseState = _StarterState()
+        self._true_table : TrueTable = true_table
+        self._current_state : BaseState = _StarterState(self.state_machine_operator)
+        self._next_state_on_success : BaseState
+        self._next_state_on_failure : BaseState
 
-    def get_next_state(self) -> BaseState:
-        status = self.current_state._status
-        next_state_name = self.access_machine_layer.evaluate_next_state(self.current_state.__class__.__name__, status)
-        if not next_state_name:
-            raise StateTransitionError(f"Não foi possível determinar o próximo estado a partir de {self.current_state.__class__.__name__} com status {status}")
-        next_state_class = self.access_object_layer._get(next_state_name)["object"]
-        if not next_state_class:
-            raise StateTransitionError(f"Não foi possível encontrar a classe do estado {next_state_name}")
-        next_state_instance = next_state_class(self.access_dataset_layer, self.access_object_layer)
-        return next_state_instance
+    @property
+    def current_state(self):
+        return self._current_state
 
-    def reset_current_state(self):
-        current_state_name = self.current_state.__class__.__name__
-        current_state_class = self.access_object_layer._get(current_state_name)["object"]
-        if not current_state_class:
-            raise StateTransitionError(f"Não foi possível encontrar a classe do estado {current_state_name} para reiniciar")
-        self.current_state = current_state_class(self.access_dataset_layer, self.access_object_layer)
-        self.current_state._on_entry()
+    @property
+    def next_state_on_success(self):
+        return self._next_state_on_success
 
+    @next_state_on_success.setter
+    def next_state_on_success(self, value):
+        self._next_state_on_success = value
+
+    @property
+    def next_state_on_failure(self):
+        return self._next_state_on_failure
+
+    @next_state_on_failure.setter
+    def next_state_on_failure(self, value):
+        self._next_state_on_failure = value
+
+    def evaluate_next_state(self):
+
+        if self._current_state is None:
+            raise StateTransitionError("There is no current state defined.")
+
+        current_state_name = self._current_state.__class__.__name__
+        state_info = self._true_table.get_state_info(current_state_name)
+        
+        if not state_info:
+            raise StateTransitionError(f"No registration defined for state {current_state_name}")
+        elif not state_info['success_state']:
+            raise StateTransitionError(f"No 'success_state' defined for state {current_state_name}")
+        elif not state_info['failure_state']:
+            raise StateTransitionError(f"No 'failure_state' defined for state {current_state_name}")
+        
+        # Obtém diretamente as instâncias dos estados de sucesso e falha usando os nomes armazenados
+        success_state_name = state_info['success_state']
+        failure_state_name = state_info['failure_state']
+        success_state_info = self._true_table.get_state_info(success_state_name)
+        failure_state_info = self._true_table.get_state_info(failure_state_name)
+
+        if success_state_info and failure_state_info:
+            self._next_state_on_success = success_state_info['instance']
+            self._next_state_on_failure = failure_state_info['instance']
+        else:
+            raise StateTransitionError("Success or failure state instance not found.")
+
+    def state_machine_operator(self, on_success=None, on_failure=None):
+
+        if on_success:
+            success_state_info = self._true_table.get_state_info(on_success)
+            if success_state_info:
+                self._next_state_on_success = success_state_info['instance']
+            else:
+                raise StateTransitionError(f"State information for '{on_success}' not found in TrueTable for success transition.")
+
+        if on_failure:
+            failure_state_info = self._true_table.get_state_info(on_failure)
+            if failure_state_info:
+                self._next_state_on_failure = failure_state_info['instance']
+            else:
+                raise StateTransitionError(f"State information for '{on_failure}' not found in TrueTable for failure transition.")
+
+    def add_state_transition(self, current_state, next_state_on_success, next_state_on_failure):
+        # Quando adicionar estados, passa o operador
+        self._true_table.add_transition(current_state, next_state_on_success, next_state_on_failure, self.state_machine_operator)
+
+    
     """ NOTE
     This is the state machine. Be careful when changing things here.
     """
+
     def run(self):
 
+
         while self.current_state is not None:
+            
+            self.evaluate_next_state()
 
             try:
                 self.current_state._on_entry()
                 self.current_state._execute()
                 self.current_state._on_exit()
+                self._current_state = self.next_state_on_success
             except Exception as e:
                 self.current_state._on_error(e)
-                if self.current_state.reset:
-                    continue
-            
-            self.current_state = self.access_machine_layer.get_next_state()
-
-class AccessMachineLayer:
-    def __init__(self, pytrobot_instance):
-        self.pytrobot_instance = pytrobot_instance
-    
-    def get_current_state(self):
-        return self.pytrobot_instance.current_state
-
-    def add_transition(self, current_state, next_state_on_success, next_state_on_failure):
-        self.pytrobot_instance.true_table.add_transition(current_state, next_state_on_success, next_state_on_failure)
-
-    def evaluate_next_state(self, current_state_name, status):
-        return self.pytrobot_instance.true_table.evaluate_next_state(current_state_name, status)
-    
-    def get_next_state(self):
-        return self.pytrobot_instance.state_machine.get_next_state()
-
-    def reset_current_state(self):
-        return self.pytrobot_instance.state_machine.reset_current_state()
+                self._current_state = self.next_state_on_failure

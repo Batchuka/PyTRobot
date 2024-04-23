@@ -1,10 +1,12 @@
 # pytrobot/core/dataset_layer/dataset.py
+
 import os
 import importlib.util
 import boto3
+from pytrobot.core.singleton import Singleton
+from typing import List
 
-
-class ConfigData:
+class ConfigData(metaclass=Singleton):
     def __init__(self):
         self.config = {}
 
@@ -65,90 +67,90 @@ class ConfigData:
             print(f"The name '{name}' was modified in the config.")
         self.config[name] = value
 
+class TransactionItem:
+    def __init__(self, **kwargs):
+        self.__dict__.update(kwargs)
 
-"""TODO
-É possível limpar bastante essa classe usando getter e setter no 'row' e 'column'
-"""
+    def __getitem__(self, key):
+        """Permite o acesso a atributos usando item['key']"""
+        return getattr(self, key, None)
 
-class TransactionData:
-    def __init__(self, name, columns):
-        if not columns:
-            raise ValueError("A lista de colunas não pode estar vazia.")
-        self.__name = name
-        self.columns = columns
-        self.data = {column: [] for column in self.columns}
+    def __setitem__(self, key, value):
+        """Permite a modificação de atributos usando item['key'] = value"""
+        setattr(self, key, value)
+
+    def update(self, **kwargs):
+        """Método para atualizar os valores das colunas."""
+        for key, value in kwargs.items():
+            self[key] = value  # Usando __setitem__ internamente
+
+    def __repr__(self):
+        """Método para representar o objeto como string (útil para depuração)."""
+        return f"{self.__class__.__name__}({', '.join(f'{k}={v}' for k, v in self.__dict__.items())})"
+
+class TransactionData(metaclass=Singleton):
+
+    def __init__(self, columns):
+        if not hasattr(self, '_initialized'):
+            self._initialized = True
+            self.columns = columns
+            self.items : List[TransactionItem] = []
+            self.transaction_number = 0
+            self.transaction_item = None
 
     def __iter__(self):
-        num_rows = len(self.data[self.columns[0]])
-        for i in range(num_rows):
-            yield self.get_row(i)
+        return iter(self.items)
 
-    def add_column(self, column_name):
-        if column_name in self.data:
-            raise ValueError(f"A coluna '{column_name}' já existe.")
-        self.data[column_name] = []
+    def add_item(self, **kwargs):
+        if any(item[self.columns[0]] == kwargs.get(self.columns[0], None) for item in self.items):
+            raise ValueError(f"An item with the same {self.columns[0]} already exists.")
+        item = TransactionItem(**kwargs)
+        self.items.append(item)
+        if self.transaction_item is None:
+            self.transaction_item = item
 
-    def add_row(self, **kwargs):
-        # Verifica se o valor na primeira coluna já existe
-        first_column_values = self.data[self.columns[0]]
-        if kwargs[self.columns[0]] in first_column_values:
-            print(f"Aviso: Valor '{kwargs[self.columns[0]]}' na coluna '{self.columns[0]}' já existe e será ignorado.")
-            return
+    def get_item(self, id):
+        for item in self.items:
+            if item[self.columns[0]] == id:
+                return item
+        return None
 
-        for column in self.columns:
-            self.data[column].append(kwargs.get(column, None))
-
-    def get_column(self, column_name):
-        if column_name not in self.data:
-            raise ValueError(f"A coluna '{column_name}' não existe.")
-        return self.data[column_name]
-
-    def get_row(self, index):
-        if index >= len(self.data[self.columns[0]]):
-            raise IndexError("O índice está fora do alcance dos dados existentes.")
-        return {column: self.data[column][index] for column in self.columns}
-
-    def update_row(self, find_by_column, find_value, **kwargs):
-        if find_by_column not in self.columns:
-            raise ValueError(f"A coluna '{find_by_column}' não existe.")
-
-        try:
-            row_index = self.data[find_by_column].index(find_value)
-        except ValueError:
-            print(f"Valor {find_value} não encontrado na coluna '{find_by_column}'.")
-            return
-
-        for column_name, value in kwargs.items():
-            if column_name in self.data:
-                self.data[column_name][row_index] = value
-            else:
-                print(f"A coluna '{column_name}' não existe.")
-
-class AccessDatasetLayer:
-
-    def __init__(self, pytrobot_instance):
-        self.pytrobot_instance = pytrobot_instance
-        self.tdata_reg = {}
-
-    def get_asset(self, name):
-        return self.pytrobot_instance.config_data.get_asset(name)
-
-    def set_asset(self, name, value):
-        return self.pytrobot_instance.config_data.get_asset(name, value)
-
-    def get_config_data(self):
-        return self.pytrobot_instance.config_data
-
-    def create_transaction_data(self, name, columns):
-        if name in self.tdata_reg:
-            raise ValueError(f"TransactionData com o nome '{name}' já existe.")
-        tdata = TransactionData(name=name, columns=columns)
-        self.tdata_reg[name] = tdata
-        return tdata
-
-    def get_transaction_data(self, name):
-        if name in self.tdata_reg:
-            return self.tdata_reg[name]
+    def update_item(self, id, **kwargs):
+        item = self.get_item(id)
+        if item is not None:
+            item.update(**kwargs)
         else:
-            print(f"TransactionData com o nome '{name}' não existe.")
+            raise ValueError(f"Item with {self.columns[0]} '{id}' not found.")
+
+    def get_next_item(self):
+
+        self.transaction_number += 1
+        if self.transaction_number <= len(self.items):
+            self.transaction_item = self.items[self.transaction_number - 1]
+            return self.transaction_item
+        else:
+            self.transaction_number = 0
+            self.transaction_item = None
             return None
+
+if __name__ == '__main__':
+    # Inicializar TransactionData com as colunas apropriadas
+    t_data = TransactionData(columns=['id', 'data', 'numero_transmissao', 'diagnostico', 'numero_di', 'canal', 'erro'])
+
+    # Adicionar alguns itens
+    t_data.add_item(id=1123, data=None, numero_transmissao='trans123', diagnostico=None, numero_di=None, canal=None, erro=None)
+    t_data.add_item(id=1124, data=None, numero_transmissao='trans124', diagnostico=None, numero_di=None, canal=None, erro=None)
+
+    # Atualizar um item diretamente utilizando indexação
+    item_to_update = t_data.get_item(1123)
+    if item_to_update:
+        item_to_update['numero_transmissao'] = 'trans456'
+        item_to_update['diagnostico'] = 'Novo diagnóstico'
+
+    # Atualizar todos os itens com um novo valor para 'erro' usando indexação direta
+    for item in t_data:
+        item['erro'] = 'teste'
+
+    # Imprimir os itens para verificar se foram adicionados e atualizados corretamente
+    for item in t_data:
+        print(item)  # Assumindo que a função __repr__ está definida para imprimir bonito

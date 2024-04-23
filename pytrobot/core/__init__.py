@@ -1,17 +1,23 @@
 # pytrobot/__init__.py
 import builtins
 import warnings
-from pytrobot.core.dataset_layer import ConfigData, TransactionData, AccessDatasetLayer
-from pytrobot.core.machine_layer import StateMachine, TrueTable, AccessMachineLayer
-from pytrobot.core.object_layer import ObjectsRegister, AccessObjectLayer
+from pytrobot.core.dataset_layer import ConfigData, TransactionData, TransactionItem
+from pytrobot.core.machine_layer import StateMachine, TrueTable
+from pytrobot.core.singleton import Singleton
 from pytrobot.core.utils import print_pytrobot_banner, pytrobot_print
+from abc import abstractmethod
 
+RED     = '\033[91m'
+GREEN   = '\033[92m'
+YELLOW  = '\033[93m'
+RESET   = '\033[0m'
+BLUE    = '\033[94m'
 
 class PyTRobotNotInitializedException(Exception):
     """Exceção para ser levantada quando o PyTRobot não está instanciado."""
     pass
 
-class PyTRobot:
+class PyTRobot(metaclass=Singleton):
     """Classe principal do pytrobot, implementada como um Singleton."""
     _instance = None
 
@@ -29,39 +35,25 @@ class PyTRobot:
     def _initialize(self):
         print_pytrobot_banner()
         builtins.print = pytrobot_print
-        access_dataset_layer = self.create_access_dataset_layer()
-        access_object_layer = self.create_access_object_layer()
-        access_machine_layer = self.create_access_machine_layer()
 
         # Inicializa os novos atributos
         self.config_data = ConfigData()
-        self.true_table = TrueTable()
-        self.state_machine = StateMachine(access_dataset_layer, access_object_layer, access_machine_layer)
-        self.objects_register = ObjectsRegister()
+        self.state_machine = StateMachine(true_table = TrueTable())
         self._initialized = True
 
     def _register_core_states(self):
-        from pytrobot.core.states.starter_state import _StarterState
-        from pytrobot.core.states.finisher_state import _FinisherState
+        from pytrobot.scaffold.src.starter_state import _StarterState
+        from pytrobot.scaffold.src.finisher_state import _FinisherState
         State(_StarterState)
         if self._first_state_name:
-            Transition('_StarterState', self._first_state_name, '_FinisherState')(_StarterState)
+            State(self._first_state_name, '_FinisherState')(_StarterState)
         else:
-            Transition('_StarterState', '_FinisherState', '_FinisherState')(_StarterState)
+            State('_FinisherState', '_FinisherState')(_StarterState)
         State(_FinisherState)
-        Transition('_FinisherState', '_FinisherState', '_FinisherState')(_FinisherState)
+        State('_FinisherState', '_FinisherState')(_FinisherState)
 
     def start(self):
         self.state_machine.run()
-
-    def create_access_dataset_layer(self):
-        return AccessDatasetLayer(self)
-
-    def create_access_object_layer(self):
-        return AccessObjectLayer(self)
-
-    def create_access_machine_layer(self):
-        return AccessMachineLayer(self)
 
     # Métodos de acesso para os decoradores
 
@@ -72,25 +64,6 @@ class PyTRobot:
         return cls._instance
 
     @classmethod
-    def add_object_on_registry(cls, registry_cls):
-        try:
-            instance = cls.get_instance()
-            instance.objects_register.register(registry_cls.__name__, registry_cls)
-            return instance.objects_register
-        except PyTRobotNotInitializedException as e:
-            warnings.warn(str(f"{e} : Your objects will not be registered"), RuntimeWarning)
-            
-
-    @classmethod
-    def add_transition_on_true_table(cls, current_state_name, next_state_on_success_name, next_state_on_failure_name):
-        try:
-            instance = cls.get_instance()
-            instance.true_table.add_transition(current_state_name, next_state_on_success_name, next_state_on_failure_name)
-            return instance.true_table
-        except PyTRobotNotInitializedException as e:
-            warnings.warn(str(f"{e} : Your objects will not be registered"), RuntimeWarning)
-
-    @classmethod
     def set_first_state(cls, state_name):
         try:
             instance = cls.get_instance()
@@ -98,34 +71,134 @@ class PyTRobot:
         except PyTRobotNotInitializedException as e:
             warnings.warn(str(f"{e} : Your objects will not be registered"), RuntimeWarning)
 
+class BaseState(metaclass=Singleton):
+    """
+    Base class for all states within the state management system.
+    Each state is a Singleton, ensuring that only one instance of each specific state is created and necessary.
+    They don't restart, so think about that!
+
+    Attributes:
+        state_machine_operator (callable): Is a function that allows some State manipulate the transition on StateMachine Object.
+        _status (bool or None): The status of the last running process, True was successful.
+        retry_counter (int): Counter for attempting to execute the state.
+        reset (bool): Flag to indicate whether the state should be reset after an error — 
+
+    Abstract methods:
+        execute: Defines a main state execution logic.
+        on_entry: Executed when the state is activated.
+        on_exit: Executed when the state completes successfully.
+        on_error: Executed when an error occurs during state execution.
+    """
+    def __str__(self) -> str:
+        return f"State {self.__class__.__name__}"
+
+    def __init__(self, state_machine_operator):
+        self.state_machine_operator = state_machine_operator
+        self._status = None
+        self.retry_counter = 0
+        self.reset = False
+
+    def transition(self, on_success=None, on_failure=None):
+        """
+        Allows state instances to programmatically update their transition paths.
+        
+        :param on_success: Class name of the next state on success.
+        :param on_failure: Class name of the next state on failure.
+        """
+        # Uses the operator to update the transitions based on provided state names.
+        self.state_machine_operator(on_success=on_success, on_failure=on_failure)
+
+    @abstractmethod
+    def execute(self):
+        """
+        Define a main logic that the state must execute.
+        This method must be implemented by all subclasses.
+        """
+        pass
+
+    @abstractmethod
+    def on_entry(self):
+        """
+        State preparation logic. It is necessary to consider that this logic can run multiple times.
+        This method must be implemented by all subclasses.
+        """
+        pass
+
+    @abstractmethod
+    def on_exit(self):
+        """
+        Logic that must run every time the state ends successfully.
+        This method must be implemented by all subclasses.
+        """
+        pass
+
+    @abstractmethod
+    def on_error(self, error):
+        """
+        Logic that must be executed to handle the state when an error occurs.
+        This method must be implemented by all subclasses.
+
+        Args:
+            error (Exception): The exception that was raised.
+        """
+        pass
+
+    def _execute(self):
+        print(f"{BLUE} ========== Running 'execute' ========== {self.__class__.__name__} {RESET}")
+        method = getattr(self, 'execute', None)
+        if method:
+            method()
+        else:
+            raise NotImplementedError("The 'execute' method must be implemented by the subclass.")
+
+    def _on_entry(self):
+
+        print(f"{BLUE} =========== Starting state ============ {self.__class__.__name__} {RESET}")
+        method = getattr(self, 'on_entry', None)
+        if method:
+            method()
+        else:
+            raise NotImplementedError("The 'on_entry' method must be implemented by the subclass.")
+
+    def _on_exit(self):
+        self._status = True
+        print(f"{BLUE} ============== Success ================ {self.__class__.__name__}  {RESET}")
+        method = getattr(self, 'on_exit', None)
+        if method:
+            method()
+        else:
+            self._status = False
+            raise NotImplementedError("The 'on_exit' method must be implemented by the subclass.")
+
+    def _on_error(self, error):
+        self._status = False
+        print(f"{RED} ========== Something failed  ========== {self.__class__.__name__} \n {error}{RESET} ")
+        method = getattr(self, 'on_error', None)
+        if method:
+            if self.retry_counter > 0:
+                self.retry_counter -= 1
+                print(f"Attempt failed. {self.retry_counter} attempts remaining.")
+                self.state_machine_operator()
+            else:
+                print("Maximum number of attempts reached.")
+            return method(error)
+        else:
+            raise NotImplementedError(f"The 'on_error' method must be implemented by the subclass. Error: {error}")
+
+
 # Decoradores
 
-def State(cls):
-    PyTRobot.add_object_on_registry(cls)
-    return cls
-
-def Tool(cls):
-    PyTRobot.add_object_on_registry(cls)
-    return cls
-
-def Action(cls):
-    PyTRobot.add_object_on_registry(cls)
-    return cls
+def State(next_state_on_success=None, next_state_on_failure=None):
+    def decorator(cls):
+        try:
+            instance = PyTRobot.get_instance()
+            st = instance.state_machine
+            st.add_state_transition(cls, next_state_on_success, next_state_on_failure)
+        except PyTRobotNotInitializedException as e:
+            warnings.warn(str(f"{e} : Your objects will not be registered"), RuntimeWarning)
+        return cls
+    return decorator
 
 def First(cls):
     PyTRobot.set_first_state(cls.__name__)
     return cls
-
-def Transition(current_state_name, next_state_on_success_name, next_state_on_failure_name):
-    def decorator(cls):
-        if current_state_name is None:
-            raise ValueError("O nome do estado atual não pode ser None.")
-        if next_state_on_success_name is None:
-            raise ValueError("O nome do próximo estado para sucesso não pode ser None.")
-        if next_state_on_failure_name is None:
-            raise ValueError("O nome do próximo estado para falha não pode ser None.")
-
-        # Adiciona a transição usando o método de classe do PyTRobot
-        PyTRobot.add_transition_on_true_table(current_state_name, next_state_on_success_name, next_state_on_failure_name)
-        return cls
-    return decorator

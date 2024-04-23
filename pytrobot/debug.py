@@ -13,28 +13,28 @@ def debug_entrypoint(command='run', directory=None):
     entrypoint()
 
 
-def auto_import_classes(directory):
+def auto_import_states(directory):
     """
-    Scan the tools and states directories within src_directory,
-    and automatically writes the necessary imports to the __init__.py files
-    corresponding, but only for classes decorated with @Action, @Tool, or @State.
+    Scan the directory for Python files, and automatically writes the necessary imports to the __init__.py file
+    for classes decorated with @State.
     """
-    for subdir in ['tools', 'states']:
-        init_file_path = pathlib.Path(directory) / 'src' / subdir / '__init__.py'
-        with open(init_file_path, 'w') as init_file:
-            py_files = [f for f in os.listdir(pathlib.Path(directory) / 'src' / subdir) if f.endswith('.py') and f != '__init__.py']
-            for py_file in py_files:
-                file_path = pathlib.Path(directory) / 'src' / subdir / py_file
-                with open(file_path, 'r') as file:
-                    content = file.readlines()
-                    for index, line in enumerate(content):
-                        if re.match(r'@(Action|Tool|State)', line.strip()):
-                            # Encontra a próxima definição de classe após o decorador
-                            for class_line in content[index:]:
-                                class_match = re.search(r'class (\w+)', class_line)
-                                if class_match:
-                                    class_name = class_match.group(1)  # Pega o nome da classe
-                                    import_statement = f"from src.{subdir}.{py_file[:-3]} import {class_name}\n"
-                                    init_file.write(import_statement)
-                                    break  # Sai do loop interno após encontrar a classe decorada
-                            break  # Sai do loop externo após processar o arquivo atual
+    src_file_path = pathlib.Path(directory) / 'src'
+    init_file_path = pathlib.Path(directory) / 'src' / '__init__.py'
+
+    with open(init_file_path, 'w') as init_file:
+        py_files = [f for f in os.listdir(src_file_path) if f.endswith('.py') and f != '__init__.py']
+        for py_file in py_files:
+            file_path = pathlib.Path(src_file_path) / py_file
+            with open(file_path, 'r') as file:
+                content = file.readlines()
+                for index, line in enumerate(content):
+                    if re.match(r'@State', line.strip()):
+                        # Find the next class definition after the decorator
+                        for class_line in content[index:]:
+                            class_match = re.search(r'class (\w+)', class_line)
+                            if class_match:
+                                class_name = class_match.group(1)  # Capture the class name
+                                import_statement = f"from .{py_file[:-3]} import {class_name}\n"
+                                init_file.write(import_statement)
+                                break  # Exit the inner loop after finding the decorated class
+                        break  # Exit the outer loop after processing the current file
