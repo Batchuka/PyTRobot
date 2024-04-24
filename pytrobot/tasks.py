@@ -2,131 +2,222 @@
 import os
 import re
 import sys
+import yaml
 import shutil
 import subprocess
+from pathlib import Path
+from cookiecutter.main import cookiecutter
+
 
 from invoke import task, context, Collection, Program #type:ignore
 
-scaffold_dir = os.path.join(os.path.dirname(__file__), "scaffold")
-templates = {
-    'state': 'src/sample_state.py',
-    'testState': 'tests/test_state.py'
-}
+def get_from_yaml(value):
 
+    project_file = os.path.join(user_dir, '_bot.yml')
+    print(project_file)
+    with open(project_file, 'r') as stream:
+        config = yaml.safe_load(stream)
+    
+    return config['project_name'], config['version']
+
+SCAFFOLD_PATH           = os.path.join(os.path.dirname(__file__), 'scaffold/')
+SAMPLE_STATE_PATH       = os.path.join(SCAFFOLD_PATH, '{{cookiecutter.project_name}}_proj/{{cookiecutter.project_name}}/src/sample_state.py')
+TEST_SAMPLE_STATE_PATH  = os.path.join(SCAFFOLD_PATH, '{{cookiecutter.project_name}}_proj/tests/test_state.py')
+
+CORE_DIR    = get_from_yaml('cor_path')
+USER_DIR    = get_from_yaml('user_path')
+TRT_DIR     = get_from_yaml('trt_path')
+
+PROJECT_NAME    = get_from_yaml('project_name')
+PROJECT_VERSION = get_from_yaml('version')
+
+
+################### SCAFFOLDS ###################
 
 @task
 def testState(c, path="."):
-    template_file = templates['testState']
-    shutil.copy(os.path.join(scaffold_dir, template_file), path)
-    print(f"New testState created at: {os.path.join(path, template_file)}")
+    shutil.copy(TEST_SAMPLE_STATE_PATH, path)
+    print(f"New testState created at: {os.path.join(path, 'test_state.py')}")
 
 @task
 def state(c, path="."):
-    template_file = templates['state']
-    shutil.copy(os.path.join(scaffold_dir, template_file), path)
-    print(f"New state created at: {os.path.join(path, template_file)}")
+    shutil.copy(SAMPLE_STATE_PATH, path)
+    print(f"New state created at: {os.path.join(path, 'sample_state.py')}")
 
 @task
-def new(c, path="."):
-    # Pergunta o nome do projeto ao usuário
-    project_name = input("Por favor, insira o nome do novo projeto PyTRobot: ")
+def new(c, name=""):
+    project_name = name if name else input("Please enter the new PyTRobot project name: ")
+    version = input("Please enter the new project version (default is 0.1.0): ") or "0.1.0"
+    output_dir = os.getcwd()
 
-    # Se 'path' é '.', usa o diretório atual, caso contrário, o caminho fornecido.
-    project_path = os.path.join(path if path != "." else os.getcwd(), project_name)
+    # Supondo que a criação do projeto ocorra aqui com cookiecutter
+    try:
+        cookiecutter(
+            template=SCAFFOLD_PATH,
+            extra_context={'project_name': project_name},
+            no_input=True,
+            output_dir=output_dir
+        )
 
-    # Verifica se o diretório do projeto já existe
-    if os.path.exists(project_path):
-        print(f"O diretório '{project_path}' já existe. Por favor, escolha um nome diferente ou remova o diretório existente.")
-        return
+        # Chamada para criar o arquivo YAML após a criação do projeto
+        create_project_yaml(output_dir, project_name, version)
+        print(f"Project '{project_name}' created successfully in '{output_dir}'.")
+    except Exception as e:
+        print(f"An error occurred while creating the project: {e}")
 
-    # Caminho para o diretório de scaffold/template
-    template_path = os.path.join(os.path.dirname(__file__), 'scaffold')
-
-    # Copia o scaffold para o novo diretório do projeto
-    shutil.copytree(template_path, project_path)
+def create_project_yaml(output_dir, project_name, version):
     
-    # Cria um arquivo requirements.txt vazio
-    requirements_path = os.path.join(project_path, 'requirements.txt')
-    with open(requirements_path, 'w') as requirements_file:
-        requirements_file.write("# Adicione aqui suas dependências\n")
+    # Construindo os caminhos dinamicamente com base no projeto recém-criado
+    core_dir = os.path.join(os.path.dirname(__file__), "core")
+    user_dir = Path(output_dir) / f"{project_name}_bot"
+    trt_dir = user_dir / ".trt"
 
-    # Cria um ambiente virtual dentro do diretório do projeto
-    subprocess.run([sys.executable, '-m', 'venv', os.path.join(project_path, 'venv')])
+    yaml_content = {
+        'project_name': project_name,
+        'version': version,
+        'aws': {
+            'account_id': '',
+            'default_region': '',
+            'codeartifact_domain': '',
+            'codeartifact_token': '',
+            'codeartifact_repository': '',
+        },
+        'trt_cli': {
+            'core_path': str(core_dir),
+            'user_path': str(user_dir),
+            'trt_path': str(trt_dir)
+        }
+    }
 
-    print(f"Projeto '{project_name}' criado com sucesso em: {project_path}")
-    print(f"Para ativar o ambiente virtual, navegue até '{project_path}' e execute:")
-    print(f"'source venv/bin/activate' no Unix ou macOS, ou 'venv\\Scripts\\activate' no Windows.")
+    # Escrevendo o conteúdo no arquivo YAML
+    yaml_file_path = user_dir / f"{project_name}.yaml"
+    with open(yaml_file_path, 'w') as yaml_file:
+        yaml.dump(yaml_content, yaml_file, default_flow_style=False)
 
+    print(f"YAML configuration file created at: {yaml_file_path}")
 
-
-
-# Substitua as variáveis a seguir pelos valores apropriados
-AWS_ACCOUNT_ID = ''
-AWS_DEFAULT_REGION = ''
-CODEARTIFACT_DOMAIN = ''
-CODEARTIFACT_REPOSITORY = ''
-CODEARTIFACT_TOKEN = ''
+################### BUILD ###################
 
 @task
-def build_docker(ctx, browser):
+def build(ctx):
+
+    trt_dir = os.path.join(TRT_DIR, PROJECT_NAME)
+
+    # Step 1: Clean previous build and create new
+    remove_previous_build()
+    os.makedirs(trt_dir)
+
+    # Step 2: Copy all logic
+    copy_user_logic_to_build()
+    copy_core_logic_to_build()
+
+    # Step 3: Adjust import in all files
+    adjust_imports_to_build()
+
+    # Step 4: Build the package
+    create_setup_py()
+    build_package()
+
+    print(f"Build successful for {PROJECT_NAME} version {PROJECT_VERSION}")
+
+@task
+def build_docker(ctx):
 
     pip_index_url = f"https://aws:{CODEARTIFACT_TOKEN}@{CODEARTIFACT_DOMAIN}-{AWS_ACCOUNT_ID}.d.codeartifact.{AWS_DEFAULT_REGION}.amazonaws.com/pypi/{CODEARTIFACT_REPOSITORY}/simple/"
-
     print('\n========== Buildando o container')
-    if browser.lower() == 'firefox':
-        ctx.run(
-            f"docker build -t wmt-bot005-emitir-certidoes-due-diligence-firefox -f Dockerfile.deploy-firefox --build-arg PIP_INDEX_URL={pip_index_url} .", echo=True)
-    elif browser.lower() == 'chrome':
-        ctx.run(
-            f"docker build -t wmt-bot005-emitir-certidoes-due-diligence-chrome -f Dockerfile.deploy-chrome --build-arg PIP_INDEX_URL={pip_index_url} .", echo=True)
-    else:
-        print("Navegador não suportado. Use 'firefox' ou 'chrome'.")
+    ctx.run(f"docker build -t {PROJECT_NAME} --build-arg PIP_INDEX_URL={pip_index_url} .", echo=True)
+
+    # colocar comando para fazer tags
+
     print('\nFeito!')
 
+# Funções atualizadas
+def remove_previous_build():
+    if os.path.exists(TRT_DIR):
+        shutil.rmtree(TRT_DIR)
 
-@task
-def spec_package(ctx):
-    pass
+def copy_user_logic_to_build():
+    # Copia os diretórios 'src' e 'resources' para o diretório .trt
+    for subdir in ['src', 'resources']:
+        src_subdir = os.path.join(USER_DIR, subdir)
+        if os.path.exists(src_subdir):
+            dest_subdir = os.path.join(TRT_DIR, subdir)
+            shutil.copytree(src_subdir, dest_subdir)
 
+    # Copia o arquivo 'requirements.txt'
+    requirements_src = os.path.join(USER_DIR, "requirements.txt")
+    requirements_dest = os.path.join(TRT_DIR, "requirements.txt")
+    shutil.copy(requirements_src, requirements_dest)
+
+def copy_core_logic_to_build():
+    # Copia os arquivos do diretório 'core' para o diretório de build .trt
+    for item in os.listdir(CORE_DIR):
+        item_path = os.path.join(CORE_DIR, item)
+        if os.path.isfile(item_path):
+            shutil.copy(item_path, TRT_DIR)
+
+def adjust_imports_to_build():
+    # Atualiza os imports nos arquivos Python dentro do diretório .trt
+    for root, _, files in os.walk(TRT_DIR):
+        for file in files:
+            if file.endswith('.py'):
+                file_path = os.path.join(root, file)
+                with open(file_path, 'r') as f:
+                    content = f.read()
+                content = re.sub(r'pytrobot\.', f'{PROJECT_NAME}.', content)
+                with open(file_path, 'w') as f:
+                    f.write(content)
+
+def create_setup_py():
+    # Cria um arquivo setup.py no diretório .trt com a configuração do pacote
+    setup_path = os.path.join(TRT_DIR, "setup.py")
+    requirements_path = os.path.join(TRT_DIR, "requirements.txt")
+    with open(setup_path, 'w') as setup_file:
+        setup_file.write(
+        f"""
+        from setuptools import setup, find_packages
+
+        setup(
+            name='{PROJECT_NAME}',
+            version='{PROJECT_VERSION}',
+            packages=find_packages(),
+            include_package_data=True,
+            install_requires={open(requirements_path).readlines()},
+            entry_points={{
+                'console_scripts': [
+                    '{PROJECT_NAME}-run={PROJECT_NAME}.__main__:entrypoint'
+                ]
+            }},
+        )
+        """
+        )
+
+def build_package():
+    
+    # Constrói o pacote usando a ferramenta de build do Python
+    subprocess.run([sys.executable, '-m', 'build', TRT_DIR], check=True)
+
+################### UTILS ###################
 
 @task
 def test(ctx):
     ctx.run("pytest tests/")
     ctx.run("pytest --docker tests/")
 
-
 @task
 def clean(ctx):
     shutil.rmtree("dist", ignore_errors=True)
     shutil.rmtree("build", ignore_errors=True)
 
+@task
+def spec_package(ctx):
+    pass
 
+@task
+def auto_import(ctx):
+    pass
 
-
-# @task
-# def build(c, path=None):
-
-#     user_dir = path or os.getcwd()
-#     project_name = os.path.basename(user_dir)
-#     trt_dir = os.path.join(user_dir, ".trt", project_name)
-#     version = input("Enter Version: ")
-
-#     # Step 1: Clean previous build and create new
-#     remove_previous_build(user_dir)
-#     os.makedirs(trt_dir)
-
-#     # Step 2: Copy all logic
-#     copy_user_logic_to_build(user_dir, trt_dir)
-#     copy_core_logic_to_build(trt_dir)
-
-#     # Step 3: Adjust import in all files
-#     adjust_imports_to_build(trt_dir, project_name)
-
-#     # Step 4: Build the package
-#     create_setup_py(trt_dir, project_name, version)
-#     build_package(trt_dir)
-
-#     print(f"Build successful for {project_name} version {version}")
+# ###################################
 
 # def remove_previous_build(user_dir):
 #     trt_dir = os.path.join(user_dir, ".trt")
@@ -213,21 +304,22 @@ def clean(ctx):
 
 #     with open(setup_path, 'w') as setup_file:
 #         setup_file.write(f"""
-# from setuptools import setup, find_packages
+#             from setuptools import setup, find_packages
 
-# setup(
-#     name='{project_name}',
-#     version='{version}',
-#     packages=find_packages(),
-#     include_package_data=True,
-#     install_requires={requirements},
-#     entry_points={{
-#         'console_scripts': [
-#             'trt-run={project_name}.__main__:entrypoint'
-#         ]
-#     }}
-# )
-# """)
+#             setup(
+#                 name='{project_name}',
+#                 version='{version}',
+#                 packages=find_packages(),
+#                 include_package_data=True,
+#                 install_requires={requirements},
+#                 entry_points={{
+#                     'console_scripts': [
+#                         'trt-run={project_name}.__main__:entrypoint'
+#                     ]
+#                 }}
+#             )
+#             """
+#     )
 
 # def build_package(trt_dir):
 #     parent_dir = os.path.dirname(trt_dir)
@@ -237,6 +329,8 @@ def clean(ctx):
 #     subprocess.run([python_executable, '-m', 'build', parent_dir], check=True)
 
 
-# if __name__ == '__main__':
-#     c = context.Context()
-#     build(c,'/home/seluser/user/bot1')
+if __name__ == '__main__':
+    c = context.Context()
+    new(c)
+    # state(c)
+

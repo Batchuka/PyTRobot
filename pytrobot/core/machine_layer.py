@@ -24,8 +24,7 @@ class TrueTable(metaclass=Singleton):
 class StateMachine(metaclass=Singleton):
 
     def __init__(self, true_table):
-        from pytrobot.core import BaseState
-        from pytrobot.scaffold.src.starter_state import _StarterState
+        from pytrobot.core import BaseState, _StarterState
 
         self._true_table : TrueTable = true_table
         self._current_state : BaseState = _StarterState(self.state_machine_operator)

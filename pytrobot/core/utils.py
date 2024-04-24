@@ -32,7 +32,6 @@ def HandleException(func):
 
     return wrapper
 
-
 def WithLog(func):
     """
     Um decorator que registra a chamada de uma função com informações de depuração.
@@ -45,7 +44,6 @@ def WithLog(func):
         print(f"{self.current_state}.{func.__name__}", logging.DEBUG)
         func(self, *args, **kwargs)
     return wrapper
-
 
 def ApplyToMethods(decorator):
     """
@@ -61,7 +59,6 @@ def ApplyToMethods(decorator):
         return cls
 
     return class_decorator
-
 
 def print_pytrobot_banner():
     """Exibe o banner do pytrobot."""
@@ -80,12 +77,10 @@ def print_pytrobot_banner():
     ]
     print("\n".join(banner_lines))
 
-
 def pytrobot_print(*args, **kwargs):
     """Função print personalizada para redirecionar para o logger."""
     message = " ".join(map(str, args))
     Logger.log(message, level=kwargs.get('level', logging.INFO))
-
 
 class Logger:
     """Um logger personalizado para o pytrobot."""

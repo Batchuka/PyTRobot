@@ -42,8 +42,7 @@ class PyTRobot(metaclass=Singleton):
         self._initialized = True
 
     def _register_core_states(self):
-        from pytrobot.scaffold.src.starter_state import _StarterState
-        from pytrobot.scaffold.src.finisher_state import _FinisherState
+
         State(_StarterState)
         if self._first_state_name:
             State(self._first_state_name, '_FinisherState')(_StarterState)
@@ -202,3 +201,42 @@ def State(next_state_on_success=None, next_state_on_failure=None):
 def First(cls):
     PyTRobot.set_first_state(cls.__name__)
     return cls
+
+
+class _FinisherState(BaseState):
+
+    def execute(self):
+        pass
+
+    def on_entry(self):
+        pass
+
+    def on_exit(self):
+        
+        import threading
+
+        # Imprime a contagem de threads ativas antes de sair
+        print(f'Active threads count: {threading.active_count()}')
+        print('Active threads:', threading.enumerate())
+
+        exit()
+
+    def on_error(self):
+
+        import os
+        os._exit(0)
+
+class _StarterState(BaseState):
+
+    def execute(self):
+        pass
+
+    def on_entry(self):
+        pass
+
+    def on_exit(self):
+        pass
+
+    def on_error(self):
+        pass
+

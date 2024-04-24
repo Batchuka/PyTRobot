@@ -1,34 +1,40 @@
 # Pytrobot Framework
 
 ## Visão Geral
-Pytrobot é um framework Python inovador para automação RPA (Robotic Process Automation), projetado com base em uma máquina de estados transacionais. Ele permite a execução de automações robustas e escaláveis, manipulando 'Unidades Fundamentais de Processamento' que são, essencialmente, itens de um DataFrame do Pandas. Inspirado por princípios de projetos bem-sucedidos como Spring Boot e REFramework da UiPath, o Pytrobot visa oferecer uma experiência de desenvolvimento simplificada, mantendo a flexibilidade para casos de uso complexos e variados.
+Pytrobot é um framework Python para automação RPA (Robotic Process Automation), projetado com base em uma máquina de estados transacionais. Ele permite a execução de automações robustas e escaláveis, manipulando 'Unidades Fundamentais de Processamento' que são, essencialmente, itens (TransactionItem) de um dataset (TransactionData). O Pytrobot visa oferecer uma experiência de desenvolvimento simplificada, mantendo a flexibilidade para casos de uso complexos e variados.
 
 ## Funcionalidades
-- **Gerenciamento de Estado**: O Pytrobot utiliza um sistema de máquina de estados para gerenciar o fluxo de automação, permitindo um controle preciso sobre cada etapa do processo.
-- **Pacotes Pytrobot**: Capacidade de construir pacotes pytrobot utilizando as funções definidas pelo usuário, facilitando a distribuição e implantação.
-- **Estados Definidos pelo Usuário**: Os usuários podem definir seus próprios estados, ações e ferramentas para interagir com o ambiente ou dados de transação.
-- **Flexibilidade de Implementação**: Com suporte para a criação de condições e variáveis personalizadas, os usuários podem estender a funcionalidade do framework para atender às necessidades específicas de suas automações.
+- **Gerenciamento de Estado**: O Pytrobot utiliza um sistema de máquina de estados para gerenciar o fluxo de automação, permitindo um controle preciso sobre cada etapa do processo. Explore a classe 'StateMachine' e se familiarize com seus atributos.
+- **Estados Definidos pelo Usuário**: O usuário deve pensar em seu robô através dos 'Estados' que ele terá. Use a classe 'BaseState' que te fornecerá os métodos abstratos e integrará eles à máquina de estado. Essa classe base também te dará poder para manipular a máquina de estados com o método 'transition'.
+- **Dataset de processamento**: O usuário deve pensar na 'carga de processamento' que o robô irá executar, essa carga deve ser iniciada e estruturada em um objeto 'TransactionData', onde cada item é um 'TransactionItem'. Essa classe fornecerá métodos de acesso e controle de processamento. 
+- **Objetos únicos com Singleton**: O usuário deve entender que 'TransactionData' e todos os estados que ele implementar não terão múltiplas instancias. Este framework se sustenta no uso do padrão 'Singleton', e usa isso para recuperação dinâmica das classes instaciadas.
 
 
 ## Como Começar
 Para começar a usar o Pytrobot, siga os seguintes passos:
 
 1. **Instalação**:
-   Instale o Pytrobot usando pip:
+   Instale o Pytrobot usando pip e git (futuramente estará em repo PyPi):
    ```sh
-   pip install pytrobot
+   pip install git+https://github.com/Batchuka/PyTRobot-Framework.git
    ```
 2. **Desenvolva**:
-    Crie seus próprios estados e defina as transições entre eles. Consulte a documentação para exemplos e padrões recomendados.
+    Crie seus próprios estados e defina as transições entre eles. Consulte a documentação para exemplos e padrões recomendados. Use os comandos do Pytrobot CLI
+    ```sh
+    trt new
+    ```
+
 3. **Build**:
-    Construa sua automação com o comando:
+    Builde o projeto para um pacote instalável que será automaticamente usado pelo Dockerfile — esse projeto pressupoe ambiente Docker como runtime.
     ```sh
     trt build
     ```
-    Que deve ser dado no diretório do seu projeto.
 
 4. **Teste**:
-    A partir do Projeto Gerado, nicie o teste da lógica no diretório '.trt'.
+    Recomenda-se fortemente testar os estados com a construção de testes unitários 'Unitest'
+    ```sh
+    trt testState
+    ```
 
 
 ## Documentação

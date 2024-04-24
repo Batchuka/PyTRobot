@@ -1,7 +1,7 @@
-# Use a imagem do Selenium como base — aqui você pode escolher uma versão específica.
+# Use a imagem do Selenium        ↓ aqui você pode escolher a versão que quiser
 FROM selenium/standalone-chrome:latest
 
-# Exponha as portas necessárias
+# Expondo portas necessárias do Selenium
 EXPOSE 4444 7900
 
 # Defina o diretório de trabalho para /home/seluser
@@ -13,6 +13,7 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
+# instalando o CLI da AWS
 RUN pip install --no-cache-dir awscli
 
 # Configurar as credenciais do AWS CodeArtifact
