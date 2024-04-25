@@ -5,7 +5,7 @@ from invoke.collection import Collection
 from invoke.program import Program
 
 # Importe suas tarefas aqui
-from pytrobot.tasks import new, state, testState
+from pytrobot.tasks import new, state, testState, build
 # from pytrobot.tasks import build
 
 namespace = Collection()
@@ -13,6 +13,7 @@ namespace = Collection()
 namespace.add_task(new, name="new") #type:ignore
 namespace.add_task(state, name="state") #type:ignore
 namespace.add_task(testState, name="testState") #type:ignore
+namespace.add_task(build, name="build") #type:ignore
 
 
 # Adicione mais tarefas conforme necessário
