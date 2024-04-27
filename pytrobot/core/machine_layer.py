@@ -19,7 +19,7 @@ class TrueTable(metaclass=Singleton):
         }
 
     def get_state_info(self, state_name):
-        return self._states.get(state_name)
+         return self._states.get(state_name)
 
 class StateMachine(metaclass=Singleton):
 
@@ -70,7 +70,9 @@ class StateMachine(metaclass=Singleton):
         success_state_name = state_info['success_state']
         failure_state_name = state_info['failure_state']
         success_state_info = self._true_table.get_state_info(success_state_name)
+        if success_state_info is None: raise StateTransitionError(f"Success {success_state_name} state not found.")
         failure_state_info = self._true_table.get_state_info(failure_state_name)
+        if failure_state_info is None: raise StateTransitionError(f"Failure {failure_state_name} state not found.")
 
         if success_state_info and failure_state_info:
             self._next_state_on_success = success_state_info['instance']

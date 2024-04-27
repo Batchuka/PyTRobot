@@ -5,11 +5,11 @@ Adicionar essa modificação de cores no logger para dar acesso
 como um recurso.
 """
 
-RED = '\033[91m'
-GREEN = '\033[92m'
-YELLOW = '\033[93m'
-RESET = '\033[0m'
-BLUE = '\033[94m'
+RED     = '\033[91m'
+GREEN   = '\033[92m'
+YELLOW  = '\033[93m'
+RESET   = '\033[0m'
+BLUE    = '\033[94m'
 
 def HandleException(func):
     """
@@ -75,7 +75,7 @@ def print_pytrobot_banner():
         "               Copyright © 2023",
         "\n\n"
     ]
-    print("\n".join(banner_lines))
+    print(BLUE + "\n".join(banner_lines) + RESET)
 
 def pytrobot_print(*args, **kwargs):
     """Função print personalizada para redirecionar para o logger."""

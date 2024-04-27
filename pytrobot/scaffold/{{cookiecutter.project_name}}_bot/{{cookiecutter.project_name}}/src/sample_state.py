@@ -1,20 +1,27 @@
-from pytrobot import State, First, BaseState
+from pytrobot import State, First, BaseState, TransactionData
 
-@First
-@State('StateOnSucess', 'StateOnError')
+# @First            → Will set this state as the first in StateMachine
+# TransactionData() → This class will save the transaction data
+
+
+@State('StateOnSucess', 'StateOnFailure')
 class SampleState(BaseState):
     """
-    Um estado inicial de exemplo que pode ser usado como ponto de partida.
+    Read docstrings
     """
 
     def on_entry(self):
+
         pass
 
     def execute(self):
+
         pass
 
     def on_exit(self):
+
         pass
 
     def on_error(self, error):
+
         pass

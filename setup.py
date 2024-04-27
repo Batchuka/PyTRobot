@@ -11,7 +11,7 @@ def get_install_requires():
 
 setup(
     name='pytrobot',
-    version='3.0.1',
+    version='3.0.3',
     author='Batchuka',
     author_email='https://github.com/Batchuka',
     long_description=(Path(__file__).parent / "README.md").read_text(),

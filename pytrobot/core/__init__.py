@@ -7,15 +7,17 @@ from pytrobot.core.singleton import Singleton
 from pytrobot.core.utils import print_pytrobot_banner, pytrobot_print
 from abc import abstractmethod
 
-RED     = '\033[91m'
-GREEN   = '\033[92m'
-YELLOW  = '\033[93m'
-RESET   = '\033[0m'
-BLUE    = '\033[94m'
+RED = '\033[91m'
+GREEN = '\033[92m'
+YELLOW = '\033[93m'
+RESET = '\033[0m'
+BLUE = '\033[94m'
+
 
 class PyTRobotNotInitializedException(Exception):
     """Exceção para ser levantada quando o PyTRobot não está instanciado."""
     pass
+
 
 class PyTRobot(metaclass=Singleton):
     """Classe principal do pytrobot, implementada como um Singleton."""
@@ -31,14 +33,14 @@ class PyTRobot(metaclass=Singleton):
         self._resources: str = ''
         if not hasattr(self, '_initialized'):
             self._initialize()
-            
+
     def _initialize(self):
         print_pytrobot_banner()
         builtins.print = pytrobot_print
 
         # Inicializa os novos atributos
         self.config_data = ConfigData()
-        self.state_machine = StateMachine(true_table = TrueTable())
+        self.state_machine = StateMachine(true_table=TrueTable())
         self._initialized = True
 
     def _register_core_states(self):
@@ -59,7 +61,8 @@ class PyTRobot(metaclass=Singleton):
     @classmethod
     def get_instance(cls):
         if cls._instance is None:
-            raise PyTRobotNotInitializedException("PyTRobot object is not initialized.")
+            raise PyTRobotNotInitializedException(
+                "PyTRobot object is not initialized.")
         return cls._instance
 
     @classmethod
@@ -68,7 +71,9 @@ class PyTRobot(metaclass=Singleton):
             instance = cls.get_instance()
             instance._first_state_name = state_name
         except PyTRobotNotInitializedException as e:
-            warnings.warn(str(f"{e} : Your objects will not be registered"), RuntimeWarning)
+            warnings.warn(
+                str(f"{e} : Your objects will not be registered"), RuntimeWarning)
+
 
 class BaseState(metaclass=Singleton):
     """
@@ -88,24 +93,26 @@ class BaseState(metaclass=Singleton):
         on_exit: Executed when the state completes successfully.
         on_error: Executed when an error occurs during state execution.
     """
+
     def __str__(self) -> str:
         return f"State {self.__class__.__name__}"
 
     def __init__(self, state_machine_operator):
         self.state_machine_operator = state_machine_operator
         self._status = None
-        self.retry_counter = 0
+        self.retry_counter = 3
         self.reset = False
 
     def transition(self, on_success=None, on_failure=None):
         """
         Allows state instances to programmatically update their transition paths.
-        
+
         :param on_success: Class name of the next state on success.
         :param on_failure: Class name of the next state on failure.
         """
         # Uses the operator to update the transitions based on provided state names.
-        self.state_machine_operator(on_success=on_success, on_failure=on_failure)
+        self.state_machine_operator(
+            on_success=on_success, on_failure=on_failure)
 
     @abstractmethod
     def execute(self):
@@ -143,12 +150,14 @@ class BaseState(metaclass=Singleton):
         pass
 
     def _execute(self):
-        print(f"{BLUE} ========== Running 'execute' ========== {self.__class__.__name__} {RESET}")
+        print(
+            f"{BLUE} ========== Running 'execute' ========== {self.__class__.__name__} {RESET}")
         method = getattr(self, 'execute', None)
         if method:
             method()
         else:
-            raise NotImplementedError("The 'execute' method must be implemented by the subclass.")
+            raise NotImplementedError(
+                "The 'execute' method must be implemented by the subclass.")
 
     def _on_entry(self):
 
@@ -157,17 +166,20 @@ class BaseState(metaclass=Singleton):
         if method:
             method()
         else:
-            raise NotImplementedError("The 'on_entry' method must be implemented by the subclass.")
+            raise NotImplementedError(
+                "The 'on_entry' method must be implemented by the subclass.")
 
     def _on_exit(self):
         self._status = True
-        print(f"{BLUE} ============== Success ================ {self.__class__.__name__}  {RESET}")
+        print(
+            f"{BLUE} ============== Success ================ {self.__class__.__name__}  {RESET}")
         method = getattr(self, 'on_exit', None)
         if method:
             method()
         else:
             self._status = False
-            raise NotImplementedError("The 'on_exit' method must be implemented by the subclass.")
+            raise NotImplementedError(
+                "The 'on_exit' method must be implemented by the subclass.")
 
     def _on_error(self, error):
         self._status = False
@@ -176,13 +188,15 @@ class BaseState(metaclass=Singleton):
         if method:
             if self.retry_counter > 0:
                 self.retry_counter -= 1
-                print(f"Attempt failed. {self.retry_counter} attempts remaining.")
+                print(
+                    f"Attempt failed. {self.retry_counter} attempts remaining.")
                 self.state_machine_operator()
             else:
                 print("Maximum number of attempts reached.")
             return method(error)
         else:
-            raise NotImplementedError(f"The 'on_error' method must be implemented by the subclass. Error: {error}")
+            raise NotImplementedError(
+                f"The 'on_error' method must be implemented by the subclass. Error: {error}")
 
 
 # Decoradores
@@ -192,11 +206,14 @@ def State(next_state_on_success=None, next_state_on_failure=None):
         try:
             instance = PyTRobot.get_instance()
             st = instance.state_machine
-            st.add_state_transition(cls, next_state_on_success, next_state_on_failure)
+            st.add_state_transition(
+                cls, next_state_on_success, next_state_on_failure)
         except PyTRobotNotInitializedException as e:
-            warnings.warn(str(f"{e} : Your objects will not be registered"), RuntimeWarning)
+            warnings.warn(
+                str(f"{e} : Your objects will not be registered"), RuntimeWarning)
         return cls
     return decorator
+
 
 def First(cls):
     PyTRobot.set_first_state(cls.__name__)
@@ -212,7 +229,7 @@ class _FinisherState(BaseState):
         pass
 
     def on_exit(self):
-        
+
         import threading
 
         # Imprime a contagem de threads ativas antes de sair
@@ -225,6 +242,7 @@ class _FinisherState(BaseState):
 
         import os
         os._exit(0)
+
 
 class _StarterState(BaseState):
 
@@ -239,4 +257,3 @@ class _StarterState(BaseState):
 
     def on_error(self):
         pass
-
