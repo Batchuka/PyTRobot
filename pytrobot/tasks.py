@@ -47,8 +47,8 @@ IMPORT_PATTERN          = re.compile(r'^\s*(?:import (\S+)|from (\S+?) import)')
 
 CORE_PATH               = os.path.join(os.path.dirname(__file__), "core")
 SCAFFOLD_PATH           = os.path.join(os.path.dirname(__file__), 'scaffold')
-SAMPLE_STATE_PATH       = os.path.join(SCAFFOLD_PATH, '{{cookiecutter.project_name}}_bot', '{{cookiecutter.project_name}}', 'src', 'sample_state.py')
-TEST_SAMPLE_STATE_PATH  = os.path.join(SCAFFOLD_PATH, '{{cookiecutter.project_name}}_bot', 'tests', 'test_sample_state.py')
+SAMPLE_STATE_PATH       = os.path.join(SCAFFOLD_PATH, '{{cookiecutter.project_name}}', '{{cookiecutter.project_name}}', 'src', 'sample_state.py')
+TEST_SAMPLE_STATE_PATH  = os.path.join(SCAFFOLD_PATH, '{{cookiecutter.project_name}}', 'tests', 'test_sample_state.py')
 
 ################### SCAFFOLDS ###################
 
@@ -107,18 +107,18 @@ def create_project_yaml(output_dir, PROJECT_NAME, PROJECT_VERSION):
     print(f"{BLUE}========== Creating 'project.yaml' =========={RESET}")
     
     # Construindo os caminhos dinamicamente com base no projeto recém-criado
-    project_dir = os.path.join(output_dir, f"{PROJECT_NAME}_bot")
+    project_dir = os.path.join(output_dir, f"{PROJECT_NAME}")
     yaml_content = {
         'project_name': PROJECT_NAME,
         'version': PROJECT_VERSION,
         'project_path': project_dir,
         'package_path': os.path.join(project_dir, PROJECT_NAME),
-        'build_path': os.path.join(project_dir, ".trt"),
+        'build_path': os.path.join(project_dir, "dist"),
         'aws':{
-            'default_region':'your_default_region',
-            'account_id':'your_account_id',
-            'codeartifact_domain':'your_codeartifact_domain',
-            'codeartifact_repository':'your_codeartifact_repository'
+            'default_region':'replace >> your_default_region',
+            'account_id':'replace >> your_account_id',
+            'codeartifact_domain':'replace >> your_codeartifact_domain',
+            'codeartifact_repository':'replace >> your_codeartifact_repository'
         }
     }
 
@@ -168,7 +168,7 @@ def create_setup_py(output_dir, PROJECT_NAME, PROJECT_VERSION):
 
     print(f"{BLUE}========== Creating package 'setup.py' =========={RESET}")
 
-    # Cria um arquivo setup.py no diretório .trt com a configuração do pacote
+    # Cria um arquivo setup.py do projeto com a configuração do pacote
     setup_path = os.path.join(output_dir, "setup.py")
     requirements_path = os.path.join(output_dir, "requirements.txt")
     with open(setup_path, 'w') as setup_file:
@@ -192,7 +192,7 @@ setup(
         )
     print(f"setup.py file created in: {setup_path}")
 
-def create_requirements_txt(output_dir):
+def create_requirements_txt(output_dir, PROJECT_NAME):
 
     print(f"{BLUE}========== Creating package 'requirements.txt'  =========={RESET}")
 
@@ -218,7 +218,7 @@ def create_requirements_txt(output_dir):
                     lib = match.group(1) or match.group(2)
                     if '.' in lib:
                         lib = lib.split('.')[1]
-                    if is_standard_library(lib):
+                    if is_standard_library(lib) or lib == PROJECT_NAME:
                         continue
 
                     try:
@@ -316,19 +316,17 @@ def build(ctx, project_path='.'):
 
         PROJECT_NAME    = project_config['project_name']
         PROJECT_PATH    = project_config['project_path']
-        # PACKAGE_PATH    = project_config['package_path']
+        PACKAGE_PATH    = project_config['package_path']
         PROJECT_VERSION = project_config['version']
 
         # Remover pastas de build do python
         remove_previous_build(PROJECT_PATH)
 
         # Criação do requirements para injetar as dependências adequadas
-        create_requirements_txt(PROJECT_PATH)
-
-        # # Criação do __main__ para invocar pytrobot
-        # create_main_py(PACKAGE_PATH)
+        create_requirements_txt(PROJECT_PATH, PROJECT_NAME)
 
         #BUG : Adicionar o auto_import do usuário.
+        auto_import_states(PACKAGE_PATH)
 
         # Criação do setup.py para configurar pacote
         create_setup_py(PROJECT_PATH, PROJECT_NAME, PROJECT_VERSION)
@@ -344,47 +342,7 @@ def build(ctx, project_path='.'):
     except Exception as e:
         print(f"Error during build process: {e}")
 
-@task
-def old_build(ctx, project_path='.'):
-
-    # Determina o diretório base do projeto
-    project_path = os.path.abspath(project_path)
-    print(f"Building project in: {project_path}")
-
-    try:
-        # Supondo que esta função agora recebe o diretório base do projeto
-        project_config = get_project_config(project_path)
-
-        BUILD_PATH = project_config['build_path']
-        PACKAGE_PATH = project_config['package_path']
-        PROJECT_NAME = project_config['project_name']
-        PROJECT_VERSION = project_config['version']
-
-        # Passa o TRT_DIR para as funções
-        remove_previous_build(BUILD_PATH)
-        os.makedirs(BUILD_PATH)
-
-        copy_user_logic_to_build(PACKAGE_PATH, BUILD_PATH, PROJECT_NAME)
-        copy_core_logic_to_build(CORE_PATH, BUILD_PATH, PROJECT_NAME)
-
-        adjust_imports_to_build(BUILD_PATH, PROJECT_NAME)
-
-        create_setup_py(BUILD_PATH, PROJECT_NAME, PROJECT_VERSION)
-
-        # Obtém o URL do CodeArtifact
-        pip_index_url = get_codeartifact_url(ctx, project_path)
-
-        # Passa o caminho do BUILD e o pip_index_url para a função de construção do pacote
-        build_package(PACKAGE_PATH, pip_index_url)
-
-        print(f"Build successful for {PROJECT_NAME} version {PROJECT_VERSION}")
-
-    except Exception as e:
-        print(f"Error during build process: {e}")
-
-# Funtions to 'build'
-
-def remove_previous_build(BUILD_PATH):
+def remove_previous_build(PROJECT_PATH):
 
     print(f"{BLUE}========== Cleaning up artifacts from old builds =========={RESET}")
 
@@ -392,7 +350,7 @@ def remove_previous_build(BUILD_PATH):
     # Files do remove
     files_to_remove = ['requirements.txt', 'setup.py']
     for file_name in files_to_remove:
-        file_path = os.path.join(BUILD_PATH, file_name)
+        file_path = os.path.join(PROJECT_PATH, file_name)
         if os.path.exists(file_path):
             os.remove(file_path)
             print(f"Removed: {file_path}")
@@ -401,7 +359,7 @@ def remove_previous_build(BUILD_PATH):
     folders_to_remove = ['dist', '*.egg-info']
     for folder_pattern in folders_to_remove:
         # Usando glob para encontrar todos os diretórios que correspondem ao padrão
-        for folder in glob.glob(os.path.join(BUILD_PATH, folder_pattern)):
+        for folder in glob.glob(os.path.join(PROJECT_PATH, folder_pattern)):
             if os.path.isdir(folder):
                 shutil.rmtree(folder)
                 print(f"Removed directory: {folder}")
@@ -418,55 +376,7 @@ def build_package(BUILD_PATH, pip_index_url):
     subprocess.run([sys.executable, '-m', 'build', BUILD_PATH], env=env, check=True)
 
 
-# Funtions to 'old_build' → will be depreciated
-
-def copy_user_logic_to_build(PACKAGE_PATH, BUILD_PATH, PROJECT_NAME):
-
-    # Copia os diretórios 'src' e 'resources' para o diretório .trt
-    for subdir in ['src', 'resources']:
-        src_subdir = os.path.join(PACKAGE_PATH, subdir)
-        if os.path.exists(src_subdir):
-            dest_subdir = os.path.join(BUILD_PATH, PROJECT_NAME, subdir)
-            shutil.copytree(src_subdir, dest_subdir)
-
-    # Copia o arquivo 'requirements.txt'
-    requirements_src = os.path.join(PACKAGE_PATH, "requirements.txt")
-    requirements_dest = os.path.join(BUILD_PATH, "requirements.txt")
-    shutil.copy(requirements_src, requirements_dest)
-
-def copy_core_logic_to_build(CORE_DIR, BUILD_PATH, PROJECT_NAME):
-
-    # Copia os arquivos do diretório 'core' para o diretório de build .trt
-    for item in os.listdir(CORE_DIR):
-        item_path = os.path.join(CORE_DIR, item)
-        if os.path.isfile(item_path):
-            shutil.copy(item_path, f'{BUILD_PATH}/{PROJECT_NAME}')
-
-def adjust_imports_to_build(BUILD_PATH, PROJECT_NAME):
-    # Atualiza os imports nos arquivos Python dentro do diretório .trt
-    for root, _, files in os.walk(BUILD_PATH):
-        for file in files:
-            if file.endswith('.py'):
-                file_path = os.path.join(root, file)
-                with open(file_path, 'r') as f:
-                    content = f.read()
-                content = re.sub(r'pytrobot.core\.',
-                                 f'{PROJECT_NAME}.', content)
-                with open(file_path, 'w') as f:
-                    f.write(content)
-
-
 ################### UTILS ###################
-
-@task
-def test(ctx):
-    ctx.run("pytest tests/")
-    ctx.run("pytest --docker tests/")
-
-@task
-def clean(ctx):
-    shutil.rmtree("dist", ignore_errors=True)
-    shutil.rmtree("build", ignore_errors=True)
 
 def auto_import_states(directory):
     """
@@ -500,4 +410,4 @@ if __name__ == '__main__':
     # new(c, output_path='E:\\Projetos')
     # state(c, output_path='/home/seluser/teste_proj/sample_bot/sample/src')
     # testState(c, output_path='/home/seluser/teste_proj/sample_bot/tests')
-    build(c, project_path='E:\\Projetos\\sample_bot')
+    build(c, project_path='E:\\Projetos\\wmt_registro_di_bot')

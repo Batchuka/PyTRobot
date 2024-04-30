@@ -1,6 +1,6 @@
 import unittest
 from pytrobot.core.dataset_layer import TransactionData
-from {{cookiecutter.project_name}}_bot.{{cookiecutter.project_name}}.src.dispatcher_state import DispatcherState  # type:ignore
+from {{cookiecutter.project_name}}.{{cookiecutter.project_name}}.src.dispatcher_state import DispatcherState  # type:ignore
 
 # Classe de teste unitário
 

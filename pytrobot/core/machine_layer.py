@@ -107,7 +107,6 @@ class StateMachine(metaclass=Singleton):
 
     def run(self):
 
-
         while self.current_state is not None:
             
             self.evaluate_next_state()
@@ -118,5 +117,6 @@ class StateMachine(metaclass=Singleton):
                 self.current_state._on_exit()
                 self._current_state = self.next_state_on_success
             except Exception as e:
+                # TODO : Implementar o retry
                 self.current_state._on_error(e)
                 self._current_state = self.next_state_on_failure

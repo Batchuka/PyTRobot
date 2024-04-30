@@ -14,7 +14,7 @@ class PerformerState(BaseState):
 
     def execute(self):
 
-        if 0 < self.retry_counter < 2:
+        if 2 < self.retry_counter < 4:
             print(
                 f'DispatcherState: Simulando uma exceção. Tentativas restantes: {self.retry_counter}')
             self.retry_counter -= 1

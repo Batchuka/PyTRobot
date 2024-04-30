@@ -190,7 +190,7 @@ class BaseState(metaclass=Singleton):
                 self.retry_counter -= 1
                 print(
                     f"Attempt failed. {self.retry_counter} attempts remaining.")
-                self.state_machine_operator()
+                self.transition(on_failure=self.__class__.__name__)
             else:
                 print("Maximum number of attempts reached.")
             return method(error)

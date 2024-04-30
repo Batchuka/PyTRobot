@@ -1,11 +1,11 @@
 import unittest
 from pytrobot.core.dataset_layer import TransactionData
-from {{cookiecutter.project_name}}_bot.{{cookiecutter.project_name}}.src.sample_state import SampleState  # type:ignore
+from {{cookiecutter.project_name}}.{{cookiecutter.project_name}}.src.performer_state import PerfomerState  # type:ignore
 
 # Classe de teste unitário
 
 
-class TestSampleState(unittest.TestCase):
+class TestPerfomerState(unittest.TestCase):
 
     def setUp(self):
 

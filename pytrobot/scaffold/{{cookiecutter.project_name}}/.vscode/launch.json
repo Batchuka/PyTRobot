@@ -14,7 +14,7 @@
             "name": "Unit Dispatcher",
             "type": "python",
             "request": "launch",
-            "program": "{{cookiecutter.project_name}}_bot/tests/test_dispatcher_state.py",
+            "program": "{{cookiecutter.project_name}}/tests/test_dispatcher_state.py",
             "console": "integratedTerminal",
             "justMyCode": true,
             "cwd": "${workspaceFolder}"
@@ -23,7 +23,7 @@
             "name": "Unit Performer",
             "type": "python",
             "request": "launch",
-            "program": "{{cookiecutter.project_name}}_bot/tests/test_perfomer_state.py",
+            "program": "{{cookiecutter.project_name}}/tests/test_perfomer_state.py",
             "console": "integratedTerminal",
             "justMyCode": true,
             "cwd": "${workspaceFolder}"
