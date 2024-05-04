@@ -99,6 +99,53 @@ def new(c, name="", output_path='.'):
     except Exception as e:
         print(f"An error occurred while creating the project: {e}")
 
+@task
+def new_new(c, name="", output_path='.'):
+
+    # Verifica se a versão do Python é 3.10 ou superior
+    if sys.version_info < (3, 10):
+        print("Python 3.10 or higher is required to create a new project.")
+        return
+
+    project_name = name if name else input("Please enter the new PyTRobot project name: ")
+    version = input("Please enter the new project version (default is 0.1.0): ") or "0.1.0"
+
+    # Converte o caminho relativo em absoluto se necessário
+    output_path = os.path.abspath(output_path) if output_path != '.' else os.getcwd()
+
+    # Supondo que a criação do projeto ocorra aqui com cookiecutter
+    try:
+        cookiecutter(
+            template=SCAFFOLD_PATH,
+            extra_context={'project_name': project_name, 'version': version},
+            no_input=True,
+            output_dir=output_path
+        )
+
+        project_dir = Path(output_path) / project_name
+        venv_dir = project_dir / 'venv'
+
+        # Criação do ambiente virtual
+        subprocess.run([sys.executable, '-m', 'venv', str(venv_dir)])
+
+        # Chamada para criar o arquivo YAML após a criação do projeto
+        create_project_yaml(project_dir, project_name, version)
+        
+        # Criação dos arquivos setup.py e requirements.txt
+        create_setup_py(project_dir, project_name, version)
+        create_requirements_txt(project_dir, project_name)
+
+        # Instalação do pacote em modo editável
+        activate_venv = str(venv_dir / 'Scripts' / 'activate') if sys.platform == 'win32' else str(venv_dir / 'bin' / 'activate')
+        subprocess.run([activate_venv, '&&', 'pip', 'install', '-e', '.'], shell=True, cwd=project_dir)
+
+        print(f"Project '{project_name}' created successfully in '{output_path}'.")
+        print(f"To activate the virtual environment, run: `source {activate_venv}`")
+        
+    except Exception as e:
+        print(f"An error occurred while creating the project: {e}"):
+
+
 
 ################### FILE GENERATION FUNCIONTS ###################
 
@@ -197,8 +244,18 @@ def create_requirements_txt(output_dir, PROJECT_NAME):
     print(f"{BLUE}========== Creating package 'requirements.txt'  =========={RESET}")
 
     def is_standard_library(name):
-        # Retorna True se o módulo for uma biblioteca padrão do Python
-        return name in sys.stdlib_module_names
+        """
+        Retorna True se o módulo for uma biblioteca padrão do Python.
+        
+        Levanta uma exceção se o Python em uso for anterior à versão 3.10,
+        pois sys.stdlib_module_names só está disponível a partir do Python 3.10.
+        """
+        # Primeiro, verifique a versão do Python em execução
+        if sys.version_info < (3, 10):
+            raise RuntimeError("Pytrobot requires Python 3.10 or higher")
+        
+        # Se a versão for 3.10 ou superior, prossiga com a verificação
+        return name in sys.stdlib_module_names #type:ignore
 
     # Dicionário para armazenar bibliotecas
     libraries = {}
@@ -208,6 +265,8 @@ def create_requirements_txt(output_dir, PROJECT_NAME):
 
     # Percorre os arquivos do diretório do projeto
     for file in project_dir.rglob('*.py'):
+        if 'venv' in file.parts:
+            continue  # Ignora arquivos dentro de 'venv'
         with open(file, 'r') as f:
             for line in f:
                 if line.strip().startswith('#') or not line.strip():
@@ -410,4 +469,4 @@ if __name__ == '__main__':
     # new(c, output_path='E:\\Projetos')
     # state(c, output_path='/home/seluser/teste_proj/sample_bot/sample/src')
     # testState(c, output_path='/home/seluser/teste_proj/sample_bot/tests')
-    build(c, project_path='E:\\Projetos\\wmt_registro_di_bot')
+    build(c, project_path='/home/seluser/wmt-busca-info-cct-bot')

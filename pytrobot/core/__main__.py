@@ -2,7 +2,6 @@
 import os
 import sys
 import importlib
-import pathlib
 from pytrobot.core import PyTRobot
 
 def entrypoint():
