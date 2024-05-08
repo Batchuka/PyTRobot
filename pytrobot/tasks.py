@@ -143,7 +143,7 @@ def new_new(c, name="", output_path='.'):
         print(f"To activate the virtual environment, run: `source {activate_venv}`")
         
     except Exception as e:
-        print(f"An error occurred while creating the project: {e}"):
+        print(f"An error occurred while creating the project: {e}")
 
 
 
