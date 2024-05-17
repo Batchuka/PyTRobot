@@ -3,6 +3,7 @@ import os
 import re
 import sys
 import yaml
+import toml
 import shutil
 import subprocess
 import glob
@@ -16,28 +17,32 @@ from invoke import task, context, Collection, Program  # type:ignore
 
 def get_project_config(project_path):
     """
-    Carrega as configurações do projeto a partir de um arquivo YAML na raiz do diretório especificado.
+    Carrega as configurações do projeto a partir de um arquivo TOML na raiz do diretório especificado.
 
     :param project_path: Caminho para a raiz do diretório do projeto.
     :return: Um dicionário com as configurações do projeto.
+    :raises FileNotFoundError: Se o arquivo pyproject.toml não for encontrado.
+    :raises toml.TomlDecodeError: Se o arquivo pyproject.toml não puder ser decodificado.
     """
-    yaml_file_path = os.path.join(project_path, 'project.yaml')
-    try:
-        with open(yaml_file_path, 'r') as file:
-            config = yaml.safe_load(file)
-            if config is None:
-                raise ValueError(
-                    "The project.yaml file is empty or has incorrect content.")
-            return config
-    except FileNotFoundError:
-        raise FileNotFoundError(
-            f"The project.yaml file was not found at {yaml_file_path}.")
-    except yaml.YAMLError as e:
-        raise yaml.YAMLError(
-            f"An error occurred while parsing the YAML file at {yaml_file_path}: {e}")
-    except Exception as e:
-        raise Exception(
-            f"An unexpected error occurred while loading the project configuration: {e}")
+    pyproject_file_path = os.path.join(project_path, 'pyproject.toml')
+    
+    if not os.path.exists(pyproject_file_path):
+        raise FileNotFoundError(f"pyproject.toml not found in {project_path}")
+
+    with open(pyproject_file_path, 'r') as pyproject_file:
+        try:
+            pyproject_content = toml.load(pyproject_file)
+        except toml.TomlDecodeError as e:
+            raise toml.TomlDecodeError(f"Failed to decode pyproject.toml: {e}")
+    
+    project_config = {
+        'project_name': pyproject_content['project']['name'],
+        'project_path': project_path,
+        'package_path': os.path.join(project_path, pyproject_content['project']['name']),
+        'version': pyproject_content['project']['version']
+    }
+    
+    return project_config
 
 
 
@@ -70,8 +75,8 @@ def state(c, output_path="."):
     shutil.copy(SAMPLE_STATE_PATH, sample_state_path)
     print(f"New state created at: {sample_state_path}")
 
-@task
-def new(c, name="", output_path='.'):
+@task # deprecated
+def old_new(c, name="", output_path='.'):
     project_name = name if name else input(
         "Please enter the new PyTRobot project name: ")
     version = input(
@@ -100,7 +105,7 @@ def new(c, name="", output_path='.'):
         print(f"An error occurred while creating the project: {e}")
 
 @task
-def new_new(c, name="", output_path='.'):
+def new(c, name="", output_path='.'):
 
     # Verifica se a versão do Python é 3.10 ou superior
     if sys.version_info < (3, 10):
@@ -115,6 +120,7 @@ def new_new(c, name="", output_path='.'):
 
     # Supondo que a criação do projeto ocorra aqui com cookiecutter
     try:
+        print(f"{BLUE}========== Copying scaffold =========={RESET}")
         cookiecutter(
             template=SCAFFOLD_PATH,
             extra_context={'project_name': project_name, 'version': version},
@@ -125,30 +131,32 @@ def new_new(c, name="", output_path='.'):
         project_dir = Path(output_path) / project_name
         venv_dir = project_dir / 'venv'
 
+        print(f"{BLUE}========== Creating 'venv' enviroment =========={RESET}")
         # Criação do ambiente virtual
         subprocess.run([sys.executable, '-m', 'venv', str(venv_dir)])
 
-        # Chamada para criar o arquivo YAML após a criação do projeto
-        create_project_yaml(project_dir, project_name, version)
-        
-        # Criação dos arquivos setup.py e requirements.txt
-        create_setup_py(project_dir, project_name, version)
-        create_requirements_txt(project_dir, project_name)
+        # Chamada para criar o arquivo pyproject.toml após a criação do projeto
+        create_pyproject_toml(project_dir, project_name, version)
 
         # Instalação do pacote em modo editável
-        activate_venv = str(venv_dir / 'Scripts' / 'activate') if sys.platform == 'win32' else str(venv_dir / 'bin' / 'activate')
-        subprocess.run([activate_venv, '&&', 'pip', 'install', '-e', '.'], shell=True, cwd=project_dir)
+        if sys.platform == 'win32':
+            activate_cmd = f"{venv_dir / 'Scripts' / 'activate'} && pip install -e ."
+        else:
+            activate_cmd = f". {venv_dir / 'bin' / 'activate'} && pip install -e ."
+
+        print(f"{BLUE}========== Installing project on editable mode =========={RESET}")
+
+        subprocess.run(activate_cmd, shell=True, cwd=project_dir, executable="/bin/bash")
 
         print(f"Project '{project_name}' created successfully in '{output_path}'.")
-        print(f"To activate the virtual environment, run: `source {activate_venv}`")
         
     except Exception as e:
         print(f"An error occurred while creating the project: {e}")
 
 
-
 ################### FILE GENERATION FUNCIONTS ###################
 
+# deprecated
 def create_project_yaml(output_dir, PROJECT_NAME, PROJECT_VERSION):
 
     print(f"{BLUE}========== Creating 'project.yaml' =========={RESET}")
@@ -177,6 +185,7 @@ def create_project_yaml(output_dir, PROJECT_NAME, PROJECT_VERSION):
 
     print(f"YAML configuration file created at: {yaml_file_path}")
 
+# deprecated
 def create_main_py(output_dir):
 
     print(f"{BLUE}========== Creating package '__main__.py' =========={RESET}")
@@ -211,6 +220,7 @@ if __name__ == '__main__':
 
     pass
 
+# deprecated
 def create_setup_py(output_dir, PROJECT_NAME, PROJECT_VERSION):
 
     print(f"{BLUE}========== Creating package 'setup.py' =========={RESET}")
@@ -294,6 +304,42 @@ def create_requirements_txt(output_dir, PROJECT_NAME):
 
     print(f"requirements.txt file created in: {requirements_path}")
 
+def create_pyproject_toml(output_dir, project_name, project_version):
+
+    print(f"{BLUE}========== Creating 'pyproject.toml' =========={RESET}")
+
+# É necessário informar que a ferramenta é poetry mesmo?
+
+    pyproject_content = f"""
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "{project_name}"
+version = "{project_version}"
+description = "A short description of the project"
+authors = [
+    {{ name = "Your Name", email = "your.email@example.com" }}
+]
+readme = "README.md"
+dependencies = [
+    "pytrobot==3.0.5",
+    "boto3==1.26.141",
+    "invoke==2.2.0",
+    "cookiecutter==2.5.0"
+]
+
+[project.scripts]
+{project_name}-run = "{project_name}.__main__:main"
+    """
+
+    pyproject_file_path = os.path.join(output_dir, "pyproject.toml")
+    with open(pyproject_file_path, 'w') as pyproject_file:
+        pyproject_file.write(pyproject_content)
+    
+    print(f"pyproject.toml file created at: {pyproject_file_path}")
+
 ################### AWS ###################
 
 def get_codeartifact_url(ctx, project_path='.'):
@@ -370,7 +416,7 @@ def build(ctx, project_path='.'):
     print(f"Building project in: {project_path}")
 
     try:
-        # Supondo que esta função agora recebe o diretório base do projeto
+        # Obtém as configurações do projeto a partir do pyproject.toml
         project_config = get_project_config(project_path)
 
         PROJECT_NAME    = project_config['project_name']
@@ -398,6 +444,10 @@ def build(ctx, project_path='.'):
 
         print(f"Build successful for {PROJECT_NAME} version {PROJECT_VERSION}")
 
+    except FileNotFoundError as e:
+        print(f"Error: {e}")
+    except toml.TomlDecodeError as e:
+        print(f"Error: {e}")
     except Exception as e:
         print(f"Error during build process: {e}")
 
@@ -467,6 +517,7 @@ def auto_import_states(directory):
 if __name__ == '__main__':
     c = context.Context()
     # new(c, output_path='E:\\Projetos')
+    new_v2(c, output_path='/home/seluser/teste')
     # state(c, output_path='/home/seluser/teste_proj/sample_bot/sample/src')
     # testState(c, output_path='/home/seluser/teste_proj/sample_bot/tests')
-    build(c, project_path='/home/seluser/wmt-busca-info-cct-bot')
+    # build(c, project_path='/home/seluser/wmt-busca-info-cct-bot')
