@@ -2,8 +2,7 @@
 import os
 import re
 import sys
-import yaml
-import toml
+import tomllib
 import shutil
 import subprocess
 import glob
@@ -22,18 +21,18 @@ def get_project_config(project_path):
     :param project_path: Caminho para a raiz do diretório do projeto.
     :return: Um dicionário com as configurações do projeto.
     :raises FileNotFoundError: Se o arquivo pyproject.toml não for encontrado.
-    :raises toml.TomlDecodeError: Se o arquivo pyproject.toml não puder ser decodificado.
+    :raises tomllib.TOMLDecodeError: Se o arquivo pyproject.toml não puder ser decodificado.
     """
     pyproject_file_path = os.path.join(project_path, 'pyproject.toml')
     
     if not os.path.exists(pyproject_file_path):
         raise FileNotFoundError(f"pyproject.toml not found in {project_path}")
 
-    with open(pyproject_file_path, 'r') as pyproject_file:
+    with open(pyproject_file_path, 'rb') as pyproject_file:
         try:
-            pyproject_content = toml.load(pyproject_file)
-        except toml.TomlDecodeError as e:
-            raise toml.TomlDecodeError(f"Failed to decode pyproject.toml: {e}")
+            pyproject_content = tomllib.load(pyproject_file)
+        except tomllib.TOMLDecodeError as e:
+            raise tomllib.TOMLDecodeError(f"Failed to decode pyproject.toml: {e}")
     
     project_config = {
         'project_name': pyproject_content['project']['name'],
@@ -75,40 +74,11 @@ def state(c, output_path="."):
     shutil.copy(SAMPLE_STATE_PATH, sample_state_path)
     print(f"New state created at: {sample_state_path}")
 
-@task # deprecated
-def old_new(c, name="", output_path='.'):
-    project_name = name if name else input(
-        "Please enter the new PyTRobot project name: ")
-    version = input(
-        "Please enter the new project version (default is 0.1.0): ") or "0.1.0"
-
-    # Converte o caminho relativo em absoluto se necessário
-    if output_path == '.':
-        output_path = os.getcwd()
-    else:
-        output_path = os.path.abspath(output_path)
-
-    # Supondo que a criação do projeto ocorra aqui com cookiecutter
-    try:
-        cookiecutter(
-            template=SCAFFOLD_PATH,
-            extra_context={'project_name': project_name, 'version': version},
-            no_input=True,
-            output_dir=output_path
-        )
-
-        # Chamada para criar o arquivo YAML após a criação do projeto
-        create_project_yaml(output_path, project_name, version)
-        print(
-            f"Project '{project_name}' created successfully in '{output_path}'.")
-    except Exception as e:
-        print(f"An error occurred while creating the project: {e}")
-
 @task
 def new(c, name="", output_path='.'):
 
-    # Verifica se a versão do Python é 3.10 ou superior
-    if sys.version_info < (3, 10):
+    # Verifica se a versão do Python é 3.12 ou superior
+    if sys.version_info < (3, 12):
         print("Python 3.10 or higher is required to create a new project.")
         return
 
@@ -155,99 +125,6 @@ def new(c, name="", output_path='.'):
 
 
 ################### FILE GENERATION FUNCIONTS ###################
-
-# deprecated
-def create_project_yaml(output_dir, PROJECT_NAME, PROJECT_VERSION):
-
-    print(f"{BLUE}========== Creating 'project.yaml' =========={RESET}")
-    
-    # Construindo os caminhos dinamicamente com base no projeto recém-criado
-    project_dir = os.path.join(output_dir, f"{PROJECT_NAME}")
-    yaml_content = {
-        'project_name': PROJECT_NAME,
-        'version': PROJECT_VERSION,
-        'project_path': project_dir,
-        'package_path': os.path.join(project_dir, PROJECT_NAME),
-        'build_path': os.path.join(project_dir, "dist"),
-        'aws':{
-            'default_region':'replace >> your_default_region',
-            'account_id':'replace >> your_account_id',
-            'codeartifact_domain':'replace >> your_codeartifact_domain',
-            'codeartifact_repository':'replace >> your_codeartifact_repository'
-        }
-    }
-
-
-    # Escrevendo o conteúdo no arquivo YAML
-    yaml_file_path = os.path.join(project_dir, "project.yaml")
-    with open(yaml_file_path, 'w') as yaml_file:
-        yaml.dump(yaml_content, yaml_file, default_flow_style=False)
-
-    print(f"YAML configuration file created at: {yaml_file_path}")
-
-# deprecated
-def create_main_py(output_dir):
-
-    print(f"{BLUE}========== Creating package '__main__.py' =========={RESET}")
-
-    main_content = """
-import os
-import sys
-
-def main():
-
-    from pytrobot.core.__main__ import entrypoint
-
-    # Defines the current directory as an argument for the entrypoint
-    sys.argv = [os.path.abspath(os.path.dirname(__file__))]
-
-    # Invoke probot entrypoint
-    entrypoint()
-
-if __name__ == '__main__':
-    main()
-
-"""
-
-    # Caminho completo onde o arquivo __main__.py será criado
-    main_py_path = os.path.join(output_dir, '__main__.py')
-
-    # Escreve o conteúdo no arquivo __main__.py
-    with open(main_py_path, 'w') as main_file:
-        main_file.write(main_content)
-
-    print(f"__main__.py file created at: {main_py_path}")
-
-    pass
-
-# deprecated
-def create_setup_py(output_dir, PROJECT_NAME, PROJECT_VERSION):
-
-    print(f"{BLUE}========== Creating package 'setup.py' =========={RESET}")
-
-    # Cria um arquivo setup.py do projeto com a configuração do pacote
-    setup_path = os.path.join(output_dir, "setup.py")
-    requirements_path = os.path.join(output_dir, "requirements.txt")
-    with open(setup_path, 'w') as setup_file:
-        setup_file.write(
-            f"""
-from setuptools import setup, find_packages
-
-setup(
-    name='{PROJECT_NAME}',
-    version='{PROJECT_VERSION}',
-    packages=find_packages(),
-    include_package_data=True,
-    install_requires={open(requirements_path).readlines()},
-    entry_points={{
-        'console_scripts': [
-            '{PROJECT_NAME}-run={PROJECT_NAME}.__main__:main'
-        ]
-    }},
-)
-        """
-        )
-    print(f"setup.py file created in: {setup_path}")
 
 def create_requirements_txt(output_dir, PROJECT_NAME):
 
@@ -308,30 +185,30 @@ def create_pyproject_toml(output_dir, project_name, project_version):
 
     print(f"{BLUE}========== Creating 'pyproject.toml' =========={RESET}")
 
-# É necessário informar que a ferramenta é poetry mesmo?
+    # É necessário informar que a ferramenta é poetry mesmo?
 
     pyproject_content = f"""
-[build-system]
-requires = ["setuptools>=42", "wheel"]
-build-backend = "setuptools.build_meta"
+    [build-system]
+    requires = ["setuptools>=42", "wheel"]
+    build-backend = "setuptools.build_meta"
 
-[project]
-name = "{project_name}"
-version = "{project_version}"
-description = "A short description of the project"
-authors = [
-    {{ name = "Your Name", email = "your.email@example.com" }}
-]
-readme = "README.md"
-dependencies = [
-    "pytrobot==3.0.5",
-    "boto3==1.26.141",
-    "invoke==2.2.0",
-    "cookiecutter==2.5.0"
-]
+    [project]
+    name = "{project_name}"
+    version = "{project_version}"
+    description = "A short description of the project"
+    authors = [
+        {{ name = "Your Name", email = "your.email@example.com" }}
+    ]
+    readme = "README.md"
+    dependencies = [
+        "pytrobot==3.0.5",
+        "boto3==1.26.141",
+        "invoke==2.2.0",
+        "cookiecutter==2.5.0"
+    ]
 
-[project.scripts]
-{project_name}-run = "{project_name}.__main__:main"
+    [project.scripts]
+    {project_name}-run = "{project_name}.__main__:main"
     """
 
     pyproject_file_path = os.path.join(output_dir, "pyproject.toml")
@@ -339,6 +216,10 @@ dependencies = [
         pyproject_file.write(pyproject_content)
     
     print(f"pyproject.toml file created at: {pyproject_file_path}")
+
+def update_pyproject_toml():
+    # TODO : Implementar lógica para atulizar pacotes via pip freeze
+    pass
 
 ################### AWS ###################
 
@@ -391,8 +272,8 @@ def image(ctx, project_path='.'):
         print(f"Building project in: {project_path}")
 
         project_config = get_project_config(project_path)
-        PROJECT_NAME = project_config('project_name')
-        PROJECT_VERSION = project_config('project_version')
+        PROJECT_NAME    = project_config['project_name']
+        PROJECT_VERSION = project_config['version']
 
         # Obtém a URL do CodeArtifact
         pip_index_url = get_codeartifact_url(ctx, project_path)
@@ -433,8 +314,8 @@ def build(ctx, project_path='.'):
         #BUG : Adicionar o auto_import do usuário.
         auto_import_states(PACKAGE_PATH)
 
-        # Criação do setup.py para configurar pacote
-        create_setup_py(PROJECT_PATH, PROJECT_NAME, PROJECT_VERSION)
+        # Criação do setup.py para configurar pacote ← TODO: não está implementado
+        update_pyproject_toml()
 
         # Obtém o URL do CodeArtifact
         pip_index_url = get_codeartifact_url(ctx, project_path)
@@ -446,7 +327,7 @@ def build(ctx, project_path='.'):
 
     except FileNotFoundError as e:
         print(f"Error: {e}")
-    except toml.TomlDecodeError as e:
+    except tomllib.TOMLDecodeError as e:
         print(f"Error: {e}")
     except Exception as e:
         print(f"Error during build process: {e}")
@@ -517,7 +398,7 @@ def auto_import_states(directory):
 if __name__ == '__main__':
     c = context.Context()
     # new(c, output_path='E:\\Projetos')
-    new_v2(c, output_path='/home/seluser/teste')
+    new(c, output_path='/home/seluser/wmt_registro_di_bot')
     # state(c, output_path='/home/seluser/teste_proj/sample_bot/sample/src')
     # testState(c, output_path='/home/seluser/teste_proj/sample_bot/tests')
     # build(c, project_path='/home/seluser/wmt-busca-info-cct-bot')

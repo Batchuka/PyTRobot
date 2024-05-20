@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=69", "wheel", "setuptools_scm[toml]>=6.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pytrobot"
+dynamic = ["version"]
+description = "A short description of the project"
+readme = {file = "README.md", content-type = "text/markdown"}
+authors = [
+    { name = "Batchuka", email = "matheusrlz@hotmail.com" }
+]
+license = { text = "MIT" }  # Adicione a licença conforme necessário
+requires-python = ">=3.12"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent"
+]
+dependencies = [
+    "boto3==1.26.141",
+    "invoke==2.2.0",
+    "cookiecutter==2.5.0"
+]
+
+[project.urls]
+homepage = "https://github.com/Batchuka/PoG-PyTRobot-framework"
+
+[project.scripts]
+trt = "pytrobot.cli.main:program.run"
+
+[tool.setuptools.packages.find]
+exclude = ["tests", "*.tests", "*.tests.*", "tests.*"]
+
+[tool.setuptools_scm]
+version_scheme = "post-release"
+local_scheme = "dirty-tag"
