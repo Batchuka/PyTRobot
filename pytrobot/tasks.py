@@ -9,6 +9,7 @@ import glob
 import pathlib
 import pkg_resources
 from pathlib import Path
+from setuptools_scm import get_version
 from cookiecutter.main import cookiecutter
 
 
@@ -34,11 +35,15 @@ def get_project_config(project_path):
         except tomllib.TOMLDecodeError as e:
             raise tomllib.TOMLDecodeError(f"Failed to decode pyproject.toml: {e}")
     
+    # Obter versão usando setuptools_scm
+    scm_version = get_version(root=project_path, relative_to=__file__)
+
     project_config = {
         'project_name': pyproject_content['project']['name'],
         'project_path': project_path,
         'package_path': os.path.join(project_path, pyproject_content['project']['name']),
-        'version': pyproject_content['project']['version']
+        'venv_path': os.path.join(project_path, 'venv'),
+        'version': scm_version
     }
     
     return project_config
@@ -78,8 +83,8 @@ def state(c, output_path="."):
 def new(c, name="", output_path='.'):
 
     # Verifica se a versão do Python é 3.12 ou superior
-    if sys.version_info < (3, 12):
-        print("Python 3.10 or higher is required to create a new project.")
+    if sys.version_info < (3, 11):
+        print("Python 3.11 or higher is required to create a new project.")
         return
 
     project_name = name if name else input("Please enter the new PyTRobot project name: ")
@@ -114,9 +119,9 @@ def new(c, name="", output_path='.'):
         else:
             activate_cmd = f". {venv_dir / 'bin' / 'activate'} && pip install -e ."
 
-        print(f"{BLUE}========== Installing project on editable mode =========={RESET}")
+        # print(f"{BLUE}========== Installing project on editable mode =========={RESET}")
 
-        subprocess.run(activate_cmd, shell=True, cwd=project_dir, executable="/bin/bash")
+        # subprocess.run(activate_cmd, shell=True, cwd=project_dir, executable="/bin/bash")
 
         print(f"Project '{project_name}' created successfully in '{output_path}'.")
         
@@ -188,27 +193,27 @@ def create_pyproject_toml(output_dir, project_name, project_version):
     # É necessário informar que a ferramenta é poetry mesmo?
 
     pyproject_content = f"""
-    [build-system]
-    requires = ["setuptools>=42", "wheel"]
-    build-backend = "setuptools.build_meta"
+[build-system]
+requires = ["setuptools>=69", "wheel", "setuptools_scm[toml]>=6.0"]
+build-backend = "setuptools.build_meta"
 
-    [project]
-    name = "{project_name}"
-    version = "{project_version}"
-    description = "A short description of the project"
-    authors = [
-        {{ name = "Your Name", email = "your.email@example.com" }}
-    ]
-    readme = "README.md"
-    dependencies = [
-        "pytrobot==3.0.5",
-        "boto3==1.26.141",
-        "invoke==2.2.0",
-        "cookiecutter==2.5.0"
-    ]
+[project]
+name = "{project_name}"
+version = "{project_version}"
+description = "A short description of the project"
+authors = [
+    {{ name = "Your Name", email = "your.email@example.com" }}
+]
+readme = "README.md"
+dependencies = [
+    "pytrobot==3.0.5",
+    "boto3==1.26.141",
+    "invoke==2.2.0",
+    "cookiecutter==2.5.0"
+]
 
-    [project.scripts]
-    {project_name}-run = "{project_name}.__main__:main"
+[project.scripts]
+{project_name}-run = "{project_name}.__main__:main"
     """
 
     pyproject_file_path = os.path.join(output_dir, "pyproject.toml")
@@ -217,9 +222,52 @@ def create_pyproject_toml(output_dir, project_name, project_version):
     
     print(f"pyproject.toml file created at: {pyproject_file_path}")
 
-def update_pyproject_toml():
-    # TODO : Implementar lógica para atulizar pacotes via pip freeze
-    pass
+def update_pyproject_toml(venv_path, project_path):
+    """
+    Atualiza o pyproject.toml com as dependências usadas no ambiente virtual especificado.
+
+    :param venv_path: Caminho para o ambiente virtual.
+    :param project_path: Caminho para a raiz do diretório do projeto.
+    """
+    # Ativar o ambiente virtual e obter as dependências usando pip freeze
+    pip_freeze_cmd = [os.path.join(venv_path, 'bin', 'pip'), 'freeze']
+    result = subprocess.run(pip_freeze_cmd, stdout=subprocess.PIPE, text=True)
+    dependencies = result.stdout.splitlines()
+
+    # Formatar dependências para o formato necessário
+    formatted_dependencies = [f'"{dep}"' for dep in dependencies]
+
+    pyproject_file_path = os.path.join(project_path, 'pyproject.toml')
+    
+    if not os.path.exists(pyproject_file_path):
+        raise FileNotFoundError(f"pyproject.toml not found in {project_path}")
+
+    # Ler o arquivo pyproject.toml existente
+    with open(pyproject_file_path, 'rb') as pyproject_file:
+        pyproject_content = tomllib.load(pyproject_file)
+
+    # Atualizar a seção de dependências no dicionário
+    pyproject_content['project']['dependencies'] = formatted_dependencies
+
+    # Convertendo o dicionário de volta para o formato TOML
+    new_pyproject_content = []
+    for section, content in pyproject_content.items():
+        new_pyproject_content.append(f'[{section}]')
+        for key, value in content.items():
+            if isinstance(value, list):
+                new_pyproject_content.append(f'{key} = [')
+                for item in value:
+                    new_pyproject_content.append(f'    {item},')
+                new_pyproject_content.append(']')
+            else:
+                new_pyproject_content.append(f'{key} = "{value}"')
+        new_pyproject_content.append('')
+
+    # Escrever o novo conteúdo no arquivo pyproject.toml
+    with open(pyproject_file_path, 'w') as pyproject_file:
+        pyproject_file.write('\n'.join(new_pyproject_content))
+
+    print(f"pyproject.toml updated with dependencies from {venv_path}")
 
 ################### AWS ###################
 
@@ -258,10 +306,10 @@ def get_codeartifact_token(ctx, CODEARTIFACT_DOMAIN, AWS_ACCOUNT_ID):
     print('\n Feito!')
     return code_artifact_token
 
-################### BUILD ###################
+################### DEPLOY ###################
 
 @task
-def image(ctx, project_path='.'):
+def deploy(ctx, project_path='.'):
     print(f"{BLUE} =========== Build Docker Image ============ {RESET}")
 
 
@@ -303,6 +351,7 @@ def build(ctx, project_path='.'):
         PROJECT_NAME    = project_config['project_name']
         PROJECT_PATH    = project_config['project_path']
         PACKAGE_PATH    = project_config['package_path']
+        VENV_PATH       = project_config['venv_path']
         PROJECT_VERSION = project_config['version']
 
         # Remover pastas de build do python
@@ -314,8 +363,8 @@ def build(ctx, project_path='.'):
         #BUG : Adicionar o auto_import do usuário.
         auto_import_states(PACKAGE_PATH)
 
-        # Criação do setup.py para configurar pacote ← TODO: não está implementado
-        update_pyproject_toml()
+        # Atualização do pyproject.toml para conter todos os pacotes utilizados TODO : Não testei
+        update_pyproject_toml(VENV_PATH, PROJECT_PATH)
 
         # Obtém o URL do CodeArtifact
         pip_index_url = get_codeartifact_url(ctx, project_path)

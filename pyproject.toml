@@ -11,7 +11,7 @@ authors = [
     { name = "Batchuka", email = "matheusrlz@hotmail.com" }
 ]
 license = { text = "MIT" }  # Adicione a licença conforme necessário
-requires-python = ">=3.12"
+requires-python = ">=3.11"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
@@ -20,7 +20,8 @@ classifiers = [
 dependencies = [
     "boto3==1.26.141",
     "invoke==2.2.0",
-    "cookiecutter==2.5.0"
+    "cookiecutter==2.5.0",
+    "setuptools_scm==6.0.0"
 ]
 
 [project.urls]
