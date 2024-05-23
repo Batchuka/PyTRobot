@@ -3,10 +3,12 @@ import builtins
 import warnings
 from pytrobot.core.dataset_layer import ConfigData, TransactionData, TransactionItem
 from pytrobot.core.machine_layer import StateMachine, TrueTable
+from pytrobot.core.multithread_feature import MultithreadManager
 from pytrobot.core.singleton import Singleton
 from pytrobot.core.utils import print_pytrobot_banner, pytrobot_print
 from abc import abstractmethod
 
+# TODO : isso deve ser retirado daqui
 RED = '\033[91m'
 GREEN = '\033[92m'
 YELLOW = '\033[93m'
@@ -41,6 +43,7 @@ class PyTRobot(metaclass=Singleton):
         # Inicializa os novos atributos
         self.config_data = ConfigData()
         self.state_machine = StateMachine(true_table=TrueTable())
+        self.multithread_manager = MultithreadManager()
         self._initialized = True
 
     def _register_core_states(self):
@@ -61,10 +64,10 @@ class PyTRobot(metaclass=Singleton):
     @classmethod
     def get_instance(cls):
         if cls._instance is None:
-            raise PyTRobotNotInitializedException(
-                "PyTRobot object is not initialized.")
+            raise PyTRobotNotInitializedException("PyTRobot object is not initialized.")
         return cls._instance
 
+    # Função proxy para o decorador @First
     @classmethod
     def set_first_state(cls, state_name):
         try:
@@ -73,6 +76,18 @@ class PyTRobot(metaclass=Singleton):
         except PyTRobotNotInitializedException as e:
             warnings.warn(
                 str(f"{e} : Your objects will not be registered"), RuntimeWarning)
+
+    # @classmethod
+    # def set_thread(cls, func):
+    #     # TODO : isso está impedindo as funções de inicializarem
+    #     try:instance = cls.get_instance()
+    #     except PyTRobotNotInitializedException:return None
+    #     return instance.multithread_manager.thread(func)
+
+    @classmethod
+    def set_thread(cls, func):
+        instance = cls.get_instance()
+        return instance.multithread_manager.thread(func)
 
 
 class BaseState(metaclass=Singleton):
@@ -218,6 +233,13 @@ def State(next_state_on_success=None, next_state_on_failure=None):
 def First(cls):
     PyTRobot.set_first_state(cls.__name__)
     return cls
+
+
+def Thread(func):
+    """
+    Proxy para o decorador @Thread do PyTRobot.
+    """
+    return PyTRobot.set_thread(func)
 
 
 class _FinisherState(BaseState):
