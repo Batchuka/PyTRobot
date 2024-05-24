@@ -40,8 +40,8 @@ class PyTRobot(metaclass=Singleton):
         print_pytrobot_banner()
         builtins.print = pytrobot_print
 
-        # Inicializa os novos atributos
-        self.config_data = ConfigData()
+        # # Inicializa os novos atributos TODO: Estou testando se é necessário.
+        # self.config_data = ConfigData()
         self.state_machine = StateMachine(true_table=TrueTable())
         self.multithread_manager = MultithreadManager()
         self._initialized = True
@@ -86,8 +86,15 @@ class PyTRobot(metaclass=Singleton):
 
     @classmethod
     def set_thread(cls, func):
-        instance = cls.get_instance()
-        return instance.multithread_manager.thread(func)
+        def wrapper(*args, **kwargs):
+            try:
+                instance = cls.get_instance()
+                thread_decorator = instance.multithread_manager.thread(func)
+                return thread_decorator(*args, **kwargs)
+            except PyTRobotNotInitializedException as e:
+                warnings.warn(str(e), RuntimeWarning)
+                return None
+        return wrapper
 
 
 class BaseState(metaclass=Singleton):
