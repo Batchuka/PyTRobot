@@ -447,7 +447,7 @@ def auto_import_states(directory):
 if __name__ == '__main__':
     c = context.Context()
     # new(c, output_path='E:\\Projetos')
-    new(c, output_path='/home/seluser/wmt_registro_di_bot')
-    # state(c, output_path='/home/seluser/teste_proj/sample_bot/sample/src')
+    # new(c, output_path='/home/seluser/wmt_registro_di_bot')
+    state(c, output_path='/home/seluser/wmt_registro_di_bot/wmt_registro_di_bot/src')
     # testState(c, output_path='/home/seluser/teste_proj/sample_bot/tests')
     # build(c, project_path='/home/seluser/wmt-busca-info-cct-bot')

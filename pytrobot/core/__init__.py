@@ -77,13 +77,6 @@ class PyTRobot(metaclass=Singleton):
             warnings.warn(
                 str(f"{e} : Your objects will not be registered"), RuntimeWarning)
 
-    # @classmethod
-    # def set_thread(cls, func):
-    #     # TODO : isso está impedindo as funções de inicializarem
-    #     try:instance = cls.get_instance()
-    #     except PyTRobotNotInitializedException:return None
-    #     return instance.multithread_manager.thread(func)
-
     @classmethod
     def set_thread(cls, func):
         def wrapper(*args, **kwargs):
@@ -255,23 +248,17 @@ class _FinisherState(BaseState):
         pass
 
     def on_entry(self):
-        pass
+        self.multithread_manager = MultithreadManager()
 
     def on_exit(self):
-
-        import threading
-
-        # Imprime a contagem de threads ativas antes de sair
-        print(f'Active threads count: {threading.active_count()}')
-        print('Active threads:', threading.enumerate())
-
-        exit()
+        import sys
+        # Lista as threads ativas antes de sair
+        self.multithread_manager.list_active_threads()
+        sys.exit()
 
     def on_error(self):
-
         import os
         os._exit(0)
-
 
 class _StarterState(BaseState):
 

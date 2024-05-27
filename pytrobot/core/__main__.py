@@ -4,14 +4,26 @@ import sys
 import importlib
 from pytrobot.core import PyTRobot
 
+
+def get_base_package(src_path):
+    """
+    Extracts the base package name from the given src path.
+    Assumes the base package is the directory name just before 'src'.
+    """
+    parts = src_path.split(os.sep)
+    if 'src' in parts:
+        return parts[parts.index('src') - 1]
+    raise ValueError("Invalid src path: 'src' directory not found in path")
+
 def import_all_states(src_path):
     """
     Imports all Python modules in the specified directory.
     """
+    base_package = get_base_package(src_path)
     for file in os.listdir(src_path):
-        if file.endswith(".py") and file != "__init__.py":
+        if file.endswith(".py") and file not in ["__init__.py", "__main__.py"]:
             module_name = file[:-3]  # Remove .py
-            importlib.import_module(f'src.{module_name}')
+            importlib.import_module(f'{base_package}.src.{module_name}')
 
 def entrypoint():
     """
@@ -31,8 +43,7 @@ def entrypoint():
     
 
     directory       = sys.argv[0]
-    src_path        = os.path.join(directory)
-    # resources_path  = os.path.join(directory, 'resources') # TODO: Acho que isso não é mais necessário
+    src_path        = os.path.join(directory, 'src')
 
     robot = PyTRobot()
 
@@ -44,33 +55,6 @@ def entrypoint():
         import_all_states(src_path)
     else:
         raise FileNotFoundError("'src' directory not found.")
-    
-    #TODO: Acho que isso é tudo desnecessário.
-    # # Checks if the resources directory exists and adds it to PyTRobot
-    # if os.path.exists(resources_path):
-    #     robot._resources = resources_path
-    #     robot.config_data.load_config(resources_path)
-    # else:
-    #     raise FileNotFoundError("'resources' directory not found or not specified correctly.")
-
-    # # Checks if the src directory exists and tries to import its __init__.py
-    # if os.path.exists(src_path):
-    #     init_file = os.path.join(src_path, "src", "__init__.py")
-    #     if os.path.exists(init_file):
-    #         importlib.import_module("src")
-    #     else:
-    #         raise ImportError("The __init__.py file is mandatory in the src directory.")
-    # else:
-    #     raise FileNotFoundError("'src' directory not found.")
-    
-
-    # # Checks if the resources directory exists and adds it to PyTRobot
-    # if os.path.exists(resources_path):
-    #     robot._resources = resources_path
-    #     robot.config_data.load_config(resources_path)
-    # else:
-    #     raise FileNotFoundError("'resources' directory not found or not specified correctly.")
-    
 
     robot._register_core_states()
     robot.start()

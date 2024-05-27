@@ -2,8 +2,9 @@
 
 import threading
 from functools import wraps
+from pytrobot.core.singleton import Singleton
 
-class MultithreadManager:
+class MultithreadManager(metaclass=Singleton):
     def __init__(self):
         self.threads = {}
 
@@ -44,3 +45,12 @@ class MultithreadManager:
                 print(f"Thread {func_name} is no longer active.")
         else:
             print(f"No threads found for {func_name}.")
+    
+    def list_active_threads(self):
+        """
+        Lista todas as threads ativas gerenciadas pelo MultithreadManager.
+        """
+        active_threads = {name: thread for name, thread in self.threads.items() if thread.is_alive()}
+        print(f"Active threads count: {len(active_threads)}")
+        for name, thread in active_threads.items():
+            print(f"Thread name: {name}, Thread id: {thread.ident}")
