@@ -27,7 +27,6 @@ dependencies = [
     "invoke==2.2.0",
     "boto3==1.26.141",
     "click==8.1.7",
-    "pytrobot==3.0.5.post5+dirty",
     "setuptools==65.5.0",
 ]
 
