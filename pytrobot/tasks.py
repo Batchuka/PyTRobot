@@ -228,6 +228,20 @@ local_scheme = "dirty-tag"
     
     print(f"pyproject.toml file created at: {pyproject_file_path}")
 
+def filter_stable_versions(dependencies):
+    """
+    Filtra as dependências para remover sufixos 'dirty' e 'post'.
+
+    :param dependencies: Lista de dependências no formato 'nome==versão'.
+    :return: Lista de dependências com apenas versões estáveis.
+    """
+    stable_dependencies = []
+    for dep in dependencies:
+        name, version = dep.split('==')
+        if 'dirty' not in version and 'post' not in version:
+            stable_dependencies.append(dep)
+    return stable_dependencies
+
 def update_pyproject_toml(project_path):
     """
     Atualiza o pyproject.toml com as dependências usadas no ambiente virtual especificado.
@@ -240,8 +254,11 @@ def update_pyproject_toml(project_path):
     with open(requirements_path, 'r') as req_file:
         dependencies = req_file.read().splitlines()
 
+    # Filtrar apenas as versões estáveis
+    stable_dependencies = filter_stable_versions(dependencies)
+
     # Formatar dependências para o formato necessário
-    formatted_dependencies = [dep.split('==')[0] + '==' + dep.split('==')[1] for dep in dependencies]
+    formatted_dependencies = [dep.split('==')[0] + '==' + dep.split('==')[1] for dep in stable_dependencies]
 
     pyproject_file_path = os.path.join(project_path, 'pyproject.toml')
     
@@ -254,24 +271,6 @@ def update_pyproject_toml(project_path):
 
     # Atualizar a seção de dependências no dicionário
     pyproject_content['project']['dependencies'] = formatted_dependencies
-
-    # # Convertendo o dicionário de volta para o formato TOML
-    # new_pyproject_content = []
-    # for section, content in pyproject_content.items():
-    #     new_pyproject_content.append(f'[{section}]')
-    #     for key, value in content.items():
-    #         if isinstance(value, list):
-    #             new_pyproject_content.append(f'{key} = [')
-    #             for item in value:
-    #                 new_pyproject_content.append(f'    {item},')
-    #             new_pyproject_content.append(']')
-    #         else:
-    #             new_pyproject_content.append(f'{key} = "{value}"')
-    #     new_pyproject_content.append('')
-
-    # # Escrever o novo conteúdo no arquivo pyproject.toml
-    # with open(pyproject_file_path, 'w') as pyproject_file:
-    #     pyproject_file.write('\n'.join(new_pyproject_content))
 
     with open(pyproject_file_path, 'wb') as pyproject_file:
         tomli_w.dump(pyproject_content, pyproject_file)
@@ -378,6 +377,16 @@ def aws(ctx, output_path='.'):
 
 ################### DEPLOY ###################
 
+def get_latest_version_tag():
+    # Função para obter a última versão tag do git
+    result = os.popen('git describe --tags --abbrev=0').read().strip()
+    return result
+
+def increment_version(version):
+    # Incrementa a versão (presumindo versão semântica)
+    major, minor, patch = map(int, version.split('.'))
+    return f"{major}.{minor}.{patch + 1}"
+
 @task
 def publish(ctx, project_path='.'):
     print(f"{BLUE} =========== Publishing Package on CodeArtifact ============ {RESET}")
@@ -385,15 +394,31 @@ def publish(ctx, project_path='.'):
     try:
         project_path = os.path.abspath(project_path)
 
-        # # Atividades de build não serão feitas por hora
-        # print(f"Building project in: {project_path}")
+        # Commit, tag e push
+        summary = input("Enter commit summary: ")
+        description = input("Enter commit description: ")
+
+        latest_version = get_latest_version_tag()
+        suggested_version = increment_version(latest_version.strip('v'))
+        new_version = input(f"Enter new version (suggested: {suggested_version}): ") or suggested_version
+
+        branch = os.popen('git branch --show-current').read().strip()
+
+        os.system("git add .")
+        os.system(f"git commit -m 'Summary: {summary} | Description: {description}'")
+        os.system(f"git tag -a v{new_version} -m 'Release version {new_version}'")
+        os.system(f"git push origin {branch} v{new_version}")
+
+        # Build
+        build(ctx, project_path='.')
 
         project_config = get_project_config(project_path)
 
         PROJECT_NAME    = project_config['project_name']
         PROJECT_VERSION = project_config['version']
 
-        # trusted_host = get_codeartifact_url(ctx)
+        # Autenticar no CodeArtifact para client twine
+        ctx.run(f"aws codeartifact login --tool twine --repository wmt-python-repository --domain wmt-libraries --domain-owner 435062120355 --region us-east-1", echo=True)
 
         # Publicar o pacote no CodeArtifact usando twine
         ctx.run(f"twine upload --repository codeartifact dist/*", echo=True)

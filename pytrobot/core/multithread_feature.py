@@ -1,4 +1,4 @@
-# multithread_feature.py
+# pytrobot/multithread_feature.py
 
 import threading
 from functools import wraps

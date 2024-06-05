@@ -4,6 +4,7 @@ import warnings
 from pytrobot.core.dataset_layer import ConfigData, TransactionData, TransactionItem
 from pytrobot.core.machine_layer import StateMachine, TrueTable
 from pytrobot.core.multithread_feature import MultithreadManager
+from pytrobot.core.subprocess_feature import SubprocessManager
 from pytrobot.core.singleton import Singleton
 from pytrobot.core.utils import print_pytrobot_banner, pytrobot_print
 from abc import abstractmethod
@@ -40,10 +41,9 @@ class PyTRobot(metaclass=Singleton):
         print_pytrobot_banner()
         builtins.print = pytrobot_print
 
-        # # Inicializa os novos atributos TODO: Estou testando se é necessário.
-        # self.config_data = ConfigData()
         self.state_machine = StateMachine(true_table=TrueTable())
         self.multithread_manager = MultithreadManager()
+        self.subprocess_manager = SubprocessManager()
         self._initialized = True
 
     def _register_core_states(self):
@@ -89,6 +89,11 @@ class PyTRobot(metaclass=Singleton):
                 return None
         return wrapper
 
+    @classmethod
+    def set_subprocess(cls, comando, captura_saida=True, captura_erro=True):
+        if not isinstance(comando, list):
+            raise ValueError("O comando deve ser uma lista de strings.")
+        return cls().subprocess_manager.executar_subprocesso(comando, captura_saida, captura_erro)
 
 class BaseState(metaclass=Singleton):
     """
@@ -229,17 +234,29 @@ def State(next_state_on_success=None, next_state_on_failure=None):
         return cls
     return decorator
 
-
 def First(cls):
     PyTRobot.set_first_state(cls.__name__)
     return cls
-
 
 def Thread(func):
     """
     Proxy para o decorador @Thread do PyTRobot.
     """
     return PyTRobot.set_thread(func)
+
+def Subprocess(comando, captura_saida=True, captura_erro=True):
+    """
+    Função para acessar o SubprocessManager do PyTRobot e executar um subprocesso.
+    
+    Args:
+        comando (list): Lista de strings contendo o comando a ser executado.
+        captura_saida (bool, opcional): Indica se a saída padrão do subprocesso deve ser capturada (padrão: True).
+        captura_erro (bool, opcional): Indica se a saída de erro do subprocesso deve ser capturada (padrão: True).
+
+    Returns:
+        dict: Resultado do subprocesso, conforme retornado pelo SubprocessManager.
+    """
+    return PyTRobot.set_subprocess(comando, captura_saida, captura_erro)
 
 
 class _FinisherState(BaseState):
@@ -249,11 +266,13 @@ class _FinisherState(BaseState):
 
     def on_entry(self):
         self.multithread_manager = MultithreadManager()
+        self.subprocess_manager = SubprocessManager()
 
     def on_exit(self):
         import sys
         # Lista as threads ativas antes de sair
         self.multithread_manager.list_active_threads()
+        self.subprocess_manager.list_active_processes()
         sys.exit()
 
     def on_error(self):
