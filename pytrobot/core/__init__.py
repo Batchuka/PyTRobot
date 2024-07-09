@@ -90,6 +90,8 @@ class PyTRobot(metaclass=Singleton):
         return wrapper
 
 
+# Classes Base para usuário implementar conforme uso do Framework
+
 class BaseState(metaclass=Singleton):
     """
     Base class for all states within the state management system.
@@ -213,6 +215,35 @@ class BaseState(metaclass=Singleton):
             raise NotImplementedError(
                 f"The 'on_error' method must be implemented by the subclass. Error: {error}")
 
+class BaseRoutine(metaclass=Singleton):
+
+    def __init__(self, queue_manager):
+        self.queue_manager = queue_manager
+
+    def condition(self, item):
+        """
+        QMachine usará esse método implementado pelo usuário para identificar se a rotina deve ser iniciada.
+        Então esse método deve acessar de maneira superficial o 'identificador' do item e fazer validações com ele.
+        Na camada do identificador, além da identificação, há informações que podem ser usadas para fins de validação 
+        dessa condition.
+
+        'condition' pode manipular a camada 'identificacao' do item o quanto quiser, mas deve retornar bool.
+        """
+        raise NotImplementedError("O método 'process_item' deve ser implementado pela classe derivada.")
+
+    def setup(self, item):
+        """
+        Se a 'condition' for estabelecida, a QMachine inicia o setup e depois 'routine' — que por estar 
+        decorada com o @Thread executará enquando a condição 'condition' for true.
+        """
+        raise NotImplementedError("O método 'process_item' deve ser implementado pela classe derivada.")
+
+    
+    def routine(self):
+        """
+        Literalmente a lógica que ficará em loop enquanto a 'condition' for true.
+        """
+
 
 # Decoradores
 
@@ -229,11 +260,9 @@ def State(next_state_on_success=None, next_state_on_failure=None):
         return cls
     return decorator
 
-
 def First(cls):
     PyTRobot.set_first_state(cls.__name__)
     return cls
-
 
 def Thread(func):
     """
@@ -241,6 +270,8 @@ def Thread(func):
     """
     return PyTRobot.set_thread(func)
 
+
+# Idiossincrasias da máquina de estado
 
 class _FinisherState(BaseState):
 

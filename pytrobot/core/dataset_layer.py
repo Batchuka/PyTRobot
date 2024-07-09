@@ -133,24 +133,3 @@ class TransactionData(metaclass=Singleton):
             self.transaction_item = None
             return None
 
-if __name__ == '__main__':
-    # Inicializar TransactionData com as colunas apropriadas
-    t_data = TransactionData(columns=['id', 'data', 'numero_transmissao', 'diagnostico', 'numero_di', 'canal', 'erro'])
-
-    # Adicionar alguns itens
-    t_data.add_item(id=1123, data=None, numero_transmissao='trans123', diagnostico=None, numero_di=None, canal=None, erro=None)
-    t_data.add_item(id=1124, data=None, numero_transmissao='trans124', diagnostico=None, numero_di=None, canal=None, erro=None)
-
-    # Atualizar um item diretamente utilizando indexação
-    item_to_update = t_data.get_item(1123)
-    if item_to_update:
-        item_to_update['numero_transmissao'] = 'trans456'
-        item_to_update['diagnostico'] = 'Novo diagnóstico'
-
-    # Atualizar todos os itens com um novo valor para 'erro' usando indexação direta
-    for item in t_data:
-        item['erro'] = 'teste'
-
-    # Imprimir os itens para verificar se foram adicionados e atualizados corretamente
-    for item in t_data:
-        print(item)  # Assumindo que a função __repr__ está definida para imprimir bonito
