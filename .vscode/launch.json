@@ -9,6 +9,15 @@
             "console": "integratedTerminal",
             "justMyCode": true,
             "cwd": "${workspaceFolder}"
+        },
+        {
+            "name": "Celery",
+            "type": "python",
+            "request": "launch",
+            "program": "pytrobot/core/celery_layer.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}"
         }
     ]
 }
