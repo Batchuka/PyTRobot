@@ -3,22 +3,42 @@ import boto3
 from datetime import datetime
 
 class CeleryManager:
-    
-    def __init__(self, broker_url, result_backend, region_name, role_arn, queue_url, visibility_timeout=3600, polling_interval=10):
-        self.broker_url = broker_url
-        self.result_backend = result_backend
+    """
+    This manager uses SQS as queue. Obligatory uses CLI credentials to assume role for URL queue passed.
+    """
+    def __init__(self, region_name, role_arn, queue_url, queue_name, visibility_timeout=3600, polling_interval=10):
         self.region_name = region_name
         self.role_arn = role_arn
         self.queue_url = queue_url
+        self.queue_name = queue_name
         self.visibility_timeout = visibility_timeout
         self.polling_interval = polling_interval
+
+        # Obter credenciais da AWS CLI
+        session = boto3.Session()
+        credentials = session.get_credentials()
+        aws_access_key_id = credentials.access_key
+        aws_secret_access_key = credentials.secret_key
+
+        self.broker_url = f'sqs://{aws_access_key_id}:{aws_secret_access_key}@'
         self.celery_app = Celery('tasks', broker=self.broker_url)
-        self.celery_app.conf.result_backend = self.result_backend
-        self.celery_app.conf.broker_transport_options = {
-            'region': self.region_name,
-            'visibility_timeout': self.visibility_timeout,
-            'polling_interval': self.polling_interval
-        }
+        self.celery_app.conf.update(
+            broker_transport_options={
+                'region': self.region_name,
+                'visibility_timeout': self.visibility_timeout,
+                'polling_interval': self.polling_interval,
+                'predefined_queues': {
+                    self.queue_name: {
+                        'url': self.queue_url
+                    }
+                }
+            },
+            broker_connection_retry_on_startup=True,
+            task_acks_late=True
+        )
+
+
+        self.celery_app.conf.task_default_queue = self.queue_name
         self.sqs_client = self._assume_role_and_get_sqs_client()
 
     def _assume_role_and_get_sqs_client(self):
@@ -38,16 +58,19 @@ class CeleryManager:
             aws_session_token=credentials['SessionToken'],
         )
         return sqs_client
+    
+    def purge_queue(self):
+        #TODO : é preciso permissão para fazer isso.
+        self.sqs_client.purge_queue(QueueUrl=self.queue_url)
 
     def Worker(self, cls):
-        task = self.celery_app.task(base=BaseWorker)(cls().run)
+        task_name = f'{cls.__module__}.{cls.__name__}.run'
+        task = self.celery_app.task(name=task_name, base=BaseWorker)(cls().run)
         return task
 
-    def add_task(self, worker_cls, *args, **kwargs):
-        worker_cls().apply_async(args=args, kwargs=kwargs)
-
     def run(self):
-        self.celery_app.start(argv=['celery', 'worker', '--loglevel=info'])
+        # self.purge_queue()
+        self.celery_app.start(argv=['worker', '--loglevel=info'])
 
 class BaseWorker(Task):
     abstract = True
@@ -55,39 +78,4 @@ class BaseWorker(Task):
     def run(self, *args, **kwargs):
         raise NotImplementedError("O método 'run' deve ser implementado pelo worker.")
 
-if __name__ == "__main__":
-    import os
 
-    # Obter credenciais da memória
-    aws_access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
-    aws_secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY')
-
-    # Configurar o CeleryManager com os parâmetros necessários
-    celery_manager = CeleryManager(
-        broker_url='sqs://aws_access_key_id:aws_secret_access_key@',
-        result_backend='redis://localhost:6379/0',
-        region_name='us-east-1',
-        role_arn='arn:aws:iam::435062120355:role/wmt-service-robot-role',
-        queue_url='https://sqs.us-east-1.amazonaws.com/435062120355/wmt-declaracao-importacao-queue'
-    )
-
-    # Definir e registrar o primeiro worker
-    @celery_manager.Worker
-    class PrintarValoresWorker(BaseWorker):
-
-        def run(self, param1, param2):
-            print(f"Processando {param1} e {param2}")
-
-    # Definir e registrar o segundo worker
-    @celery_manager.Worker
-    class AcessarSiteWorker(BaseWorker):
-
-        def run(self, url):
-            print(f"Acessando o site: {url}")
-
-    # # Adicionar tarefas à fila
-    # celery_manager.add_task(PrintarValoresWorker, "dados1", "dados2")
-    # celery_manager.add_task(AcessarSiteWorker, "http://example.com")
-
-    # Executar o worker do Celery
-    celery_manager.run()

@@ -21,7 +21,6 @@ class PyTRobotNotInitializedException(Exception):
     """Exceção para ser levantada quando o PyTRobot não está instanciado."""
     pass
 
-
 class PyTRobot(metaclass=Singleton):
     """Classe principal do pytrobot, implementada como um Singleton."""
     _instance = None
@@ -220,36 +219,8 @@ class BaseState(metaclass=Singleton):
             raise NotImplementedError(
                 f"The 'on_error' method must be implemented by the subclass. Error: {error}")
 
-class BaseRoutine(metaclass=Singleton):
 
-    def __init__(self, queue_manager):
-        self.queue_manager = queue_manager
-
-    def condition(self, item):
-        """
-        QMachine usará esse método implementado pelo usuário para identificar se a rotina deve ser iniciada.
-        Então esse método deve acessar de maneira superficial o 'identificador' do item e fazer validações com ele.
-        Na camada do identificador, além da identificação, há informações que podem ser usadas para fins de validação 
-        dessa condition.
-
-        'condition' pode manipular a camada 'identificacao' do item o quanto quiser, mas deve retornar bool.
-        """
-        raise NotImplementedError("O método 'process_item' deve ser implementado pela classe derivada.")
-
-    def setup(self, item):
-        """
-        Se a 'condition' for estabelecida, a QMachine inicia o setup e depois 'routine' — que por estar 
-        decorada com o @Thread executará enquando a condição 'condition' for true.
-        """
-        raise NotImplementedError("O método 'process_item' deve ser implementado pela classe derivada.")
-
-    def routine(self):
-        """
-        Literalmente a lógica que ficará em loop enquanto a 'condition' for true.
-        """
-
-
-# Decoradores
+# Decorators
 
 def State(next_state_on_success=None, next_state_on_failure=None):
     def decorator(cls):
@@ -288,8 +259,7 @@ def Subprocess(comando, captura_saida=True, captura_erro=True):
     """
     return PyTRobot.set_subprocess(comando, captura_saida, captura_erro)
 
-
-# Idiossincrasias da máquina de estado
+# Idiosyncrasies of the state machine
 
 class _FinisherState(BaseState):
 

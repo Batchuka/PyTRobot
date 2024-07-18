@@ -16,7 +16,7 @@
             "request": "launch",
             "program": "pytrobot/core/celery_layer.py",
             "console": "integratedTerminal",
-            "justMyCode": true,
+            "justMyCode": false,
             "cwd": "${workspaceFolder}"
         }
     ]
