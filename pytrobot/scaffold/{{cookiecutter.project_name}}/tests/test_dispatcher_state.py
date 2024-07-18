@@ -1,5 +1,5 @@
 import unittest
-from pytrobot.core.dataset_layer import TransactionData
+from pytrobot.core.strategies.state.dataset_layer import TransactionData
 from {{cookiecutter.project_name}}.{{cookiecutter.project_name}}.src.dispatcher_state import DispatcherState  # type:ignore
 
 # Classe de teste unitário

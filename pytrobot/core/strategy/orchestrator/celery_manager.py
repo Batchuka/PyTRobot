@@ -1,8 +1,10 @@
-from celery import Celery, Task
-import boto3
+# pytrobot/core/strategy/orchestrator/celery_manager.py
 from datetime import datetime
+from pytrobot.core.singleton import Singleton
+from celery import Celery
+import boto3
 
-class CeleryManager:
+class CeleryManager(metaclass=Singleton):
     """
     This manager uses SQS as queue. Obligatory uses CLI credentials to assume role for URL queue passed.
     """
@@ -63,19 +65,6 @@ class CeleryManager:
         #TODO : é preciso permissão para fazer isso.
         self.sqs_client.purge_queue(QueueUrl=self.queue_url)
 
-    def Worker(self, cls):
-        task_name = f'{cls.__module__}.{cls.__name__}.run'
-        task = self.celery_app.task(name=task_name, base=BaseWorker)(cls().run)
-        return task
-
     def run(self):
         # self.purge_queue()
         self.celery_app.start(argv=['worker', '--loglevel=info'])
-
-class BaseWorker(Task):
-    abstract = True
-
-    def run(self, *args, **kwargs):
-        raise NotImplementedError("O método 'run' deve ser implementado pelo worker.")
-
-

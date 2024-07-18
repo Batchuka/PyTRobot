@@ -4,6 +4,7 @@
         "${workspaceFolder}"
     ],
     "python.analysis.extraPaths": [
-        "${workspaceFolder}"
+        "${workspaceFolder}",
+        "/home/seluser/PyTRobot-Framework/pytrobot"
     ]
 }

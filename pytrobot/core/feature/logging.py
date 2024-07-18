@@ -1,36 +1,18 @@
+from enum import Enum
 import logging
 
 """TODO
 Adicionar essa modificação de cores no logger para dar acesso
 como um recurso.
 """
+from enum import Enum
 
-RED     = '\033[91m'
-GREEN   = '\033[92m'
-YELLOW  = '\033[93m'
-RESET   = '\033[0m'
-BLUE    = '\033[94m'
-
-def HandleException(func):
-    """
-    Um decorator que envolve a função fornecida com tratamento de exceções genéricas.
-    Se a função for executada com sucesso, atualiza o status do robô para True. Se ocorrer
-    uma exceção, registra um erro e atualiza o status do robô para False.
-
-    :param func: A função a ser decorada.
-    """
-
-    def wrapper(self, *args, **kwargs):
-        try:
-            func(self, *args, **kwargs)
-            self.status = True
-        except Exception as e:
-            # Logger.log(
-            #     f"Error in '{func.__name__}' of the {self.current_state}: {str(e)}", logging.ERROR)
-            print(f"Error in '{func.__name__}' of the {self.current_state}: {str(e)}", logging.ERROR)
-            self.status = False
-
-    return wrapper
+class TerminalColor(Enum):
+    RED = '\033[91m'
+    GREEN = '\033[92m'
+    YELLOW = '\033[93m'
+    RESET = '\033[0m'
+    BLUE = '\033[94m'
 
 def WithLog(func):
     """
@@ -44,21 +26,6 @@ def WithLog(func):
         print(f"{self.current_state}.{func.__name__}", logging.DEBUG)
         func(self, *args, **kwargs)
     return wrapper
-
-def ApplyToMethods(decorator):
-    """
-    Um decorator de classe que aplica um decorator fornecido a todos os métodos da classe.
-
-    :param decorator: O decorator a ser aplicado.
-    """
-
-    def class_decorator(cls):
-        for name, value in vars(cls).items():
-            if callable(value) and not name.startswith("__"):
-                setattr(cls, name, decorator(value))
-        return cls
-
-    return class_decorator
 
 def print_pytrobot_banner():
     """Exibe o banner do pytrobot."""

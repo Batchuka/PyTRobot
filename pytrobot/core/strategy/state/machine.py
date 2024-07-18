@@ -1,4 +1,4 @@
-# pytrobot/core/machine_layer.py
+# pytrobot/core/strategy/state/machine.py
 
 from pytrobot.core.singleton import Singleton
 
@@ -24,7 +24,8 @@ class TrueTable(metaclass=Singleton):
 class StateMachine(metaclass=Singleton):
 
     def __init__(self, true_table):
-        from pytrobot.core import BaseState, _StarterState
+        from pytrobot.core.strategy.state.base_state import BaseState
+        from pytrobot.core.strategy.state.private_states import _StarterState
 
         self._true_table : TrueTable = true_table
         self._current_state : BaseState = _StarterState(self.state_machine_operator)

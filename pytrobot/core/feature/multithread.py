@@ -54,3 +54,13 @@ class MultithreadManager(metaclass=Singleton):
         print(f"Active threads count: {len(active_threads)}")
         for name, thread in active_threads.items():
             print(f"Thread name: {name}, Thread id: {thread.ident}")
+
+
+
+# Decorator
+def Thread(func):
+    """
+    Proxy para o decorador @Thread do PyTRobot.
+    """
+    multithread_manager = MultithreadManager()
+    return multithread_manager.thread(func)
