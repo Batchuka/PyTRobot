@@ -7,7 +7,7 @@ def main():
     from pytrobot.core.__main__ import entrypoint
 
     # Defines the current directory as an argument for the entrypoint
-    sys.argv = [os.path.abspath(os.path.dirname(__file__))]
+    sys.argv = [os.path.abspath(os.path.dirname(__file__)), "state"]
 
     # Invoke probot entrypoint
     entrypoint()

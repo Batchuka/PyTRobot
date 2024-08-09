@@ -82,7 +82,7 @@ class SubprocessManager(metaclass=Singleton):
 # Decorator
 def Subprocess(comando, captura_saida=True, captura_erro=True):
     """
-    Função para acessar o SubprocessManager do PyTRobot e executar um subprocesso.
+    Função para acessar o SubprocessManager diretamente e executar um subprocesso.
     
     Args:
         comando (list): Lista de strings contendo o comando a ser executado.
@@ -92,4 +92,5 @@ def Subprocess(comando, captura_saida=True, captura_erro=True):
     Returns:
         dict: Resultado do subprocesso, conforme retornado pelo SubprocessManager.
     """
-    return PyTRobot.set_subprocess(comando, captura_saida, captura_erro)
+    subprocess_manager = SubprocessManager()
+    return subprocess_manager.executar_subprocesso(comando, captura_saida, captura_erro)

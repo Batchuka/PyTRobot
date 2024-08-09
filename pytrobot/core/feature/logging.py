@@ -1,5 +1,9 @@
+# pytrobot/core/feature/logging.py
 from enum import Enum
 import logging
+from typing import Literal
+
+from pytrobot.core.singleton import Singleton
 
 """TODO
 Adicionar essa modificação de cores no logger para dar acesso
@@ -14,63 +18,56 @@ class TerminalColor(Enum):
     RESET = '\033[0m'
     BLUE = '\033[94m'
 
-def WithLog(func):
-    """
-    Um decorator que registra a chamada de uma função com informações de depuração.
-
-    :param func: A função a ser decorada.
-    """
-
-    def wrapper(self, *args, **kwargs):
-        # Logger.log(f"{self.current_state}.{func.__name__}", logging.DEBUG)
-        print(f"{self.current_state}.{func.__name__}", logging.DEBUG)
-        func(self, *args, **kwargs)
-    return wrapper
-
 def print_pytrobot_banner():
     """Exibe o banner do pytrobot."""
     banner_lines = [
-        "  _____        _______          _",
-        " |  __ \__   _|__   __|        | |     o   _",
-        " | |__) \ \ / /  | |_ ___  ___ | |__  _|_ | |__",
-        " |  ___/ \ V /   | | V __|/ _ \|  _ \/   \|  __|",
-        " | |      | |    | |  /  | |_| | |_)( * * ) |",
-        " |_|      |_|    |_|__|   \___/|____/\---/|_|",
-        " ____________________________________________",
-        "|____________________________________________|",
-        "  -- Transactional State Robot for Python --",
-        "               Copyright © 2023",
+        r"  _____        _______          _",
+        r" |  __ \__   _|__   __|        | |     o   _",
+        r" | |__) \ \ / /  | |_ ___  ___ | |__  _|_ | |__",
+        r" |  ___/ \ V /   | | V __|/ _ \|  _ \/   \|  __|",
+        r" | |      | |    | |  /  | |_| | |_)( * * ) |",
+        r" |_|      |_|    |_|__|   \___/|____/\---/|_|",
+        r" ____________________________________________",
+        r"|____________________________________________|",
+        r"      -- Transactional Robot for Python --    ",
+        r"               Copyright © 2023",
         "\n\n"
     ]
-    print(BLUE + "\n".join(banner_lines) + RESET)
+    banner_text = "\n".join(banner_lines)
+    print(f"{TerminalColor.BLUE}{banner_text}{TerminalColor.RESET}")
 
-def pytrobot_print(*args, **kwargs):
-    """Função print personalizada para redirecionar para o logger."""
-    message = " ".join(map(str, args))
-    Logger.log(message, level=kwargs.get('level', logging.INFO))
+class Logger(metaclass=Singleton):
+    """Logger customizado para o PyTRobot."""
 
-class Logger:
-    """Um logger personalizado para o pytrobot."""
-    _instance = None
+    def _setup_logger(self, log_level, show_datetime, error_verbosity):
+        self.logger = logging.getLogger('pytrobot')
+        self.logger.setLevel(log_level)
+        format_str = "%(message)s"
+        if show_datetime:
+            format_str = "%(asctime)s  %(levelname)s  %(message)s"
 
-    @classmethod
-    def get_instance(cls):
-        if cls._instance is None:
-            cls._instance = cls._setup_logger()
-        return cls._instance
-
-    @staticmethod
-    def _setup_logger():
-        logger = logging.getLogger('pytrobot')
-        logger.setLevel(logging.INFO)
-
-        formatter = logging.Formatter("%(asctime)s  %(levelname)s  %(message)s", datefmt="%d-%m-%Y %H:%M:%S")
+        formatter = logging.Formatter(format_str, datefmt="%d-%m-%Y %H:%M:%S")
         handler = logging.StreamHandler()
         handler.setFormatter(formatter)
-        logger.addHandler(handler)
-        return logger
+        self.logger.addHandler(handler)
+        self.error_verbosity = error_verbosity
 
-    @staticmethod
-    def log(message, level=logging.INFO):
-        logger = Logger.get_instance()
-        logger.log(level, message)
+    def log(self, message, level=logging.INFO):
+        color = TerminalColor.RESET.value
+        if level == logging.ERROR:
+            color = TerminalColor.RED.value
+        elif level == logging.WARNING:
+            color = TerminalColor.YELLOW.value
+        elif level == logging.DEBUG:
+            color = TerminalColor.BLUE.value
+        
+        self.logger.log(level, f"{color}{message}{TerminalColor.RESET.value}")
+
+    def info(self, message):
+        self.log(message, level=logging.INFO)
+
+    def debug(self, message):
+        self.log(message, level=logging.DEBUG)
+
+    def error(self, message):
+        self.log(message, level=logging.ERROR)

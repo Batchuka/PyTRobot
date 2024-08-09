@@ -4,7 +4,7 @@ from pytrobot.core.singleton import Singleton
 from typing import List
 
 
-class TransactionItem:
+class Item:
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
 
@@ -25,13 +25,13 @@ class TransactionItem:
         """Método para representar o objeto como string (útil para depuração)."""
         return f"{self.__class__.__name__}({', '.join(f'{k}={v}' for k, v in self.__dict__.items())})"
 
-class TransactionData(metaclass=Singleton):
+class Table(metaclass=Singleton):
 
     def __init__(self, columns):
         if not hasattr(self, '_initialized'):
             self._initialized = True
             self.columns = columns
-            self.items : List[TransactionItem] = []
+            self.items : List[Item] = []
             self.transaction_number = 0
             self.transaction_item = None
 
@@ -41,7 +41,7 @@ class TransactionData(metaclass=Singleton):
     def add_item(self, **kwargs):
         if any(item[self.columns[0]] == kwargs.get(self.columns[0], None) for item in self.items):
             raise ValueError(f"An item with the same {self.columns[0]} already exists.")
-        item = TransactionItem(**kwargs)
+        item = Item(**kwargs)
         self.items.append(item)
         if self.transaction_item is None:
             self.transaction_item = item

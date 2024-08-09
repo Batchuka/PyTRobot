@@ -4,6 +4,7 @@ from pytrobot.core.singleton import Singleton
 from celery import Celery
 import boto3
 
+
 class CeleryManager(metaclass=Singleton):
     """
     This manager uses SQS as queue. Obligatory uses CLI credentials to assume role for URL queue passed.
@@ -62,8 +63,10 @@ class CeleryManager(metaclass=Singleton):
         return sqs_client
     
     def purge_queue(self):
-        #TODO : é preciso permissão para fazer isso.
-        self.sqs_client.purge_queue(QueueUrl=self.queue_url)
+        try:
+            self.sqs_client.purge_queue(QueueUrl=self.queue_url)
+        except Exception as e:
+            print(f"Erro ao tentar limpar a fila: {e}")
 
     def run(self):
         # self.purge_queue()

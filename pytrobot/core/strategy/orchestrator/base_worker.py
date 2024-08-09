@@ -1,18 +1,36 @@
 # pytrobot/core/strategy/orchestrator/base_worker.py
 
 from celery import Task
+from abc import ABC, abstractmethod
 
-
-class BaseWorker(Task):
+class BaseWorker(Task, ABC):
     abstract = True
 
     def run(self, *args, **kwargs):
-        raise NotImplementedError("O método 'run' deve ser implementado pelo worker.")
+        # Chama o método de entrada antes de executar a lógica principal
+        self._on_entry()
+        self.execute(*args, **kwargs)
 
+    @abstractmethod
+    def on_entry(self):
+        """
+        Método abstrato de preparação para a execução da tarefa.
+        Deve ser implementado pelo usuário para inicializar qualquer
+        estado ou recurso necessário antes da execução da tarefa.
+        """
+        pass
 
-# Orchestrator Decorators
+    def _on_entry(self):
+        """
+        Método privado que chama o método on_entry do usuário.
+        Pode incluir lógica adicional de inicialização, se necessário.
+        """
+        self.on_entry()
 
-def Worker(self, cls):
-    task_name = f'{cls.__module__}.{cls.__name__}.run'
-    task = self.celery_app.task(name=task_name, base=BaseWorker)(cls().run)
-    return task
+    @abstractmethod
+    def execute(self, *args, **kwargs):
+        """
+        Define a lógica principal da tarefa.
+        Deve ser implementado pelo usuário.
+        """
+        raise NotImplementedError("O método 'execute' deve ser implementado pelo worker.")

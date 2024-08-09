@@ -125,22 +125,3 @@ class BaseState(metaclass=Singleton):
         else:
             raise NotImplementedError(
                 f"The 'on_error' method must be implemented by the subclass. Error: {error}")
-
-# Machine State Decorators
-
-def State(next_state_on_success=None, next_state_on_failure=None):
-    def decorator(cls):
-        try:
-            instance = PyTRobot.get_instance()
-            st = instance.state_machine
-            st.add_state_transition(
-                cls, next_state_on_success, next_state_on_failure)
-        except PyTRobotNotInitializedException as e:
-            warnings.warn(
-                str(f"{e} : Your objects will not be registered"), RuntimeWarning)
-        return cls
-    return decorator
-
-def First(cls):
-    PyTRobot.set_first_state(cls.__name__)
-    return cls

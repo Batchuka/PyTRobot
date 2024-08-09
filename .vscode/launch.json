@@ -3,7 +3,7 @@
     "configurations": [
         {
             "name": "Tasks",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/pytrobot/tasks.py",
             "console": "integratedTerminal",
@@ -11,13 +11,12 @@
             "cwd": "${workspaceFolder}"
         },
         {
-            "name": "Celery",
-            "type": "python",
+            "name": "Test | CeleryManager",
+            "type": "debugpy",
             "request": "launch",
-            "program": "pytrobot/core/celery_layer.py",
+            "program": "pytrobot/core/strategy/orchestrator/celery_manager.py",
             "console": "integratedTerminal",
-            "justMyCode": false,
-            "cwd": "${workspaceFolder}"
+            "justMyCode": false
         }
     ]
 }
