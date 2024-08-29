@@ -8,8 +8,8 @@ from pytrobot.core.singleton import Singleton
 from pytrobot.core.feature.logging import print_pytrobot_banner
 from pytrobot.core.feature.config import ConfigManager
 from pytrobot.core.strategy.application_strategy import ApplicationStrategy
-from pytrobot.core.strategy.state_strategy import StateStrategy
-from pytrobot.core.strategy.orchestrator_strategy import OrchastratorStrategy
+from pytrobot.core.strategy.state.concrete import StateStrategy
+from pytrobot.core.strategy.orchestrator.concrete import OrchastratorStrategy
 
 class PyTRobotNotInitializedException(Exception):
     """Exceção para ser levantada quando o PyTRobot não está instanciado."""

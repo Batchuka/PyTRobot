@@ -1,18 +1,24 @@
 # pytrobot/core/strategy/orchestrator/concrete.py
-import warnings
+
 from pytrobot.core.singleton import Singleton
+from pytrobot.core.utility.config import Value
 from pytrobot.core.strategy.application_strategy import ApplicationStrategy
-from pytrobot.core.strategy.state.state_machine import StateMachine, TrueTable
+from pytrobot.core.strategy.orchestrator.celery_manager import CeleryManager
 
-
-class StateStrategy(ApplicationStrategy, metaclass=Singleton):
+class OrchastratorStrategy(ApplicationStrategy, metaclass=Singleton):
     def __init__(self):
         super().__init__()
-        self._first_state_name = None
-        self.state_machine : StateMachine
+        self.celery_layer : CeleryManager
 
     def initialize(self):
-        self.state_machine = StateMachine(true_table=TrueTable())
+        self.celery_layer = CeleryManager(
+            region_name=Value("aws.region_name"),
+            role_arn=Value("aws.role_arn"),
+            queue_url=Value("aws.queue_url"),
+            queue_name=Value("aws.queue_name"),
+            visibility_timeout=Value("general.visibility_timeout"), #type:ignore
+            polling_interval=Value("general.polling_interval") #type:ignore
+        )
 
     def start(self):
-        self.state_machine.run()
+        self.celery_layer.run()

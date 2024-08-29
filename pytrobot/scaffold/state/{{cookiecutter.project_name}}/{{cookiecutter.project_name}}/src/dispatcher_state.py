@@ -22,13 +22,19 @@ class DispatcherState(BaseState):
         for i in range(5):
             transaction_data.add_item(id=i, data=f'Sample Data {i}')
             time.sleep(2)
+        
+        self.valor_negocio = 'algo que depende da lógica' # Três valores possíveis
 
         print('Dados carregados com sucesso em TransactionData.')
 
     def on_exit(self):
 
-        pass
+        if self.valor_negocio == 'isso': self.transition('FazerIssoState')
+        elif self.valor_negocio == 'aquilo' : self.transition('FazerAquiloState')
+        elif self.valor_negocio == 'etc' : self.transition('FazerEtcState')
+        else : self.transition('_FinisherState')
 
     def on_error(self, error):
 
-        pass
+        print(error)
+        self.transition('_FinisherState')
