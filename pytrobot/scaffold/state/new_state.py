@@ -1,11 +1,10 @@
-from pytrobot import State, First, BaseState, TransactionData
+from pytrobot.core.strategy.state.base_state import BaseState
+from pytrobot.core.decortador.state import State
+#from pytrobot.core.decortador.state import First
 
-# @First            → Will set this state as the first in StateMachine
-# TransactionData() → This class will save the transaction data
-
-
+#@First → If set, this state will be the first
 @State('StateOnSucess', 'StateOnFailure')
-class SampleState(BaseState):
+class NewState(BaseState):
     """
     Read docstrings
     """
