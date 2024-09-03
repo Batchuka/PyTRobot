@@ -2,13 +2,15 @@ import os
 import importlib.util
 import boto3
 
+from pytrobot.core.singleton import Singleton
+
 class ConfigData(metaclass=Singleton):
     def __init__(self):
         self.config = {}
 
-    def load_config(self, resources_path):
-        """Carrega as configurações do arquivo 'config.py' localizado no diretório 'resources' especificado."""
-        config_path = os.path.join(resources_path, 'config.py')
+    def load_config(self, rsc_path):
+        """Carrega as configurações do arquivo 'config.py' localizado no diretório 'rsc' especificado."""
+        config_path = os.path.join(rsc_path, 'config.py')
         
         if not os.path.exists(config_path):
             raise FileNotFoundError(f"Arquivo de configuração não encontrado em: {config_path}")

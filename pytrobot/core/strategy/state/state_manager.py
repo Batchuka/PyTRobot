@@ -1,4 +1,4 @@
-# pytrobot/core/strategy/state/state_machine.py
+# pytrobot/core/strategy/state/state_manager.py
 
 from pytrobot.core.singleton import Singleton
 from pytrobot.core.strategy.state.private_states import _StarterState, _FinisherState
@@ -7,6 +7,7 @@ class StateTransitionError(Exception):
     pass
 
 class TrueTable(metaclass=Singleton):
+    #TODO: não seria interessante colocar TrueTable em um arquivo a parte?
     
     def __init__(self):
         self._states = {}
@@ -36,7 +37,7 @@ class TrueTable(metaclass=Singleton):
     def get_state_info(self, state_name):
          return self._states.get(state_name)
 
-class StateMachine(metaclass=Singleton):
+class StateManager(metaclass=Singleton):
 
     def __init__(self, true_table):
         from pytrobot.core.strategy.state.base_state import BaseState

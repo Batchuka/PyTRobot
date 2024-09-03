@@ -1,14 +1,14 @@
-# pytrobot/core/strategy/orchestrator/concrete.py
+# pytrobot/core/strategy/celery/concrete.py
 
 from pytrobot.core.singleton import Singleton
 from pytrobot.core.utility.config import Value
 from pytrobot.core.strategy.application_strategy import ApplicationStrategy
-from pytrobot.core.strategy.orchestrator.celery_manager import CeleryManager
+from pytrobot.core.strategy.celery.celery_manager import CeleryManager
 
-class OrchastratorStrategy(ApplicationStrategy, metaclass=Singleton):
+class CeleryStrategy(ApplicationStrategy, metaclass=Singleton):
     def __init__(self):
         super().__init__()
-        self.celery_layer : CeleryManager
+        self.celery_layer: CeleryManager
 
     def initialize(self):
         self.celery_layer = CeleryManager(
@@ -16,9 +16,12 @@ class OrchastratorStrategy(ApplicationStrategy, metaclass=Singleton):
             role_arn=Value("aws.role_arn"),
             queue_url=Value("aws.queue_url"),
             queue_name=Value("aws.queue_name"),
-            visibility_timeout=Value("general.visibility_timeout"), #type:ignore
-            polling_interval=Value("general.polling_interval") #type:ignore
+            visibility_timeout=Value("general.visibility_timeout"),
+            polling_interval=Value("general.polling_interval")
         )
 
     def start(self):
-        self.celery_layer.run()
+        self.multithread_manager.thread(self.celery_layer.run())
+
+    def stop(self):
+        self.multithread_manager.stop_thread('start')

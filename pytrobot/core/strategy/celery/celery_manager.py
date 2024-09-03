@@ -1,11 +1,15 @@
-# pytrobot/core/strategy/orchestrator/celery_manager.py
+# pytrobot/core/strategy/celery/celery_manager.py
+import json
 from datetime import datetime
+
 from pytrobot.core.singleton import Singleton
+from pytrobot.core.strategy.celery.message_builder import MessageBuilder
+
 from celery import Celery
 import boto3
 
-
 class CeleryManager(metaclass=Singleton):
+    # TODO : Essa classe não deveria está implementando a metaclass
     """
     This manager uses SQS as queue. Obligatory uses CLI credentials to assume role for URL queue passed.
     """
@@ -24,7 +28,7 @@ class CeleryManager(metaclass=Singleton):
         aws_secret_access_key = credentials.secret_key
 
         self.broker_url = f'sqs://{aws_access_key_id}:{aws_secret_access_key}@'
-        self.celery_app = Celery('tasks', broker=self.broker_url)
+        self.celery_app = Celery('celery_manager', broker=self.broker_url)
         self.celery_app.conf.update(
             broker_transport_options={
                 'region': self.region_name,
@@ -38,6 +42,7 @@ class CeleryManager(metaclass=Singleton):
             },
             broker_connection_retry_on_startup=True,
             task_acks_late=True
+            
         )
 
 
@@ -63,11 +68,41 @@ class CeleryManager(metaclass=Singleton):
         return sqs_client
     
     def purge_queue(self):
+        """TODO : Não use esse método. Tem que rever e terminar
+        """
         try:
             self.sqs_client.purge_queue(QueueUrl=self.queue_url)
         except Exception as e:
             print(f"Erro ao tentar limpar a fila: {e}")
 
+    def publish_message(self, task_name, args=None, kwargs=None, eta=None, expires=None, root_id=None, parent_id=None, group_id=None):
+        # FIXME: está totalmente errada a forma como está ocorrendo o retorno de message_builder()
+        """
+        Publica uma mensagem diretamente na fila SQS usando o protocolo Celery v2.
+        """
+        message_builder = MessageBuilder(task_name, args, kwargs, eta, expires, root_id, parent_id, group_id)
+        body, properties, headers = message_builder.build()
+
+        try:
+            self.sqs_client.send_message(
+                QueueUrl=self.queue_url,
+                MessageBody=body,
+                MessageAttributes={
+                    'Headers': {
+                        'StringValue': json.dumps(headers),
+                        'DataType': 'String'
+                    },
+                    'Properties': {
+                        'StringValue': json.dumps(properties),
+                        'DataType': 'String'
+                    }
+                }
+            )
+            print(f"Mensagem publicada com sucesso: {body}")
+        except Exception as e:
+            print(f"Erro ao publicar a mensagem: {e}")
+
     def run(self):
         # self.purge_queue()
         self.celery_app.start(argv=['worker', '--loglevel=info'])
+

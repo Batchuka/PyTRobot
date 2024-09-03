@@ -1,15 +1,22 @@
-# pytrobot/core/strategy/orchestrator/base_worker.py
+# pytrobot/core/strategy/celery/base_task.py
 
 from celery import Task
 from abc import ABC, abstractmethod
 
-class BaseWorker(Task, ABC):
+class BaseTask(Task, ABC):
     abstract = True
 
-    def run(self, *args, **kwargs):
+    def __run(self, *args, **kwargs):
         # Chama o método de entrada antes de executar a lógica principal
-        self._on_entry()
+        self.__on_entry()
         self.execute(*args, **kwargs)
+
+    def __on_entry(self):
+        """
+        Método privado que chama o método on_entry do usuário.
+        Pode incluir lógica adicional de inicialização, se necessário.
+        """
+        self.on_entry()
 
     @abstractmethod
     def on_entry(self):
@@ -19,14 +26,7 @@ class BaseWorker(Task, ABC):
         estado ou recurso necessário antes da execução da tarefa.
         """
         pass
-
-    def _on_entry(self):
-        """
-        Método privado que chama o método on_entry do usuário.
-        Pode incluir lógica adicional de inicialização, se necessário.
-        """
-        self.on_entry()
-
+    
     @abstractmethod
     def execute(self, *args, **kwargs):
         """

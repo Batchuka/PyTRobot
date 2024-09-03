@@ -1,4 +1,4 @@
-# pytrobot/multithread_feature.py
+# pytrobot/core/feature/multithread.py
 
 import threading
 from functools import wraps
@@ -10,24 +10,20 @@ class MultithreadManager(metaclass=Singleton):
 
     def thread(self, func):
         """
-        Decorador para executar a função decorada em uma nova thread e gerenciar a thread.
+        Executa a função em uma nova thread e gerencia a thread.
         Garante que a função não crie múltiplas threads simultaneamente.
         """
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            instance = args[0]  # A primeira arg é a instância de `self`
-            thread_name = f"_{func.__name__}_thread"
-            
-            if thread_name in self.threads and self.threads[thread_name].is_alive():
-                print(f"The thread for {func.__name__} is already running.")
-                return
-            else:
-                print(f"Starting new thread for {func.__name__}.")
-                thread = threading.Thread(target=func, args=args, kwargs=kwargs, daemon=True)
-                self.threads[thread_name] = thread
-                thread.start()
-                return thread
-        return wrapper
+        thread_name = f"_{func.__name__}_thread"
+
+        if thread_name in self.threads and self.threads[thread_name].is_alive():
+            print(f"The thread for {func.__name__} is already running.")
+            return
+        else:
+            print(f"Starting new thread for {func.__name__}.")
+            thread = threading.Thread(target=func, daemon=True)
+            self.threads[thread_name] = thread
+            thread.start()
+            return thread
 
     def stop_thread(self, func_name):
         """
@@ -54,13 +50,3 @@ class MultithreadManager(metaclass=Singleton):
         print(f"Active threads count: {len(active_threads)}")
         for name, thread in active_threads.items():
             print(f"Thread name: {name}, Thread id: {thread.ident}")
-
-
-
-# Decorator
-def Thread(func):
-    """
-    Proxy para o decorador @Thread do PyTRobot.
-    """
-    multithread_manager = MultithreadManager()
-    return multithread_manager.thread(func)

@@ -13,12 +13,12 @@ class ConfigManager(metaclass=Singleton):
 
     def load_config(self, directory: str, config_name: str = 'app.json'):
         """
-        Carrega as configurações a partir de um arquivo na pasta resources.
+        Carrega as configurações a partir de um arquivo na pasta rsc.
         """
-        config_path = os.path.join(directory, 'resources', config_name)
+        config_path = os.path.join(directory, 'rsc', config_name)
 
         if not os.path.exists(config_path):
-            raise FileNotFoundError(f"Config file '{config_name}' not found in the resources directory.")
+            raise FileNotFoundError(f"Config file '{config_name}' not found in the rsc directory.")
 
         with open(config_path, 'r', encoding='utf-8') as config_file:
             self._config_data = json.load(config_file)

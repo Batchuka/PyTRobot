@@ -1,5 +1,6 @@
 # pytrobot/core/decortador/state.py
-from pytrobot.core.strategy.state.state_machine import TrueTable
+
+from pytrobot.core.strategy.state.state_manager import TrueTable
 
 def State(next_state_on_success, next_state_on_failure='_FinisherState'):
     """
