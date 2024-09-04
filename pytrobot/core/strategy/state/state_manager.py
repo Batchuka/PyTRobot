@@ -25,7 +25,6 @@ class TrueTable(metaclass=Singleton):
         # _FinisherState
         self.add_transition(_FinisherState,'_FinisherState', '_FinisherState')
 
-
     def add_transition(self, current_state, next_state_on_success, next_state_on_failure, operator=None):
         # Assegura que as instâncias dos estados são criadas com acesso ao operador
         self._states[current_state.__name__] = {

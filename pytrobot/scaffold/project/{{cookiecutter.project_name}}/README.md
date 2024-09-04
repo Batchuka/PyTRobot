@@ -5,7 +5,10 @@
 ---
 O `{{cookiecutter.project_name}}` é um robô destinado a automatizar ...
 
-## Fluxo de Operações (Estados)
+## Overview da Lógica
+
+> Dê uma visão geral de como a lógica dessa aplicação está aplicação e do objetivo dela.
+
 ---
 ### 1. Título do estado — NomeDoState
 ... Lista de ações

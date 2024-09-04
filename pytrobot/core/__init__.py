@@ -3,14 +3,14 @@ import builtins
 import os
 import sys
 import importlib
-from typing import Dict
+from typing import Optional, Dict
 
 from pytrobot.core.singleton import Singleton
 from pytrobot.core.feature.logging import print_pytrobot_banner
 from pytrobot.core.feature.config import ConfigManager
 from pytrobot.core.strategy.application_strategy import ApplicationStrategy
 from pytrobot.core.strategy.state.concrete import StateStrategy
-from pytrobot.core.strategy.orchestrator.concrete import OrchastratorStrategy
+from pytrobot.core.strategy.celery.concrete import CeleryStrategy
 
 class PyTRobotNotInitializedException(Exception):
     """Exceção para ser levantada quando o PyTRobot não está instanciado."""
@@ -20,11 +20,20 @@ class PyTRobot(metaclass=Singleton):
     """Classe principal do pytrobot, implementada como um Singleton."""
     _instance = None
 
-    def __init__(self, directory: str, strategies: Dict[str, ApplicationStrategy] = None):
+    def __init__(self, directory: Optional[str] = None, strategies: Optional[Dict[str, ApplicationStrategy]] = None):
+        """
+        Inicializa o PyTRobot. O diretório e as estratégias são opcionais.
+        """
         if not hasattr(self, '_initialized'):
-            self._initialize(directory, strategies)
+            if directory:
+                self._initialize(directory, strategies)
+            else:
+                print("Nenhum diretório de projeto fornecido. Inicialização mínima.")
+                self.strategies = strategies or {}
+                self._initialized = True
 
-    def _initialize(self, directory: str, strategies: Dict[str, ApplicationStrategy] = None):
+    def _initialize(self, directory: str, strategies: Optional[Dict[str, ApplicationStrategy]] = None):
+
         print_pytrobot_banner()
 
         self.load_config(directory)
@@ -37,10 +46,6 @@ class PyTRobot(metaclass=Singleton):
             self.strategies = {}
             self.load_strategies()
 
-        # Inicializa todas as estratégias carregadas
-        for strategy in self.strategies.values():
-            strategy.initialize()
-
         self._initialized = True
 
     def _instantiate_strategy(self, strategy_name: str) -> ApplicationStrategy:
@@ -48,7 +53,7 @@ class PyTRobot(metaclass=Singleton):
         if strategy_name == "state":
             return StateStrategy()
         elif strategy_name == "orchestrator":
-            return OrchastratorStrategy()
+            return CeleryStrategy()
         else:
             raise ValueError(f"Unknown strategy: {strategy_name}")
 
@@ -66,7 +71,6 @@ class PyTRobot(metaclass=Singleton):
             if file.endswith(".py") and file not in ["__init__.py", "__main__.py"]:
                 module_name = file[:-3]  # Remove .py
                 importlib.import_module(f'{base_package}.src.{module_name}')
-
 
     def load_config(self, directory: str):
         """Carrega o arquivo de configuração"""
@@ -100,4 +104,10 @@ class PyTRobot(metaclass=Singleton):
         """Inicia todas as estratégias carregadas"""
         for strategy in self.strategies.values():
             strategy.start()
+
+    def stop_application(self):
+        """Inicia todas as estratégias carregadas"""
+        for strategy in self.strategies.values():
+            strategy.stop()
+
 

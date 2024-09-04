@@ -2,19 +2,18 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Tasks",
+            "name": "Test | CeleryStrategy",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/pytrobot/tasks.py",
+            "program": "pytrobot/core/strategy/celery/concrete.py",
             "console": "integratedTerminal",
-            "justMyCode": true,
-            "cwd": "${workspaceFolder}"
+            "justMyCode": false
         },
         {
-            "name": "Test | CeleryManager",
+            "name": "Test | StateStrategy",
             "type": "debugpy",
             "request": "launch",
-            "program": "pytrobot/core/strategy/orchestrator/celery_manager.py",
+            "program": "pytrobot/core/strategy/state/concrete.py",
             "console": "integratedTerminal",
             "justMyCode": false
         }

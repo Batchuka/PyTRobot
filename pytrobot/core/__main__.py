@@ -16,6 +16,7 @@ def entrypoint():
     # Initialize the PyTRobot application
     pytrobot = PyTRobot(directory)
     pytrobot.initialize_application()
+    pytrobot.start_application()
 
 if __name__ == '__main__':
     entrypoint()
