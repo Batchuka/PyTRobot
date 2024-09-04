@@ -1,6 +1,9 @@
 {
     "environment": "DEV",
-    "strategy": "orchestrator",
+    "strategy": [
+        "celery",
+        "state"
+    ],
     "general": {
         "max_retries": 3,
         "tiny_timeout": 1,
@@ -12,7 +15,12 @@
         "polling_interval": 10,
         "global": {}
     },
-    "aws": {},
+    "aws": {
+        "region_name": "us-east-1",
+        "role_arn": "arn:aws:iam::..",
+        "queue_url": "https://sqs.us-east-1.amazonaws.com/...",
+        "queue_name": "nome-fila"
+    },
     "library": {},
     "endpoints": {},
     "environments": {

@@ -33,7 +33,7 @@ dependencies = [
 
 # Scripts que podem ser executados a partir do CLI
 [project.scripts]
-pytrobot = "pytrobot.cli.__main__"
+pytrobot = "pytrobot.cli.__main__:cli"
 
 # Configurações do setuptools
 [tool.setuptools]

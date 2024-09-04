@@ -16,6 +16,14 @@
             "program": "pytrobot/core/strategy/state/concrete.py",
             "console": "integratedTerminal",
             "justMyCode": false
+        },
+        {
+            "name": "Test | CLI",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "pytrobot/cli/__main__.py",
+            "console": "integratedTerminal",
+            "justMyCode": false
         }
     ]
 }
