@@ -14,7 +14,8 @@ class StateStrategy(ApplicationStrategy, metaclass=Singleton):
 
     def initialize(self):
 
-        self.state_manager = StateMachine(true_table=TrueTable())
+        true_table = TrueTable()
+        self.state_manager = StateMachine(true_table=true_table)
 
     def start(self):
 
@@ -23,17 +24,3 @@ class StateStrategy(ApplicationStrategy, metaclass=Singleton):
     def stop(self):
 
         self.multithread_manager.stop_thread(self.state_manager.run)
-
-
-if __name__ == "__main__":
-
-    import time
-
-    # Testando passando argumentos diretamente
-    ss_obj = StateStrategy()
-    ss_obj.initialize()
-    ss_obj.start()
-    ss_obj.multithread_manager.list_active_threads()
-    while True:
-        print("aqui é a principal")
-        time.sleep(10)

@@ -2,7 +2,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Test | CeleryStrategy",
+            "name": "Test | Celery",
             "type": "debugpy",
             "request": "launch",
             "program": "pytrobot/core/strategy/celery/concrete.py",
@@ -10,7 +10,7 @@
             "justMyCode": false
         },
         {
-            "name": "Test | StateStrategy",
+            "name": "Test | State",
             "type": "debugpy",
             "request": "launch",
             "program": "pytrobot/core/strategy/state/concrete.py",

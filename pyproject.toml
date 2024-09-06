@@ -28,7 +28,9 @@ dependencies = [
     "boto3==1.26.141",
     "click==8.1.7",
     "setuptools==65.5.0",
-    "cookiecutter==2.1.1"
+    "cookiecutter==2.1.1",
+    "celery",
+    "pycurl"
 ]
 
 # Scripts que podem ser executados a partir do CLI

@@ -1,7 +1,6 @@
 # pytrobot/core/feature/logging.py
 from enum import Enum
 import logging
-from typing import Literal
 
 from pytrobot.core.singleton import Singleton
 
@@ -34,7 +33,7 @@ def print_pytrobot_banner():
         "\n\n"
     ]
     banner_text = "\n".join(banner_lines)
-    print(f"{TerminalColor.BLUE}{banner_text}{TerminalColor.RESET}")
+    print(f"{TerminalColor.BLUE.value}{banner_text}{TerminalColor.RESET.value}")
 
 class Logger(metaclass=Singleton):
     """Logger customizado para o PyTRobot."""

@@ -79,7 +79,7 @@ class BaseState(metaclass=Singleton):
 
     def _execute(self):
         print(
-            f"{TerminalColor.BLUE} ========== Running 'execute' ========== {self.__class__.__name__} {TerminalColor.RESET}")
+            f"{TerminalColor.BLUE.value} ========== Running 'execute' ========== {self.__class__.__name__} {TerminalColor.RESET.value}")
         method = getattr(self, 'execute', None)
         if method:
             method()
@@ -89,7 +89,7 @@ class BaseState(metaclass=Singleton):
 
     def _on_entry(self):
 
-        print(f"{TerminalColor.BLUE} =========== Starting state ============ {self.__class__.__name__} {TerminalColor.RESET}")
+        print(f"{TerminalColor.BLUE.value} =========== Starting state ============ {self.__class__.__name__} {TerminalColor.RESET.value}")
         method = getattr(self, 'on_entry', None)
         if method:
             method()
@@ -100,7 +100,7 @@ class BaseState(metaclass=Singleton):
     def _on_exit(self):
         self._status = True
         print(
-            f"{TerminalColor.BLUE} ============== Success ================ {self.__class__.__name__}  {TerminalColor.RESET}")
+            f"{TerminalColor.BLUE.value} ============== Success ================ {self.__class__.__name__}  {TerminalColor.RESET.value}")
         method = getattr(self, 'on_exit', None)
         if method:
             method()
@@ -111,7 +111,7 @@ class BaseState(metaclass=Singleton):
 
     def _on_error(self, error):
         self._status = False
-        print(f"{TerminalColor.RED} ========== Something failed  ========== {self.__class__.__name__} \n {error}{TerminalColor.RESET} ")
+        print(f"{TerminalColor.RED.value} ========== Something failed  ========== {self.__class__.__name__} \n {error}{TerminalColor.RESET.value} ")
         method = getattr(self, 'on_error', None)
         if method:
             if self.retry_counter > 0:

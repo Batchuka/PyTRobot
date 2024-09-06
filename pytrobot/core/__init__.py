@@ -8,6 +8,7 @@ from typing import Optional, Dict
 from pytrobot.core.singleton import Singleton
 from pytrobot.core.feature.logging import print_pytrobot_banner
 from pytrobot.core.feature.config import ConfigManager
+from pytrobot.core.feature.multithread import MultithreadManager
 from pytrobot.core.strategy.application_strategy import ApplicationStrategy
 from pytrobot.core.strategy.state.concrete import StateStrategy
 from pytrobot.core.strategy.celery.concrete import CeleryStrategy
@@ -20,19 +21,15 @@ class PyTRobot(metaclass=Singleton):
     """Classe principal do pytrobot, implementada como um Singleton."""
     _instance = None
 
-    def __init__(self, directory: Optional[str] = None, strategies: Optional[Dict[str, ApplicationStrategy]] = None):
+    def __init__(self, directory: str , strategies: Optional[list[str]] = None):
         """
         Inicializa o PyTRobot. O diretório e as estratégias são opcionais.
         """
         if not hasattr(self, '_initialized'):
-            if directory:
-                self._initialize(directory, strategies)
-            else:
-                print("Nenhum diretório de projeto fornecido. Inicialização mínima.")
-                self.strategies = strategies or {}
-                self._initialized = True
+            self._initialize(directory, strategies)
 
-    def _initialize(self, directory: str, strategies: Optional[Dict[str, ApplicationStrategy]] = None):
+
+    def _initialize(self, directory: str, strategies: Optional[list[str]] = None):
 
         print_pytrobot_banner()
 
@@ -46,16 +43,23 @@ class PyTRobot(metaclass=Singleton):
             self.strategies = {}
             self.load_strategies()
 
+        self.multithread_manager = MultithreadManager()
+
         self._initialized = True
 
-    def _instantiate_strategy(self, strategy_name: str) -> ApplicationStrategy:
-        """Instancia a estratégia com base no nome fornecido"""
-        if strategy_name == "state":
-            return StateStrategy()
-        elif strategy_name == "orchestrator":
-            return CeleryStrategy()
-        else:
-            raise ValueError(f"Unknown strategy: {strategy_name}")
+    def _instantiate_strategies(self, strategy_names: list) -> list[ApplicationStrategy]:
+        """Instancia uma lista de estratégias com base nos nomes fornecidos"""
+        strategies = []
+        
+        for strategy_name in strategy_names:
+            if strategy_name == "state":
+                strategies.append(StateStrategy())
+            elif strategy_name == "celery":
+                strategies.append(CeleryStrategy())
+            else:
+                raise ValueError(f"Unknown strategy: {strategy_name}")
+
+        return strategies
 
     def _get_base_package(self) -> str:
         """Extrai o nome do pacote base do caminho do src"""
@@ -88,26 +92,46 @@ class PyTRobot(metaclass=Singleton):
         else:
             raise FileNotFoundError("'src' directory not found.")
 
-    def load_strategies(self):
-        """Carrega a estratégia com base na configuração"""
-        strategy_name = self.config_manager.get_config("strategy")
-        if not strategy_name:
-            raise ValueError("Strategy not specified in configuration.")
-        self.strategy = self._instantiate_strategy(strategy_name)
+    def load_strategies(self, strategies: Optional[list[str]] = None):
+        """Carrega as estratégias com base na lista de estratégias ou na configuração."""
+        if strategies:
+            # Instancia as estratégias passadas como strings
+            self.strategies : list[ApplicationStrategy] = self._instantiate_strategies(strategies)
+        else:
+            # Carrega as estratégias da configuração
+            strategy_name = self.config_manager.get_config("strategy")
+            if not strategy_name:
+                raise ValueError("Strategy not specified in configuration.")
+            
+            # Carrega a estratégia com base na configuração
+            self.strategies : list[ApplicationStrategy] = self._instantiate_strategies(strategy_name)
+
+    def monitor_threads(self):
+        """Monitora as threads ativas e mantém o processo ativo enquanto houver threads."""
+        import time
+        while True:
+            active_threads = self.multithread_manager.get_number_active_threads()
+            if active_threads and active_threads == 0:
+                print("Nenhuma thread ativa, encerrando o processo...")
+                break
+            time.sleep(10)
 
     def initialize_application(self):
         """Inicializa todas as estratégias carregadas"""
-        for strategy in self.strategies.values():
+        for strategy in self.strategies:
             strategy.initialize()
 
     def start_application(self):
         """Inicia todas as estratégias carregadas"""
-        for strategy in self.strategies.values():
+        for strategy in self.strategies:
             strategy.start()
+
+        # Inicia o monitoramento das threads
+        self.monitor_threads()
 
     def stop_application(self):
         """Inicia todas as estratégias carregadas"""
-        for strategy in self.strategies.values():
+        for strategy in self.strategies:
             strategy.stop()
 
 

@@ -7,7 +7,7 @@ class MultithreadManager(metaclass=Singleton):
     def __init__(self):
         self.threads = {}
 
-    def new_thread(self, func):
+    def new_thread(self, func, join=False):
         """
         Executa a função em uma nova thread e gerencia a thread.
         Garante que a função não crie múltiplas threads simultaneamente.
@@ -29,6 +29,7 @@ class MultithreadManager(metaclass=Singleton):
             thread = threading.Thread(target=func, daemon=True)
             self.threads[full_invocation] = thread
             thread.start()
+            if join:thread.join() # Se join for True, aguarde o término da thread
             return thread
 
     def stop_thread(self, func):
@@ -65,3 +66,11 @@ class MultithreadManager(metaclass=Singleton):
         print(f"Active threads count: {len(active_threads)}")
         for name, thread in active_threads.items():
             print(f"Thread name: {name}, Thread id: {thread.ident}")
+
+    def get_number_active_threads(self) -> int:
+        """
+        Retorna o número de threads ativas gerenciadas pelo MultithreadManager.
+        """
+        active_threads = {name: thread for name, thread in self.threads.items() if thread.is_alive()}
+        return len(active_threads)
+            
