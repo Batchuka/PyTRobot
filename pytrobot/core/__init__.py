@@ -6,9 +6,11 @@ import importlib
 from typing import Optional, Dict
 
 from pytrobot.core.singleton import Singleton
+
 from pytrobot.core.feature.logging import print_pytrobot_banner
 from pytrobot.core.feature.config import ConfigManager
 from pytrobot.core.feature.multithread import MultithreadManager
+
 from pytrobot.core.strategy.application_strategy import ApplicationStrategy
 from pytrobot.core.strategy.state.concrete import StateStrategy
 from pytrobot.core.strategy.celery.concrete import CeleryStrategy
@@ -21,45 +23,48 @@ class PyTRobot(metaclass=Singleton):
     """Classe principal do pytrobot, implementada como um Singleton."""
     _instance = None
 
-    def __init__(self, directory: str , strategies: Optional[list[str]] = None):
+    def __init__(self, directory: str):
         """
         Inicializa o PyTRobot. O diretório e as estratégias são opcionais.
         """
         if not hasattr(self, '_initialized'):
-            self._initialize(directory, strategies)
+            self._initialize(directory)
 
-
-    def _initialize(self, directory: str, strategies: Optional[list[str]] = None):
+    def _initialize(self, directory: str):
 
         print_pytrobot_banner()
 
         self.load_config(directory)
         self.load_src(directory)
-        
-        # Se estratégias foram passadas como argumento, use-as. Caso contrário, carregue conforme a configuração.
-        if strategies:
-            self.strategies = strategies
-        else:
-            self.strategies = {}
-            self.load_strategies()
 
         self.multithread_manager = MultithreadManager()
 
+        # Verifica se há registros nos registries e adiciona as estratégias necessárias
+        self._check_and_register_strategies()
+
         self._initialized = True
 
-    def _instantiate_strategies(self, strategy_names: list) -> list[ApplicationStrategy]:
-        """Instancia uma lista de estratégias com base nos nomes fornecidos"""
-        strategies = []
-        
-        for strategy_name in strategy_names:
-            if strategy_name == "state":
-                strategies.append(StateStrategy())
-            elif strategy_name == "celery":
-                strategies.append(CeleryStrategy())
-            else:
-                raise ValueError(f"Unknown strategy: {strategy_name}")
+    def _check_and_register_strategies(self):
+        """Verifica se há registros de tasks ou states e adiciona as estratégias necessárias."""
+        from pytrobot.core.strategy.celery.task_registry import TaskRegistry
+        from pytrobot.core.strategy.state.state_registry import StateRegistry
 
-        return strategies
+        self.strategies = []
+
+        task_registry = TaskRegistry()
+        state_registry = StateRegistry()
+
+        # Adiciona a CeleryStrategy se houver tasks registradas
+        if task_registry.get_all():
+            self.strategies.append(CeleryStrategy())
+
+        # Adiciona a StateStrategy se houver states registrados
+        if state_registry.get_all():
+            self.strategies.append(StateStrategy())
+
+        # Caso não haja registros e nenhuma estratégia configurada, lança um erro
+        if not self.strategies:
+            raise ValueError("Nenhuma estratégia registrada ou especificada na configuração.")
 
     def _get_base_package(self) -> str:
         """Extrai o nome do pacote base do caminho do src"""
@@ -92,20 +97,6 @@ class PyTRobot(metaclass=Singleton):
         else:
             raise FileNotFoundError("'src' directory not found.")
 
-    def load_strategies(self, strategies: Optional[list[str]] = None):
-        """Carrega as estratégias com base na lista de estratégias ou na configuração."""
-        if strategies:
-            # Instancia as estratégias passadas como strings
-            self.strategies : list[ApplicationStrategy] = self._instantiate_strategies(strategies)
-        else:
-            # Carrega as estratégias da configuração
-            strategy_name = self.config_manager.get_config("strategy")
-            if not strategy_name:
-                raise ValueError("Strategy not specified in configuration.")
-            
-            # Carrega a estratégia com base na configuração
-            self.strategies : list[ApplicationStrategy] = self._instantiate_strategies(strategy_name)
-
     def monitor_threads(self):
         """Monitora as threads ativas e mantém o processo ativo enquanto houver threads."""
         import time
@@ -135,3 +126,7 @@ class PyTRobot(metaclass=Singleton):
             strategy.stop()
 
 
+
+"""
+TODO: Retirei a posibilidade de passar argumentos de estratégia por hora. Agora é só no reconhecimento automático.
+"""

@@ -12,7 +12,6 @@ class CeleryStrategy(ApplicationStrategy, metaclass=Singleton):
         self.celery_manager: CeleryManager
 
     def initialize(self, region_name=None, role_arn=None, queue_url=None, queue_name=None, visibility_timeout=None, polling_interval=None):
-        """Permite passar os valores diretamente ou usar o Value para pegar os valores do arquivo de configuração."""
         task_registry = TaskRegistry()
         self.celery_manager = CeleryManager(
             task_registry       = task_registry,

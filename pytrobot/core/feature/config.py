@@ -20,6 +20,8 @@ class ConfigManager(metaclass=Singleton):
         if not os.path.exists(config_path):
             raise FileNotFoundError(f"Config file '{config_name}' not found in the rsc directory.")
 
+        # E:\Projetos\Library\PyTRobot\pytrobot\scaffold\state\new_project\new_project\rsc
+
         with open(config_path, 'r', encoding='utf-8') as config_file:
             self._config_data = json.load(config_file)
 

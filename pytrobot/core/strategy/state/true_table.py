@@ -4,7 +4,9 @@ from pytrobot.core.singleton import Singleton
 from pytrobot.core.strategy.state.private_states import _StarterState, _FinisherState
 
 class TrueTable(metaclass=Singleton):
-    #TODO: não seria interessante colocar TrueTable em um arquivo a parte?
+    """
+    DEPRECATED
+    """
     
     def __init__(self):
         self._states = {}

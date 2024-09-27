@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=70", "wheel", "setuptools_scm[toml]>=8.1.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "{{cookiecutter.project_name}}"
+dynamic = ["version"]
+description = "Robô para Transmitir e acompanhar DI's no Siscomex Importação Web"
+authors = [{ name = "Matheus C. Delfino", email = "matheus.corteletti@wmtrading.com.br" }]
+readme = "README.md"
+requires-python = ">=3.11"
+
+dependencies = [
+    "pytrobot",
+    "pilot"
+]
+
+# Configurações do setuptools
+[tool.setuptools]
+packages.find = { exclude = ["tests", "*.tests", "*.tests.*", "tests.*"] }
+
+[project.scripts]
+{{cookiecutter.project_name}} = "{{cookiecutter.project_name}}.__main__:main"
+
+[tool.setuptools_scm]
+version_scheme = "post-release"
+local_scheme = "dirty-tag"

@@ -2,26 +2,18 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Test | Celery",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "pytrobot/core/strategy/celery/concrete.py",
-            "console": "integratedTerminal",
-            "justMyCode": false
-        },
-        {
             "name": "Test | State",
             "type": "debugpy",
             "request": "launch",
-            "program": "pytrobot/core/strategy/state/concrete.py",
+            "program": "test\\test_state_strategy.py",
             "console": "integratedTerminal",
             "justMyCode": false
         },
         {
-            "name": "Test | CLI",
+            "name": "Test | Celery",
             "type": "debugpy",
             "request": "launch",
-            "program": "pytrobot/cli/__main__.py",
+            "program": "test\\test_state_strategy.py",
             "console": "integratedTerminal",
             "justMyCode": false
         }

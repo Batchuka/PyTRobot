@@ -2,20 +2,21 @@
 
 from pytrobot.core.singleton import Singleton
 from pytrobot.core.strategy.application_strategy import ApplicationStrategy
-from pytrobot.core.strategy.state.state_machine import StateMachine, TrueTable
+# from pytrobot.core.strategy.state.state_manager import StateManager, TrueTable
+from pytrobot.core.strategy.state.state_manager import StateManager, StateRegistry
 
 
 class StateStrategy(ApplicationStrategy, metaclass=Singleton):
-    # TODO: Talvez seja o caso de desvinciliar a máquina de estados do 'StateManager'
     def __init__(self):
         super().__init__()
-        self._first_state_name = None
-        self.state_manager : StateMachine
+        self.state_manager : StateManager
 
     def initialize(self):
-
-        true_table = TrueTable()
-        self.state_manager = StateMachine(true_table=true_table)
+        # true_table = TrueTable()
+        state_registry = StateRegistry()
+        self.state_manager = StateManager(
+            state_registry      = state_registry
+        )
 
     def start(self):
 
