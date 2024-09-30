@@ -3,7 +3,6 @@ from pytrobot.core.strategy.state.base_state import BaseState
 from pytrobot.core.feature.multithread import MultithreadManager
 from pytrobot.core.feature.subprocess import SubprocessManager
 
-
 class _FinisherState(BaseState):
 
     def execute(self):

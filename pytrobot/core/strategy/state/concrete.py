@@ -2,7 +2,6 @@
 
 from pytrobot.core.singleton import Singleton
 from pytrobot.core.strategy.application_strategy import ApplicationStrategy
-# from pytrobot.core.strategy.state.state_manager import StateManager, TrueTable
 from pytrobot.core.strategy.state.state_manager import StateManager, StateRegistry
 
 
@@ -12,7 +11,6 @@ class StateStrategy(ApplicationStrategy, metaclass=Singleton):
         self.state_manager : StateManager
 
     def initialize(self):
-        # true_table = TrueTable()
         state_registry = StateRegistry()
         self.state_manager = StateManager(
             state_registry      = state_registry

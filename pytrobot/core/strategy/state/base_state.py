@@ -39,8 +39,7 @@ class BaseState(metaclass=Singleton):
         :param on_failure: Class name of the next state on failure.
         """
         # Uses the operator to update the transitions based on provided state names.
-        self.state_machine_operator(
-            on_success=on_success, on_failure=on_failure)
+        self.state_machine_operator(on_success=on_success, on_failure=on_failure)
 
     @abstractmethod
     def execute(self):

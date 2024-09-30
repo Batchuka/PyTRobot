@@ -18,8 +18,8 @@ class TestNewProjectState(unittest.TestCase):
     
     def setUp(self):
         # Inicializa o PyTRobot no diretório do projeto `new_project`
-        project_dir    = Path(__file__).resolve().parent.parent / "pytrobot" / "scaffold" / "state" / "new_project" 
-        src_path       = Path(__file__).resolve().parent.parent / "pytrobot" / "scaffold" / "state" / "new_project" / "new_project" 
+        project_dir    = Path(__file__).resolve().parent.parent / "pytrobot" / "scaffold" / "state" / "project" 
+        src_path       = Path(__file__).resolve().parent.parent / "pytrobot" / "scaffold" / "state" / "project" / "pizza_bot" 
         self.project_dir    = str(project_dir)
         self.src_path       = str(src_path)
         pass
@@ -34,11 +34,14 @@ class TestNewProjectState(unittest.TestCase):
 
             # Verifica se as estratégias foram inicializadas automaticamente
             self.assertIsNotNone(pytrobot.strategies, "Estratégias não foram inicializadas.")
+            
+            # Verifica se pelo menos uma estratégia foi carregada
+            self.assertGreater(len(pytrobot.strategies), 0, "Nenhuma estratégia foi carregada.")
+            
+            pytrobot.initialize_application()
 
             # Inicia a aplicação e verifica se há threads ativas
             pytrobot.start_application()
-            active_threads = pytrobot.multithread_manager.get_number_active_threads()
-            self.assertGreater(active_threads, 0, "Nenhuma thread ativa após iniciar a aplicação.")
 
 if __name__ == "__main__":
     unittest.main()

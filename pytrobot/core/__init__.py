@@ -1,17 +1,12 @@
 # pytrobot/__init__.py
-import builtins
 import os
 import sys
 import importlib
-from typing import Optional, Dict
 
 from pytrobot.core.singleton import Singleton
-
 from pytrobot.core.feature.logging import print_pytrobot_banner
 from pytrobot.core.feature.config import ConfigManager
 from pytrobot.core.feature.multithread import MultithreadManager
-
-from pytrobot.core.strategy.application_strategy import ApplicationStrategy
 from pytrobot.core.strategy.state.concrete import StateStrategy
 from pytrobot.core.strategy.celery.concrete import CeleryStrategy
 
@@ -102,8 +97,9 @@ class PyTRobot(metaclass=Singleton):
         import time
         while True:
             active_threads = self.multithread_manager.get_number_active_threads()
-            if active_threads and active_threads == 0:
-                print("Nenhuma thread ativa, encerrando o processo...")
+            if active_threads == 0:
+                print("No active threads, terminating the process...")
+                self.stop_application()
                 break
             time.sleep(10)
 
