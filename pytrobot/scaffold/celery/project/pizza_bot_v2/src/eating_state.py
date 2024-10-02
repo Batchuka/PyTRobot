@@ -5,7 +5,7 @@ from pytrobot.core.strategy.state.base_state import BaseState
 from .pizza import Pizza
 
 @State('Satisfied', 'Dead')
-class EatingPizza(BaseState):
+class EatingState(BaseState):
     """The robot is eating the pizza."""
 
     def on_entry(self):

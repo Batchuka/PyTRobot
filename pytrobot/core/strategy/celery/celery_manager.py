@@ -1,10 +1,7 @@
 # pytrobot/core/strategy/celery/celery_manager.py
 
 from datetime import datetime
-
-# from pytrobot.core.singleton import Singleton
 from pytrobot.core.strategy.celery.task_registry import TaskRegistry
-
 from celery import Celery
 import boto3
 
@@ -68,7 +65,7 @@ class CeleryManager():
 
     def initialize_tasks(self):
         """Adiciona todas as tasks registradas no TaskRegistry ao Celery"""
-        tasks = self.task_registry.get_all_tasks()  # Pega todas as tasks registradas
+        tasks = self.task_registry.get_all()  # Pega todas as tasks registradas
 
         for task_name, task_cls in tasks.items():
             self.celery_app.task(name=task_name)(task_cls().run)  # Registra a task no Celery

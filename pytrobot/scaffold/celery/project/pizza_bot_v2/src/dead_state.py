@@ -2,7 +2,7 @@ from pytrobot.core.decortador.state import State
 from pytrobot.core.strategy.state.base_state import BaseState
 
 @State()
-class Dead(BaseState):
+class DeadState(BaseState):
     """The robot died of hunger."""
 
     def on_entry(self):

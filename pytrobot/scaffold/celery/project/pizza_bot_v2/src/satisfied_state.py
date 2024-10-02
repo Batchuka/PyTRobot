@@ -2,7 +2,7 @@ from pytrobot.core.decortador.state import State
 from pytrobot.core.strategy.state.base_state import BaseState
 
 @State()
-class Satisfied(BaseState):
+class SatisfiedState(BaseState):
     """The robot is satisfied after eating pizza."""
 
     def on_entry(self):

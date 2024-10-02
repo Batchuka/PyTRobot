@@ -10,4 +10,5 @@
             "justMyCode": true,
             "cwd": "${workspaceFolder}"
         }
-    }
+    ]
+}

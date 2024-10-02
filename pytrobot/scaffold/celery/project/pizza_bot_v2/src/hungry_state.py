@@ -6,7 +6,7 @@ from pytrobot.core.strategy.state.base_state import BaseState
 
 @First
 @State('OrderPizza', 'Dead')
-class Hungry(BaseState):
+class HungryState(BaseState):
     """Estado inicial: o robô está com fome e quer pizza."""
     def on_entry(self):
         print("I am hungry!")

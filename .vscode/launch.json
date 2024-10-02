@@ -16,6 +16,14 @@
             "program": "test\\test_state_strategy.py",
             "console": "integratedTerminal",
             "justMyCode": false
+        },
+        {
+            "name": "Test | CLI",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "pytrobot\\cli\\__main__.py",
+            "console": "integratedTerminal",
+            "justMyCode": false
         }
     ]
 }

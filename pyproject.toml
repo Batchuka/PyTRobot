@@ -23,19 +23,17 @@ classifiers = [
 dependencies = [
     "tomli_w==1.0.0",
     "setuptools_scm==8.1.0",
-    "pilot",
     "invoke==2.2.0",
     "boto3==1.26.141",
     "click==8.1.7",
     "setuptools==65.5.0",
-    "cookiecutter==2.1.1",
     "celery",
     "pycurl"
 ]
 
 # Scripts que podem ser executados a partir do CLI
 [project.scripts]
-pytrobot = "pytrobot.cli.__main__:cli"
+trobot = "pytrobot.cli.__main__:cli"
 
 # Configurações do setuptools
 [tool.setuptools]
