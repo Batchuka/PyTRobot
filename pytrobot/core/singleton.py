@@ -1,3 +1,5 @@
+# pytrobot\core\singleton.py
+
 from abc import ABCMeta
 
 class Singleton(ABCMeta):

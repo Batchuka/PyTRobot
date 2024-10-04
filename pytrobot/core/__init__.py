@@ -3,7 +3,6 @@ import os
 import sys
 import importlib
 from pathlib import Path
-from contextlib import contextmanager
 
 from pytrobot.core.singleton import Singleton
 from pytrobot.core.feature.logging import print_pytrobot_banner
@@ -11,17 +10,8 @@ from pytrobot.core.feature.config import ConfigManager
 from pytrobot.core.feature.multithread import MultithreadManager
 from pytrobot.core.strategy.state.concrete import StateStrategy
 from pytrobot.core.strategy.celery.concrete import CeleryStrategy
+from pytrobot.core.utility.common import add_to_path
 
-
-# contextmanager para adicionar temporariamente ao sys.path
-@contextmanager
-def temporarily_add_to_path(path):
-    """Adiciona um caminho ao sys.path temporariamente."""
-    sys.path.insert(0, path)
-    try:
-        yield
-    finally:
-        sys.path.pop(0)
 
 class PyTRobotNotInitializedException(Exception):
     """Exceção para ser levantada quando o PyTRobot não está instanciado."""
@@ -92,16 +82,12 @@ class PyTRobot(metaclass=Singleton):
                     importlib.import_module(f'{base_package}.src.{module_name}')
                 except ModuleNotFoundError as e:
                     print(f"Error importing module '{module_name}': {e}. fallback action : trying to add the path to sys.path temporarily.")
-                    with temporarily_add_to_path(Path(self.base_directory).parent):
-                        try:
-                            print(f"Tentando importar o módulo: {module_name} de {base_package}.src")
-                            print("Caminhos no sys.path:")
-                            for path in sys.path:
-                                print(f"  - {path}")
-                            importlib.import_module(f'{base_package}.src.{module_name}')
-                        except ModuleNotFoundError as e:
-                            print(f"Error importing module after adding to sys.path: {e}")
-                            raise e
+                    add_to_path(Path(self.base_directory).parent)
+                    try:
+                        importlib.import_module(f'{base_package}.src.{module_name}')
+                    except ModuleNotFoundError as e:
+                        print(f"Error importing module after adding to sys.path: {e}")
+                        raise e
 
     def load_config(self):
         """Carrega o arquivo de configuração"""
@@ -137,8 +123,26 @@ class PyTRobot(metaclass=Singleton):
 
     def start_application(self):
         """Inicia todas as estratégias carregadas"""
+        # Supondo que você já tenha carregado o JSON em uma variável 'config'
+        import time
+
+        config = ConfigManager().get_all_configs()
+        strategy_priority = config.get("strategy_priority", "celery").lower()
+        start_delay = config.get("strategy_start_delay", 10)  # Tempo de espera entre inicializações em segundos
+
+        # Ordena as estratégias para iniciar com base na prioridade
+        if strategy_priority == "celery":
+            # Mover a estratégia 'Celery' para a frente
+            self.strategies.sort(key=lambda s: s.__class__.__name__.lower() != "celerymanager")
+        elif strategy_priority == "state":
+            # Mover a estratégia 'State' para a frente
+            self.strategies.sort(key=lambda s: s.__class__.__name__.lower() != "statemanager")
+        
+        # Inicia as estratégias na ordem correta
         for strategy in self.strategies:
             strategy.start()
+            if start_delay > 0:
+                time.sleep(start_delay)  # Espera pelo tempo especificado no JSON
 
         # Inicia o monitoramento das threads
         self.monitor_threads()
@@ -148,8 +152,3 @@ class PyTRobot(metaclass=Singleton):
         for strategy in self.strategies:
             strategy.stop()
 
-
-
-"""
-TODO: Retirei a posibilidade de passar argumentos de estratégia por hora. Agora é só no reconhecimento automático.
-"""

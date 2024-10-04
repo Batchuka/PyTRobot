@@ -2,6 +2,7 @@
 
 from datetime import datetime
 from pytrobot.core.strategy.celery.task_registry import TaskRegistry
+from pytrobot.core.utility.log import LogManager
 from celery import Celery
 import boto3
 
@@ -15,6 +16,7 @@ class CeleryManager():
         self.visibility_timeout = visibility_timeout
         self.polling_interval = polling_interval
         self.task_registry : TaskRegistry = task_registry
+        self.logger = LogManager().get_logger('Celery')
  
         # Obter credenciais da AWS CLI
         session = boto3.Session()
@@ -30,6 +32,8 @@ class CeleryManager():
 
     def _configure_celery(self):
         self.celery_app.conf.update(
+            worker_hijack_root_logger=False,
+            worker_redirect_stdouts = False,
             broker_transport_options={
                 'region': self.region_name,
                 'visibility_timeout': self.visibility_timeout,
@@ -68,11 +72,12 @@ class CeleryManager():
         tasks = self.task_registry.get_all()  # Pega todas as tasks registradas
 
         for task_name, task_cls in tasks.items():
-            self.celery_app.task(name=task_name)(task_cls().run)  # Registra a task no Celery
+            self.celery_app.task(name=task_name)(task_cls.run)  # Registra a task no Celery
 
-        print(f"Total de {len(tasks)} tasks registradas e iniciadas.")
+        # Usa o logger em vez de print
+        self.logger.info(f"Total de {len(tasks)} tasks registradas e iniciadas.")
 
     def run(self):
         """Inicia o Celery após registrar todas as tasks"""
         self.initialize_tasks()
-        self.celery_app.start(argv=['worker', '--loglevel=info'])
+        self.celery_app.start(argv=['worker', '--logfile=NUL','--loglevel=info'])

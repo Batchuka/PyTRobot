@@ -1,7 +1,8 @@
 # pytrobot/core/strategy/state/base_state.py
+from typing import Literal
 from abc import abstractmethod
 from pytrobot.core.singleton import Singleton
-from pytrobot.core.feature.logging import TerminalColor
+from pytrobot.core.utility.log import LogManager
 
 class BaseState(metaclass=Singleton):
     """
@@ -26,10 +27,16 @@ class BaseState(metaclass=Singleton):
         return f"State {self.__class__.__name__}"
 
     def __init__(self, state_machine_operator):
+        self.log_manager = LogManager()
+        self.logger = self.log_manager.get_logger('State')
         self.state_machine_operator = state_machine_operator
         self._status = None
         self.retry_counter = 3
         self.reset = False
+
+    def log(self, message: str, level: Literal['INFO', 'DEBUG', 'ERROR', 'WARN'] = 'INFO'):
+        # Usa o método log do LogManager para logar a mensagem
+        self.log_manager.log(self.logger, message, level)
 
     def transition(self, on_success=None, on_failure=None):
         """
@@ -77,8 +84,6 @@ class BaseState(metaclass=Singleton):
         pass
 
     def _execute(self):
-        print(
-            f"{TerminalColor.BLUE.value} ========== Running 'execute' ========== {self.__class__.__name__} {TerminalColor.RESET.value}")
         method = getattr(self, 'execute', None)
         if method:
             method()
@@ -87,40 +92,31 @@ class BaseState(metaclass=Singleton):
                 "The 'execute' method must be implemented by the subclass.")
 
     def _on_entry(self):
-
-        print(f"{TerminalColor.BLUE.value} =========== Starting state ============ {self.__class__.__name__} {TerminalColor.RESET.value}")
         method = getattr(self, 'on_entry', None)
         if method:
             method()
         else:
-            raise NotImplementedError(
-                "The 'on_entry' method must be implemented by the subclass.")
+            raise NotImplementedError("The 'on_entry' method must be implemented by the subclass.")
 
     def _on_exit(self):
         self._status = True
-        print(
-            f"{TerminalColor.BLUE.value} ============== Success ================ {self.__class__.__name__}  {TerminalColor.RESET.value}")
         method = getattr(self, 'on_exit', None)
         if method:
             method()
         else:
             self._status = False
-            raise NotImplementedError(
-                "The 'on_exit' method must be implemented by the subclass.")
+            raise NotImplementedError("The 'on_exit' method must be implemented by the subclass.")
 
     def _on_error(self, error):
         self._status = False
-        print(f"{TerminalColor.RED.value} ========== Something failed  ========== {self.__class__.__name__} \n {error}{TerminalColor.RESET.value} ")
         method = getattr(self, 'on_error', None)
         if method:
             if self.retry_counter > 0:
                 self.retry_counter -= 1
-                print(
-                    f"Attempt failed. {self.retry_counter} attempts remaining.")
+                self.log(f"Attempt failed. {self.retry_counter} attempts remaining.", level='WARN')
                 self.transition(on_failure=self.__class__.__name__)
             else:
-                print("Maximum number of attempts reached.")
+                self.log("Maximum number of attempts reached.", level='WARN')
             return method(error)
         else:
-            raise NotImplementedError(
-                f"The 'on_error' method must be implemented by the subclass. Error: {error}")
+            raise NotImplementedError(f"The 'on_error' method must be implemented by the subclass. Error: {error}")

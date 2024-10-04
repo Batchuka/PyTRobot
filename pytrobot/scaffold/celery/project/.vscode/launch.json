@@ -5,9 +5,10 @@
             "name": "Run All",
             "type": "debugpy",
             "request": "launch",
-            "program": "debug.py",
+            "program": "pizza_bot_v2/__main__.py",
             "console": "integratedTerminal",
             "justMyCode": true,
             "cwd": "${workspaceFolder}"
         }
-    }
+    ]
+}

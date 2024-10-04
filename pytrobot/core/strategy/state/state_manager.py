@@ -2,6 +2,7 @@
 
 from pytrobot.core.strategy.state.state_registry import StateRegistry
 from pytrobot.core.strategy.state.base_state import BaseState
+from pytrobot.core.utility.log import LogManager
 
 class StateTransitionError(Exception):
     pass
@@ -14,6 +15,7 @@ class StateManager():
         # Atualiza a referência do operador no StateRegistry
         self._state_registry: StateRegistry = state_registry
         self._state_registry.update_state_operator(self.state_machine_operator)
+        self.logger = LogManager().get_logger('State')
         
         # Define o estado inicial corretamente, usando o StateRegistry
         starter_state_info = self._state_registry.get_state_info('_StarterState')

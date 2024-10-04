@@ -1,12 +1,21 @@
 # pytrobot/core/strategy/celery/base_task.py
 
 from celery import Task
+from typing import Literal
 from abc import ABC, abstractmethod
+from pytrobot.core.utility.log import LogManager
 
 class BaseTask(Task, ABC):
-    abstract = True
+    # abstract = True
+    def __init__(self):
+        self.log_manager = LogManager()
+        self.logger = LogManager().get_logger('Celery')
 
-    def __run(self, *args, **kwargs):
+    def log(self, message: str, level: Literal['INFO', 'DEBUG', 'ERROR', 'WARN'] = 'INFO'):
+        # Usa o método log do LogManager para logar a mensagem
+        self.log_manager.log(self.logger, message, level)
+
+    def run(self, *args, **kwargs):
         # Chama o método de entrada antes de executar a lógica principal
         self.__on_entry()
         self.execute(*args, **kwargs)

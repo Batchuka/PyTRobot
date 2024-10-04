@@ -2,6 +2,7 @@
 import click
 import shutil
 from pathlib import Path
+from datetime import datetime
 
 # Caminhos base para os scaffolds
 from pytrobot.scaffold.state import project as state_project_scaffold
@@ -45,32 +46,40 @@ def new(output_path, stateproject, celeryproject, state, teststate, task, testta
     """Cria um novo projeto ou componente PyTrobot no caminho especificado."""
     output_path = Path(output_path).resolve()  # Caminho onde os arquivos serão copiados
 
+    # Gera timestamp único
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
     if stateproject:
         src = Path(list(state_project_scaffold.__path__)[0]).resolve()
-        # Cria um subdiretório chamado 'project_state'
-        destination = output_path / 'project_state'
+        # Cria um subdiretório com timestamp
+        destination = output_path / f'project_state_{timestamp}'
         destination.mkdir(parents=True, exist_ok=True)
         copy_project(src, destination)
     elif celeryproject:
         src = Path(list(celery_project_scaffold.__path__)[0]).resolve()
-        # Cria um subdiretório chamado 'project_celery'
-        destination = output_path / 'project_celery'
+        # Cria um subdiretório com timestamp
+        destination = output_path / f'project_celery_{timestamp}'
         destination.mkdir(parents=True, exist_ok=True)
         copy_project(src, destination)
     elif state:
         src = Path(new_state_file.__file__).resolve()
-        copy_project(src, output_path / src.name)
+        destination = output_path / f"{src.stem}_{timestamp}"
+        copy_project(src, destination)
     elif teststate:
         src = Path(test_state_file.__file__).resolve()
-        copy_project(src, output_path / src.name)
+        destination = output_path / f"{src.stem}_{timestamp}"
+        copy_project(src, destination)
     elif task:
         src = Path(new_task_file.__file__).resolve()
-        copy_project(src, output_path / src.name)
+        destination = output_path / f"{src.stem}_{timestamp}"
+        copy_project(src, destination)
     elif testtask:
         src = Path(test_task_file.__file__).resolve()
-        copy_project(src, output_path / src.name)
+        destination = output_path / f"{src.stem}_{timestamp}"
+        copy_project(src, destination)
     else:
         print("Nenhuma opção foi selecionada. Use --help para ver as opções disponíveis.")
+
 
 if __name__ == "__main__":
 
@@ -81,6 +90,6 @@ if __name__ == "__main__":
     os.chdir(r'E:\Projetos')
 
     # Adicione os argumentos como se fossem passados pelo terminal
-    sys.argv.extend(['new', '-StateProject'])  # Exemplo de como adicionar opções e argumentos
+    sys.argv.extend(['new', '-CeleryProject'])  # Exemplo de como adicionar opções e argumentos
     
     cli()  # Executa o CLI
