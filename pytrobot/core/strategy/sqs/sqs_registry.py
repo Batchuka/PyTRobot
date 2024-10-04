@@ -1,12 +1,12 @@
-# pytrobot/core/strategy/celery/task_registry.py
+# pytrobot/core/strategy/sqs/sqs_registry.py
 from pytrobot.core.singleton import Singleton
 from pytrobot.core.strategy.base_registry import BaseRegistry
 from pytrobot.core.utility.log import LogManager
 
-class TaskRegistry(BaseRegistry, metaclass=Singleton):
+class SQSRegistry(BaseRegistry, metaclass=Singleton):
     def __init__(self):
         super().__init__()
-        self.logger = LogManager().get_logger('Queue')
+        self.logger = LogManager().get_logger('SQS')
         self._tasks = {}  # Dicionário para armazenar tasks {task_name: task_class}
 
     def register(self, task_name, task_cls):

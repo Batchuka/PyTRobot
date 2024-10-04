@@ -17,25 +17,25 @@ class LogManager(metaclass=Singleton):
         self.state_logger.addHandler(state_handler)
         self.state_logger.setLevel(logging.INFO)
 
-        # Logger para Queue
-        self.queue_logger = logging.getLogger('Queue')
-        queue_handler = logging.StreamHandler()
-        queue_formatter = logging.Formatter('[QUEUE] %(asctime)s - %(levelname)s - %(message)s')
-        queue_handler.setFormatter(queue_formatter)
-        self.queue_logger.addHandler(queue_handler)
-        self.queue_logger.setLevel(logging.INFO)
+        # Logger para SQS
+        self.sqs_logger = logging.getLogger('SQS')
+        sqs_handler = logging.StreamHandler()
+        sqs_formatter = logging.Formatter('[SQS] %(asctime)s - %(levelname)s - %(message)s')
+        sqs_handler.setFormatter(sqs_formatter)
+        self.sqs_logger.addHandler(sqs_handler)
+        self.sqs_logger.setLevel(logging.INFO)
 
-        # Redireciona logs do Queue para o logger customizado
-        logging.getLogger('queue').addHandler(queue_handler)
+        # Redireciona logs do SQS para o logger customizado
+        logging.getLogger('sqs').addHandler(sqs_handler)
 
-    def get_logger(self, name: Literal['State', 'Queue']):
-        """Obtém o logger correto para 'State' ou 'Queue'."""
+    def get_logger(self, name: Literal['State', 'SQS']):
+        """Obtém o logger correto para 'State' ou 'SQS'."""
         if name == 'State':
             return self.state_logger
-        elif name == 'Queue':
-            return self.queue_logger
+        elif name == 'SQS':
+            return self.sqs_logger
         else:
-            raise ValueError("Logger name must be 'State' or 'Queue'")
+            raise ValueError("Logger name must be 'State' or 'SQS'")
 
     def log(self, logger, message: str, level: Literal['INFO', 'DEBUG', 'ERROR', 'WARN'] = 'INFO'):
         """
