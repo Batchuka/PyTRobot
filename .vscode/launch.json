@@ -2,22 +2,28 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Tasks",
-            "type": "python",
+            "name": "Test | State",
+            "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/pytrobot/tasks.py",
+            "program": "test\\test_state_strategy.py",
             "console": "integratedTerminal",
-            "justMyCode": true,
-            "cwd": "${workspaceFolder}"
+            "justMyCode": false
         },
         {
-            "name": "Celery",
-            "type": "python",
+            "name": "Test | Celery",
+            "type": "debugpy",
             "request": "launch",
-            "program": "pytrobot/core/celery_layer.py",
+            "program": "test\\test_state_strategy.py",
             "console": "integratedTerminal",
-            "justMyCode": true,
-            "cwd": "${workspaceFolder}"
+            "justMyCode": false
+        },
+        {
+            "name": "Test | CLI",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "pytrobot\\cli\\__main__.py",
+            "console": "integratedTerminal",
+            "justMyCode": false
         }
     ]
 }

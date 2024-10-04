@@ -1,326 +1,154 @@
 # pytrobot/__init__.py
-import builtins
-import warnings
-from pytrobot.core.dataset_layer import ConfigData, TransactionData, TransactionItem
-from pytrobot.core.state_layer import StateMachine, TrueTable
-from pytrobot.core.multithread_feature import MultithreadManager
-from pytrobot.core.subprocess_feature import SubprocessManager
-from pytrobot.core.singleton import Singleton
-from pytrobot.core.utils import print_pytrobot_banner, pytrobot_print
-from abc import abstractmethod
+import os
+import sys
+import importlib
+from pathlib import Path
 
-# TODO : isso deve ser retirado daqui
-RED = '\033[91m'
-GREEN = '\033[92m'
-YELLOW = '\033[93m'
-RESET = '\033[0m'
-BLUE = '\033[94m'
+from pytrobot.core.singleton import Singleton
+from pytrobot.core.feature.logging import print_pytrobot_banner
+from pytrobot.core.feature.config import ConfigManager
+from pytrobot.core.feature.multithread import MultithreadManager
+from pytrobot.core.strategy.state.concrete import StateStrategy
+from pytrobot.core.strategy.celery.concrete import CeleryStrategy
+from pytrobot.core.utility.common import add_to_path
 
 
 class PyTRobotNotInitializedException(Exception):
     """Exceção para ser levantada quando o PyTRobot não está instanciado."""
     pass
 
-
 class PyTRobot(metaclass=Singleton):
     """Classe principal do pytrobot, implementada como um Singleton."""
     _instance = None
 
-    def __new__(cls, *args, **kwargs):
-        if not cls._instance:
-            cls._instance = super(PyTRobot, cls).__new__(cls)
-        return cls._instance
-
-    def __init__(self):
-        self._first_state_name: str = ''
-        self._resources: str = ''
+    def __init__(self, directory: str):
+        """
+        Inicializa o PyTRobot. O diretório e as estratégias são opcionais.
+        """
         if not hasattr(self, '_initialized'):
+            self.directory = directory or sys.argv[0]
             self._initialize()
 
     def _initialize(self):
-        print_pytrobot_banner()
-        builtins.print = pytrobot_print
 
-        self.state_machine = StateMachine(true_table=TrueTable())
+        print_pytrobot_banner()
+
+        self.load_config()
+        self.load_src()
+
         self.multithread_manager = MultithreadManager()
-        self.subprocess_manager = SubprocessManager()
+
+        # Verifica se há registros nos registries e adiciona as estratégias necessárias
+        self._check_and_register_strategies()
+
         self._initialized = True
 
-    def _register_core_states(self):
+    def _check_and_register_strategies(self):
+        """Verifica se há registros de tasks ou states e adiciona as estratégias necessárias."""
+        from pytrobot.core.strategy.celery.task_registry import TaskRegistry
+        from pytrobot.core.strategy.state.state_registry import StateRegistry
 
-        State(_StarterState)
-        if self._first_state_name:
-            State(self._first_state_name, '_FinisherState')(_StarterState)
+        self.strategies = []
+
+        task_registry = TaskRegistry()
+        state_registry = StateRegistry()
+
+        # Adiciona a CeleryStrategy se houver tasks registradas
+        if task_registry.get_all():
+            self.strategies.append(CeleryStrategy())
+
+        # Adiciona a StateStrategy se houver states registrados
+        if state_registry.get_all():
+            self.strategies.append(StateStrategy())
+
+        # Caso não haja registros e nenhuma estratégia configurada, lança um erro
+        if not self.strategies:
+            raise ValueError("Nenhuma estratégia registrada ou especificada na configuração.")
+
+    def _get_base_package(self) -> str:
+        """Extrai o nome do pacote base do caminho do src"""
+        parts = self.src_path.split(os.sep)
+        if 'src' in parts:
+            return parts[parts.index('src') - 1]
+        raise ValueError("Invalid src path: 'src' directory not found in path")
+
+    def _import_all_files(self):
+        """Importa todos os módulos Python no diretório especificado."""
+        base_package = self._get_base_package()
+        for file in os.listdir(self.src_path):
+            if file.endswith(".py") and file not in ["__init__.py", "__main__.py"]:
+                module_name = file[:-3]  # Remove .py
+                try:
+                    importlib.import_module(f'{base_package}.src.{module_name}')
+                except ModuleNotFoundError as e:
+                    print(f"Error importing module '{module_name}': {e}. fallback action : trying to add the path to sys.path temporarily.")
+                    add_to_path(Path(self.base_directory).parent)
+                    try:
+                        importlib.import_module(f'{base_package}.src.{module_name}')
+                    except ModuleNotFoundError as e:
+                        print(f"Error importing module after adding to sys.path: {e}")
+                        raise e
+
+    def load_config(self):
+        """Carrega o arquivo de configuração"""
+        self.config_manager = ConfigManager()
+        self.config_manager.load_config(self.directory)
+
+    def load_src(self):
+        """Carrega todos os módulos do diretório 'src'"""
+        self.base_directory = self.directory
+        self.src_path = os.path.join(self.directory, 'src')
+        sys.path.insert(0, str(self.src_path))
+
+        if os.path.exists(self.src_path):
+            self._import_all_files()
         else:
-            State('_FinisherState', '_FinisherState')(_StarterState)
-        State(_FinisherState)
-        State('_FinisherState', '_FinisherState')(_FinisherState)
+            raise FileNotFoundError("'src' directory not found.")
 
-    def start(self):
-        self.state_machine.run()
+    def monitor_threads(self):
+        """Monitora as threads ativas e mantém o processo ativo enquanto houver threads."""
+        import time
+        while True:
+            active_threads = self.multithread_manager.get_number_active_threads()
+            if active_threads == 0:
+                print("No active threads, terminating the process...")
+                self.stop_application()
+                break
+            time.sleep(10)
 
-    # Métodos de acesso para os decoradores
+    def initialize_application(self):
+        """Inicializa todas as estratégias carregadas"""
+        for strategy in self.strategies:
+            strategy.initialize()
 
-    @classmethod
-    def get_instance(cls):
-        if cls._instance is None:
-            raise PyTRobotNotInitializedException("PyTRobot object is not initialized.")
-        return cls._instance
+    def start_application(self):
+        """Inicia todas as estratégias carregadas"""
+        # Supondo que você já tenha carregado o JSON em uma variável 'config'
+        import time
 
-    # Função proxy para o decorador @First
-    @classmethod
-    def set_first_state(cls, state_name):
-        try:
-            instance = cls.get_instance()
-            instance._first_state_name = state_name
-        except PyTRobotNotInitializedException as e:
-            warnings.warn(
-                str(f"{e} : Your objects will not be registered"), RuntimeWarning)
+        config = ConfigManager().get_all_configs()
+        strategy_priority = config.get("strategy_priority", "celery").lower()
+        start_delay = config.get("strategy_start_delay", 10)  # Tempo de espera entre inicializações em segundos
 
-    @classmethod
-    def set_thread(cls, func):
-        def wrapper(*args, **kwargs):
-            try:
-                instance = cls.get_instance()
-                thread_decorator = instance.multithread_manager.thread(func)
-                return thread_decorator(*args, **kwargs)
-            except PyTRobotNotInitializedException as e:
-                warnings.warn(str(e), RuntimeWarning)
-                return None
-        return wrapper
+        # Ordena as estratégias para iniciar com base na prioridade
+        if strategy_priority == "celery":
+            # Mover a estratégia 'Celery' para a frente
+            self.strategies.sort(key=lambda s: s.__class__.__name__.lower() != "celerymanager")
+        elif strategy_priority == "state":
+            # Mover a estratégia 'State' para a frente
+            self.strategies.sort(key=lambda s: s.__class__.__name__.lower() != "statemanager")
+        
+        # Inicia as estratégias na ordem correta
+        for strategy in self.strategies:
+            strategy.start()
+            if start_delay > 0:
+                time.sleep(start_delay)  # Espera pelo tempo especificado no JSON
 
-    @classmethod
-    def set_subprocess(cls, comando, captura_saida=True, captura_erro=True):
-        if not isinstance(comando, list):
-            raise ValueError("O comando deve ser uma lista de strings.")
-        return cls().subprocess_manager.executar_subprocesso(comando, captura_saida, captura_erro)
+        # Inicia o monitoramento das threads
+        self.monitor_threads()
 
-# Classes Base para usuário implementar conforme uso do Framework
+    def stop_application(self):
+        """Inicia todas as estratégias carregadas"""
+        for strategy in self.strategies:
+            strategy.stop()
 
-class BaseState(metaclass=Singleton):
-    """
-    Base class for all states within the state management system.
-    Each state is a Singleton, ensuring that only one instance of each specific state is created and necessary.
-    They don't restart, so think about that!
-
-    Attributes:
-        state_machine_operator (callable): Is a function that allows some State manipulate the transition on StateMachine Object.
-        _status (bool or None): The status of the last running process, True was successful.
-        retry_counter (int): Counter for attempting to execute the state.
-        reset (bool): Flag to indicate whether the state should be reset after an error — 
-
-    Abstract methods:
-        execute: Defines a main state execution logic.
-        on_entry: Executed when the state is activated.
-        on_exit: Executed when the state completes successfully.
-        on_error: Executed when an error occurs during state execution.
-    """
-
-    def __str__(self) -> str:
-        return f"State {self.__class__.__name__}"
-
-    def __init__(self, state_machine_operator):
-        self.state_machine_operator = state_machine_operator
-        self._status = None
-        self.retry_counter = 3
-        self.reset = False
-
-    def transition(self, on_success=None, on_failure=None):
-        """
-        Allows state instances to programmatically update their transition paths.
-
-        :param on_success: Class name of the next state on success.
-        :param on_failure: Class name of the next state on failure.
-        """
-        # Uses the operator to update the transitions based on provided state names.
-        self.state_machine_operator(
-            on_success=on_success, on_failure=on_failure)
-
-    @abstractmethod
-    def execute(self):
-        """
-        Define a main logic that the state must execute.
-        This method must be implemented by all subclasses.
-        """
-        pass
-
-    @abstractmethod
-    def on_entry(self):
-        """
-        State preparation logic. It is necessary to consider that this logic can run multiple times.
-        This method must be implemented by all subclasses.
-        """
-        pass
-
-    @abstractmethod
-    def on_exit(self):
-        """
-        Logic that must run every time the state ends successfully.
-        This method must be implemented by all subclasses.
-        """
-        pass
-
-    @abstractmethod
-    def on_error(self, error):
-        """
-        Logic that must be executed to handle the state when an error occurs.
-        This method must be implemented by all subclasses.
-
-        Args:
-            error (Exception): The exception that was raised.
-        """
-        pass
-
-    def _execute(self):
-        print(
-            f"{BLUE} ========== Running 'execute' ========== {self.__class__.__name__} {RESET}")
-        method = getattr(self, 'execute', None)
-        if method:
-            method()
-        else:
-            raise NotImplementedError(
-                "The 'execute' method must be implemented by the subclass.")
-
-    def _on_entry(self):
-
-        print(f"{BLUE} =========== Starting state ============ {self.__class__.__name__} {RESET}")
-        method = getattr(self, 'on_entry', None)
-        if method:
-            method()
-        else:
-            raise NotImplementedError(
-                "The 'on_entry' method must be implemented by the subclass.")
-
-    def _on_exit(self):
-        self._status = True
-        print(
-            f"{BLUE} ============== Success ================ {self.__class__.__name__}  {RESET}")
-        method = getattr(self, 'on_exit', None)
-        if method:
-            method()
-        else:
-            self._status = False
-            raise NotImplementedError(
-                "The 'on_exit' method must be implemented by the subclass.")
-
-    def _on_error(self, error):
-        self._status = False
-        print(f"{RED} ========== Something failed  ========== {self.__class__.__name__} \n {error}{RESET} ")
-        method = getattr(self, 'on_error', None)
-        if method:
-            if self.retry_counter > 0:
-                self.retry_counter -= 1
-                print(
-                    f"Attempt failed. {self.retry_counter} attempts remaining.")
-                self.transition(on_failure=self.__class__.__name__)
-            else:
-                print("Maximum number of attempts reached.")
-            return method(error)
-        else:
-            raise NotImplementedError(
-                f"The 'on_error' method must be implemented by the subclass. Error: {error}")
-
-class BaseRoutine(metaclass=Singleton):
-
-    def __init__(self, queue_manager):
-        self.queue_manager = queue_manager
-
-    def condition(self, item):
-        """
-        QMachine usará esse método implementado pelo usuário para identificar se a rotina deve ser iniciada.
-        Então esse método deve acessar de maneira superficial o 'identificador' do item e fazer validações com ele.
-        Na camada do identificador, além da identificação, há informações que podem ser usadas para fins de validação 
-        dessa condition.
-
-        'condition' pode manipular a camada 'identificacao' do item o quanto quiser, mas deve retornar bool.
-        """
-        raise NotImplementedError("O método 'process_item' deve ser implementado pela classe derivada.")
-
-    def setup(self, item):
-        """
-        Se a 'condition' for estabelecida, a QMachine inicia o setup e depois 'routine' — que por estar 
-        decorada com o @Thread executará enquando a condição 'condition' for true.
-        """
-        raise NotImplementedError("O método 'process_item' deve ser implementado pela classe derivada.")
-
-    def routine(self):
-        """
-        Literalmente a lógica que ficará em loop enquanto a 'condition' for true.
-        """
-
-
-# Decoradores
-
-def State(next_state_on_success=None, next_state_on_failure=None):
-    def decorator(cls):
-        try:
-            instance = PyTRobot.get_instance()
-            st = instance.state_machine
-            st.add_state_transition(
-                cls, next_state_on_success, next_state_on_failure)
-        except PyTRobotNotInitializedException as e:
-            warnings.warn(
-                str(f"{e} : Your objects will not be registered"), RuntimeWarning)
-        return cls
-    return decorator
-
-def First(cls):
-    PyTRobot.set_first_state(cls.__name__)
-    return cls
-
-def Thread(func):
-    """
-    Proxy para o decorador @Thread do PyTRobot.
-    """
-    return PyTRobot.set_thread(func)
-
-def Subprocess(comando, captura_saida=True, captura_erro=True):
-    """
-    Função para acessar o SubprocessManager do PyTRobot e executar um subprocesso.
-    
-    Args:
-        comando (list): Lista de strings contendo o comando a ser executado.
-        captura_saida (bool, opcional): Indica se a saída padrão do subprocesso deve ser capturada (padrão: True).
-        captura_erro (bool, opcional): Indica se a saída de erro do subprocesso deve ser capturada (padrão: True).
-
-    Returns:
-        dict: Resultado do subprocesso, conforme retornado pelo SubprocessManager.
-    """
-    return PyTRobot.set_subprocess(comando, captura_saida, captura_erro)
-
-
-# Idiossincrasias da máquina de estado
-
-class _FinisherState(BaseState):
-
-    def execute(self):
-        pass
-
-    def on_entry(self):
-        self.multithread_manager = MultithreadManager()
-        self.subprocess_manager = SubprocessManager()
-
-    def on_exit(self):
-        import sys
-        # Lista as threads ativas antes de sair
-        self.multithread_manager.list_active_threads()
-        self.subprocess_manager.list_active_processes()
-        sys.exit()
-
-    def on_error(self):
-        import os
-        os._exit(0)
-
-class _StarterState(BaseState):
-
-    def execute(self):
-        pass
-
-    def on_entry(self):
-        pass
-
-    def on_exit(self):
-        pass
-
-    def on_error(self):
-        pass

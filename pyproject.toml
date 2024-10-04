@@ -1,26 +1,25 @@
 [build-system]
-requires = [
-    "setuptools>=69",
-    "wheel",
-    "setuptools_scm[toml]>=8.1.0",
-]
+requires = ["setuptools>=70","wheel","setuptools_scm[toml]>=8.1.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "pytrobot"
-dynamic = [
-    "version",
-]
-description = "A short description of the project"
+dynamic = ["version"]
+description = "A transactional robot framework for Python"
+license = { text = "MIT" }
+requires-python = ">=3.11"
+readme = { file = "README.md", content-type = "text/markdown" }
+urls = { homepage = "https://github.com/Batchuka/PyTRobot" }
 authors = [
     { name = "Batchuka", email = "matheusrlz@hotmail.com" },
 ]
-requires-python = ">=3.11"
+
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
+
 dependencies = [
     "tomli_w==1.0.0",
     "setuptools_scm==8.1.0",
@@ -28,29 +27,19 @@ dependencies = [
     "boto3==1.26.141",
     "click==8.1.7",
     "setuptools==65.5.0",
+    "celery",
+    "pycurl"
 ]
 
-[project.readme]
-file = "README.md"
-content-type = "text/markdown"
-
-[project.license]
-text = "MIT"
-
-[project.urls]
-homepage = "https://github.com/Batchuka/PoG-PyTRobot-framework"
-
+# Scripts que podem ser executados a partir do CLI
 [project.scripts]
-trt = "pytrobot.cli.main:program.run"
+trobot = "pytrobot.cli.__main__:cli"
 
-[tool.setuptools.packages.find]
-exclude = [
-    "tests",
-    "*.tests",
-    "*.tests.*",
-    "tests.*",
-]
+# Configurações do setuptools
+[tool.setuptools]
+packages.find = { exclude = ["tests", "*.tests", "*.tests.*", "tests.*"] }
 
+# Configurações do setuptools_scm para versionamento automático
 [tool.setuptools_scm]
 version_scheme = "post-release"
 local_scheme = "dirty-tag"
