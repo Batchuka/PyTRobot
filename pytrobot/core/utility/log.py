@@ -3,7 +3,6 @@ import logging
 import inspect
 from typing import Literal
 from pytrobot.core.singleton import Singleton
-from pytrobot.core.feature.logging import Logger
 
 class LogManager(metaclass=Singleton):
     def __init__(self):
@@ -18,25 +17,25 @@ class LogManager(metaclass=Singleton):
         self.state_logger.addHandler(state_handler)
         self.state_logger.setLevel(logging.INFO)
 
-        # Logger para Celery
-        self.celery_logger = logging.getLogger('Celery')
-        celery_handler = logging.StreamHandler()
-        celery_formatter = logging.Formatter('[CELERY] %(asctime)s - %(levelname)s - %(message)s')
-        celery_handler.setFormatter(celery_formatter)
-        self.celery_logger.addHandler(celery_handler)
-        self.celery_logger.setLevel(logging.INFO)
+        # Logger para Queue
+        self.queue_logger = logging.getLogger('Queue')
+        queue_handler = logging.StreamHandler()
+        queue_formatter = logging.Formatter('[QUEUE] %(asctime)s - %(levelname)s - %(message)s')
+        queue_handler.setFormatter(queue_formatter)
+        self.queue_logger.addHandler(queue_handler)
+        self.queue_logger.setLevel(logging.INFO)
 
-        # Redireciona logs do Celery para o logger customizado
-        logging.getLogger('celery').addHandler(celery_handler)
+        # Redireciona logs do Queue para o logger customizado
+        logging.getLogger('queue').addHandler(queue_handler)
 
-    def get_logger(self, name: Literal['State', 'Celery']):
-        """Obtém o logger correto para 'State' ou 'Celery'."""
+    def get_logger(self, name: Literal['State', 'Queue']):
+        """Obtém o logger correto para 'State' ou 'Queue'."""
         if name == 'State':
             return self.state_logger
-        elif name == 'Celery':
-            return self.celery_logger
+        elif name == 'Queue':
+            return self.queue_logger
         else:
-            raise ValueError("Logger name must be 'State' or 'Celery'")
+            raise ValueError("Logger name must be 'State' or 'Queue'")
 
     def log(self, logger, message: str, level: Literal['INFO', 'DEBUG', 'ERROR', 'WARN'] = 'INFO'):
         """

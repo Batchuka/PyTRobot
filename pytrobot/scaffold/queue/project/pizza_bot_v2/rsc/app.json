@@ -1,0 +1,31 @@
+{
+    "environment": "DEV",
+    "strategy": [
+        "celery",
+        "state"
+    ],
+    "general": {
+        "max_retries": 3,
+        "tiny_timeout": 1,
+        "short_timeout": 5,
+        "long_timeout": 10,
+        "short_sleep": 2,
+        "long_sleep": 5,
+        "visibility_timeout": 3600,
+        "polling_interval": 10,
+        "global": {}
+    },
+    "aws": {
+        "region_name": "us-east-1",
+        "role_arn": "arn:aws:iam::..",
+        "queue_url": "https://sqs.us-east-1.amazonaws.com/...",
+        "queue_name": "nome-fila"
+    },
+    "library": {},
+    "endpoints": {},
+    "environments": {
+        "dev": {},
+        "hml": {},
+        "ops": {}
+    }
+}
