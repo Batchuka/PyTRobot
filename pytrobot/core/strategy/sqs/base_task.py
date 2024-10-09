@@ -9,11 +9,7 @@ class BaseTask(Task, ABC):
     # abstract = True
     def __init__(self):
         self.log_manager = LogManager()
-        self.logger = LogManager().get_logger('Queue')
-
-    def log(self, message: str, level: Literal['INFO', 'DEBUG', 'ERROR', 'WARN'] = 'INFO'):
-        # Usa o método log do LogManager para logar a mensagem
-        self.log_manager.log(self.logger, message, level)
+        self.logger = LogManager().get_logger('SQS')
 
     def run(self, *args, **kwargs):
         # Chama o método de entrada antes de executar a lógica principal

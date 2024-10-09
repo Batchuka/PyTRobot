@@ -1,7 +1,5 @@
-# pytrobot/core/utility/log.py
 import logging
 import inspect
-from typing import Literal
 from pytrobot.core.singleton import Singleton
 
 class LogManager(metaclass=Singleton):
@@ -9,61 +7,66 @@ class LogManager(metaclass=Singleton):
         self._configure_loggers()
 
     def _configure_loggers(self):
-        # Logger para State
-        self.state_logger = logging.getLogger('State')
-        state_handler = logging.StreamHandler()
-        state_formatter = logging.Formatter('[STATE] %(asctime)s - %(levelname)s - %(message)s')
-        state_handler.setFormatter(state_formatter)
-        self.state_logger.addHandler(state_handler)
-        self.state_logger.setLevel(logging.INFO)
-
-        # Logger para SQS
-        self.sqs_logger = logging.getLogger('SQS')
-        sqs_handler = logging.StreamHandler()
-        sqs_formatter = logging.Formatter('[SQS] %(asctime)s - %(levelname)s - %(message)s')
-        sqs_handler.setFormatter(sqs_formatter)
-        self.sqs_logger.addHandler(sqs_handler)
-        self.sqs_logger.setLevel(logging.INFO)
-
-        # Redireciona logs do SQS para o logger customizado
-        logging.getLogger('sqs').addHandler(sqs_handler)
-
-    def get_logger(self, name: Literal['State', 'SQS']):
-        """Obtém o logger correto para 'State' ou 'SQS'."""
-        if name == 'State':
-            return self.state_logger
-        elif name == 'SQS':
-            return self.sqs_logger
-        else:
-            raise ValueError("Logger name must be 'State' or 'SQS'")
-
-    def log(self, logger, message: str, level: Literal['INFO', 'DEBUG', 'ERROR', 'WARN'] = 'INFO'):
         """
-        Loga a mensagem usando o logger apropriado, incluindo contexto de classe e método.
+        Configura os loggers para 'State' e 'SQS' com formatos personalizados.
         """
-        # Obtém o frame chamador para extrair o contexto de classe e método
-        frame = inspect.currentframe()
-        
-        # Verifica se o frame e o frame.f_back não são None antes de acessar atributos
-        if frame is not None and frame.f_back is not None:
-            caller_frame = frame.f_back.f_back if frame.f_back and frame.f_back.f_back else frame.f_back
-            if 'self' in caller_frame.f_locals:
-                class_name = caller_frame.f_locals['self'].__class__.__name__
-                method_name = caller_frame.f_code.co_name
-                # Cria a mensagem de log com classe e método
-                formatted_message = f"[{class_name}.{method_name}] {message}"
-            else:
-                # Caso não consiga obter o contexto, usa a mensagem original
-                formatted_message = message
-        else:
-            formatted_message = message
-            
-        # Usa o nível de log apropriado
-        if level == 'DEBUG':
-            logger.debug(formatted_message)
-        elif level == 'ERROR':
-            logger.error(formatted_message)
-        elif level == 'WARN':
-            logger.warning(formatted_message)
-        else:
-            logger.info(formatted_message)
+        self.loggers = {
+            'PyTRobot': self._create_logger('PyTRobot'),
+            'State': self._create_logger('State'),
+            'SQS': self._create_logger('SQS')
+        }
+
+    def _create_logger(self, name: str) -> logging.Logger:
+        """
+        Cria um logger que utiliza um formato dinâmico com o contexto (classe e método) capturado na execução.
+        O formato do log será: [name] [Classe.Metodo] %(asctime)s - %(levelname)s - %(message)s.
+        """
+        logger = logging.getLogger(name)
+        handler = logging.StreamHandler()
+
+        # Define um Formatter personalizado para que o contexto seja injetado dinamicamente
+        class ContextFormatter(logging.Formatter):
+            def format(self, record):
+                # Captura o contexto automaticamente
+                frame = inspect.currentframe()
+
+                # Itera sobre os frames para encontrar o correto
+                depth = 0
+                while frame and depth < 10:  # Ajuste a profundidade se necessário
+                    if frame.f_code.co_name != 'emit':  # Pulando a função 'emit' que não nos interessa
+                        caller_frame = frame
+                    frame = frame.f_back
+                    depth += 1
+
+                # Adiciona o contexto dinâmico ao record
+                if caller_frame and 'self' in caller_frame.f_locals:
+                    class_name = caller_frame.f_locals['self'].__class__.__name__
+                    method_name = caller_frame.f_code.co_name
+                    context = record.__dict__['context'] = f"[{class_name}.{method_name}]"
+                else:
+                    context = record.__dict__['context'] = "[UnknownContext]"
+
+                # Formato do log com a ordem que você pediu
+                formatted_time = self.formatTime(record)  # Formata o tempo
+                formatted_level = f"{record.levelname:<2}"  # Nível de log (alinhado à esquerda)
+                formatted_name = f"[{record.name:<8}]"  # Nome do logger com preenchimento à esquerda (tamanho 10)
+                formatted_context = f"{context:<24}"  # Contexto com preenchimento à esquerda (tamanho 20)
+                formatted_message = f"{record.getMessage()}"  # A mensagem original
+
+                # Formato do log
+                return f"{formatted_time} {formatted_level} {formatted_name} {formatted_context} {formatted_message}"
+
+        # Define o formato básico do log (sem o contexto)
+        formatter = ContextFormatter('%(asctime)s - %(levelname)s - %(message)s')
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
+        logger.setLevel(logging.INFO)
+        return logger
+
+    def get_logger(self, name: str) -> logging.Logger:
+        """
+        Obtém o logger correto para 'State' ou 'SQS'.
+        """
+        if name in self.loggers:
+            return self.loggers[name]
+        raise ValueError("Logger name must be 'State' ou 'SQS'")

@@ -10,7 +10,7 @@ class OrderState(BaseState):
     """The robot orders pizza and gets ready to eat."""
 
     def on_entry(self):
-        print("I'll get the number of the pizzeria...")
+        self.logger.info("I'll get the number of the pizzeria...")
         self.pizzaria = Pizzeria()
     
     def execute(self):

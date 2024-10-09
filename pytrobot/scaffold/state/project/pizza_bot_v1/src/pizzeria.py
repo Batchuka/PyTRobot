@@ -18,9 +18,9 @@ class Pizzeria:
                 if self.slices > 0:
                     break
                 else:
-                    print("Please enter a number greater than zero.")
+                    self.logger.info("Please enter a number greater than zero.")
             except ValueError:
-                print("Invalid entry. Please enter a number.")
+                self.logger.info("Invalid entry. Please enter a number.")
         
         # Return a Pizza instance
         return Pizza(flavor=self.flavor, slices=self.slices)

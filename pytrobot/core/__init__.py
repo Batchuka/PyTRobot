@@ -2,15 +2,16 @@
 import os
 import sys
 import importlib
+import logging
 from pathlib import Path
 
 from pytrobot.core.singleton import Singleton
+from pytrobot.core.utility.common import add_to_path
 from pytrobot.core.feature.logging import print_pytrobot_banner
 from pytrobot.core.feature.config import ConfigManager
 from pytrobot.core.feature.multithread import MultithreadManager
-from pytrobot.core.strategy.state.concrete import StateStrategy
-from pytrobot.core.strategy.celery.concrete import CeleryStrategy
-from pytrobot.core.utility.common import add_to_path
+from pytrobot.core.strategy.state.strategy import StateStrategy
+from pytrobot.core.strategy.sqs.strategy import SQSStrategy
 
 
 class PyTRobotNotInitializedException(Exception):
@@ -32,6 +33,7 @@ class PyTRobot(metaclass=Singleton):
     def _initialize(self):
 
         print_pytrobot_banner()
+        self.logger = logging.getLogger('PyTRobot')
 
         self.load_config()
         self.load_src()
@@ -45,17 +47,17 @@ class PyTRobot(metaclass=Singleton):
 
     def _check_and_register_strategies(self):
         """Verifica se há registros de tasks ou states e adiciona as estratégias necessárias."""
-        from pytrobot.core.strategy.celery.task_registry import TaskRegistry
-        from pytrobot.core.strategy.state.state_registry import StateRegistry
+        from pytrobot.core.strategy.sqs.registry import SQSRegistry
+        from pytrobot.core.strategy.state.registry import StateRegistry
 
         self.strategies = []
 
-        task_registry = TaskRegistry()
+        task_registry = SQSRegistry()
         state_registry = StateRegistry()
 
         # Adiciona a CeleryStrategy se houver tasks registradas
         if task_registry.get_all():
-            self.strategies.append(CeleryStrategy())
+            self.strategies.append(SQSStrategy())
 
         # Adiciona a StateStrategy se houver states registrados
         if state_registry.get_all():
@@ -81,12 +83,12 @@ class PyTRobot(metaclass=Singleton):
                 try:
                     importlib.import_module(f'{base_package}.src.{module_name}')
                 except ModuleNotFoundError as e:
-                    print(f"Error importing module '{module_name}': {e}. fallback action : trying to add the path to sys.path temporarily.")
+                    self.logger.info(f"Error importing module '{module_name}': {e}. fallback action : trying to add the path to sys.path temporarily.")
                     add_to_path(Path(self.base_directory).parent)
                     try:
                         importlib.import_module(f'{base_package}.src.{module_name}')
                     except ModuleNotFoundError as e:
-                        print(f"Error importing module after adding to sys.path: {e}")
+                        self.logger.info(f"Error importing module after adding to sys.path: {e}")
                         raise e
 
     def load_config(self):
@@ -111,7 +113,7 @@ class PyTRobot(metaclass=Singleton):
         while True:
             active_threads = self.multithread_manager.get_number_active_threads()
             if active_threads == 0:
-                print("No active threads, terminating the process...")
+                self.logger.info("No active threads, terminating the process...")
                 self.stop_application()
                 break
             time.sleep(10)

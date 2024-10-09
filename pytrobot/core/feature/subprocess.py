@@ -1,10 +1,12 @@
 # pytrobot/core/feature/subprocess.py
 
+import logging
 import subprocess as sp
 from pytrobot.core.singleton import Singleton
 
 class SubprocessManager(metaclass=Singleton):
     def __init__(self):
+        self.logger = logging.getLogger('PyTRobot')
         self.processes = {}
 
     def executar_subprocesso(self, comando, captura_saida=True, captura_erro=True):
@@ -60,9 +62,9 @@ class SubprocessManager(metaclass=Singleton):
         Lista todos os subprocessos ativos gerenciados pelo SubprocessManager.
         """
         active_processes = {pid: proc for pid, proc in self.processes.items() if proc.poll() is None}
-        print(f"Active processes count: {len(active_processes)}")
+        self.logger.info(f"Active processes count: {len(active_processes)}")
         for pid, proc in active_processes.items():
-            print(f"Process ID: {pid}, Process PID: {proc.pid}")
+            self.logger.info(f"Process ID: {pid}, Process PID: {proc.pid}")
 
     def stop_process(self, process_id):
         """
@@ -71,9 +73,9 @@ class SubprocessManager(metaclass=Singleton):
         if process_id in self.processes:
             proc = self.processes[process_id]
             if proc.poll() is None:
-                print(f"Terminating the process {process_id}.")
+                self.logger.info(f"Terminating the process {process_id}.")
                 proc.terminate()
             else:
-                print(f"Process {process_id} is no longer active.")
+                self.logger.warning(f"Process {process_id} is no longer active.")
         else:
-            print(f"No process found with ID {process_id}.")
+            self.logger.warning(f"No process found with ID {process_id}.")

@@ -1,7 +1,9 @@
 # pytrobot\core\utility\common.py
 import sys
+import logging
 from pathlib import Path
 from contextlib import contextmanager
+logger = logging.getLogger('PyTRobot')
 
 
 # contextmanager para adicionar temporariamente ao sys.path
@@ -21,6 +23,6 @@ def add_to_path(path):
     resolved_path = str(Path(path).resolve())
     if resolved_path not in sys.path:
         sys.path.append(resolved_path)
-        print(f"Caminho adicionado ao sys.path: {resolved_path}")
+        logger.info(f"Caminho adicionado ao sys.path: {resolved_path}")
     else:
-        print(f"Caminho já está presente no sys.path: {resolved_path}")
+        logger.warning(f"Caminho já está presente no sys.path: {resolved_path}")

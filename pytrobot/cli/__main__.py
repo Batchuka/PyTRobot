@@ -6,11 +6,11 @@ from datetime import datetime
 
 # Caminhos base para os scaffolds
 from pytrobot.scaffold.state import project as state_project_scaffold
-from pytrobot.scaffold.queue import project as celery_project_scaffold
+from pytrobot.scaffold.sqs import project as celery_project_scaffold
 from pytrobot.scaffold.state import new_state as new_state_file
 from pytrobot.scaffold.state import test_new_state as test_state_file
-from pytrobot.scaffold.queue import new_task as new_task_file
-from pytrobot.scaffold.queue import test_new_task as test_task_file
+from pytrobot.scaffold.sqs import new_task as new_task_file
+from pytrobot.scaffold.sqs import test_new_task as test_task_file
 
 @click.group()
 def cli():

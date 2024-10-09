@@ -1,12 +1,11 @@
 # pytrobot/core/strategy/state/state_manager.py
 
-from pytrobot.core.strategy.state.state_registry import StateRegistry
+from pytrobot.core.strategy.state.registry import StateRegistry
 from pytrobot.core.strategy.state.base_state import BaseState
 from pytrobot.core.utility.log import LogManager
 
 class StateTransitionError(Exception):
     pass
-
 
 class StateManager():
 

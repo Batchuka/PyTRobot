@@ -37,7 +37,7 @@ class ConfigManager(metaclass=Singleton):
                 return default
 
         if isinstance(value, dict):
-            print(f"Config key '{key}' resolved to a dictionary, expected a value. Returning default.")
+            self.logger.info(f"Config key '{key}' resolved to a dictionary, expected a value. Returning default.")
             return default
 
         return value

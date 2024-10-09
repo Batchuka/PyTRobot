@@ -16,10 +16,15 @@
         "global": {}
     },
     "aws": {
-        "region_name": "us-east-1",
-        "role_arn": "arn:aws:iam::..",
-        "queue_url": "https://sqs.us-east-1.amazonaws.com/...",
-        "queue_name": "nome-fila"
+        "sqs": [
+            {
+                "queue_name": "wmt-rpa-teste",
+                "region_name": "us-east-1",
+                "queue_url": "https://sqs.us-east-1.amazonaws.com/435062120355/wmt-rpa-teste",
+                "max_messages": 10,
+                "wait_time": 10
+            }
+        ]
     },
     "library": {},
     "endpoints": {},

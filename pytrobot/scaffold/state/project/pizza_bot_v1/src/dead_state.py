@@ -6,10 +6,10 @@ class DeadState(BaseState):
     """The robot died of hunger."""
 
     def on_entry(self):
-        print("It was a long wait without pizza...")
+        self.logger.info("It was a long wait without pizza...")
 
     def execute(self):
-        print('The robot died of hunger.')
+        self.logger.info('The robot died of hunger.')
 
     def on_exit(self):
         # Nothing happens after this state, the robot is dead

@@ -1,14 +1,13 @@
-# test/test_new_project_state.py
-
+# test/test_celery_strategy.py
 import unittest
 from pathlib import Path
 
-class TestStateStrategy(unittest.TestCase):
+class TestSQSStrategy(unittest.TestCase):
     
     def setUp(self):
         # Inicializa o PyTRobot no diretório do projeto `new_project`
-        project_dir    = Path(__file__).resolve().parent.parent / "pytrobot" / "scaffold" / "state" / "project" 
-        src_path       = Path(__file__).resolve().parent.parent / "pytrobot" / "scaffold" / "state" / "project" / "pizza_bot_v1" 
+        project_dir    = Path(__file__).resolve().parent.parent / "pytrobot" / "scaffold" / "sqs" / "project" 
+        src_path       = Path(__file__).resolve().parent.parent / "pytrobot" / "scaffold" / "sqs" / "project" / "pizza_bot_v2" 
         self.project_dir    = str(project_dir)
         self.src_path       = str(src_path)
         pass

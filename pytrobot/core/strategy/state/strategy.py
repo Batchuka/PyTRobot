@@ -2,7 +2,7 @@
 
 from pytrobot.core.singleton import Singleton
 from pytrobot.core.strategy.application_strategy import ApplicationStrategy
-from pytrobot.core.strategy.state.state_manager import StateManager, StateRegistry
+from pytrobot.core.strategy.state.manager import StateManager, StateRegistry
 
 
 class StateStrategy(ApplicationStrategy, metaclass=Singleton):

@@ -10,10 +10,10 @@
             "justMyCode": false
         },
         {
-            "name": "Test | Celery",
+            "name": "Test | SQS",
             "type": "debugpy",
             "request": "launch",
-            "program": "test\\test_state_strategy.py",
+            "program": "test\\test_sqs_strategy.py",
             "console": "integratedTerminal",
             "justMyCode": false
         },
@@ -22,6 +22,14 @@
             "type": "debugpy",
             "request": "launch",
             "program": "pytrobot\\cli\\__main__.py",
+            "console": "integratedTerminal",
+            "justMyCode": false
+        },
+        {
+            "name": "Test | SQSManager",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "pytrobot\\core\\strategy\\sqs\\manager.py",
             "console": "integratedTerminal",
             "justMyCode": false
         }

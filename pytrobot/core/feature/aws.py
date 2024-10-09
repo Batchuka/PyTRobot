@@ -1,4 +1,5 @@
 import os
+import logging
 import importlib.util
 import boto3
 
@@ -7,6 +8,7 @@ from pytrobot.core.singleton import Singleton
 class ConfigData(metaclass=Singleton):
     def __init__(self):
         self.config = {}
+        self.logger = logging.getLogger('PyTRobot')
 
     def load_config(self, rsc_path):
         """Carrega as configurações do arquivo 'config.py' localizado no diretório 'rsc' especificado."""
@@ -47,12 +49,12 @@ class ConfigData(metaclass=Singleton):
                 )
                 parameter_value = response['Parameter']['Value']
                 self.config[key] = parameter_value
-                print(f"The value of parameter {parameter_name} is: {parameter_value}")
+                self.logger.info(f"The value of parameter {parameter_name} is: {parameter_value}")
 
             except ssm_client.exceptions.ParameterNotFound:
-                print(f"The parameter {parameter_name} was not found.")
+                self.logger.info(f"The parameter {parameter_name} was not found.")
             except Exception as e:
-                print(f"An error occurred while fetching parameter {parameter_name}: {str(e)}")
+                self.logger.info(f"An error occurred while fetching parameter {parameter_name}: {str(e)}")
 
     def get_asset(self, name):
         return self.config.get(name, None)
@@ -60,7 +62,7 @@ class ConfigData(metaclass=Singleton):
     def set_asset(self, name, value):
 
         if name in self.config:
-            print(f"The value of '{name}' has been updated in the config.")
+            self.logger.info(f"The value of '{name}' has been updated in the config.")
         else:
-            print(f"The name '{name}' was modified in the config.")
+            self.logger.info(f"The name '{name}' was modified in the config.")
         self.config[name] = value
