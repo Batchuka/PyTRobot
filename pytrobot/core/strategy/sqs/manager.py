@@ -1,3 +1,4 @@
+# pytrobot\core\strategy\sqs\manager.py
 import time
 import json
 import threading
@@ -242,6 +243,6 @@ if __name__ == "__main__":
     # Inicia o processo de polling e processamento (não irá parar, então limite o tempo no teste)
     try:
         sqs_manager.start()
-        time.sleep(30)  # Simulação do processo por 30 segundos
+        time.sleep(90)  # Simulação do processo por 30 segundos
     except KeyboardInterrupt:
         print("Encerrando o processo.")

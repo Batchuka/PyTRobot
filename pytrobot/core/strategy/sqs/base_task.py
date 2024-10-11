@@ -1,7 +1,6 @@
-# pytrobot/core/strategy/celery/base_task.py
+# pytrobot/core/strategy/sqs/base_task.py
 
 from celery import Task
-from typing import Literal
 from abc import ABC, abstractmethod
 from pytrobot.core.utility.log import LogManager
 

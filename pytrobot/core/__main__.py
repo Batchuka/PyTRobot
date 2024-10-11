@@ -1,4 +1,4 @@
-# pytrobot/__main__.py
+# pytrobot\core\__main__.py
 import sys
 from pytrobot import PyTRobot
 

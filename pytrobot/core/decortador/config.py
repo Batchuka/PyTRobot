@@ -1,4 +1,4 @@
-# pytrobot/core/feature/config.py
+# pytrobot\core\decortador\config.py
 from functools import wraps
 
 from pytrobot.core.feature.config import ConfigManager

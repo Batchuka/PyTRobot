@@ -1,4 +1,4 @@
-# pytrobot/core/strategy/sqs/concrete.py
+# pytrobot\core\strategy\sqs\strategy.py
 
 from pytrobot.core.singleton import Singleton
 from pytrobot.core.utility.config import Value

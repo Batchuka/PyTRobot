@@ -1,4 +1,4 @@
-# pytrobot/__init__.py
+# pytrobot\core\__init__.py
 import os
 import sys
 import importlib

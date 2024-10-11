@@ -1,4 +1,4 @@
-# pytrobot/core/decortador/subprocess.py
+# pytrobot\core\decortador\subprocess.py
 from pytrobot.core.feature.subprocess import SubprocessManager
 
 def Subprocess(comando, captura_saida=True, captura_erro=True):

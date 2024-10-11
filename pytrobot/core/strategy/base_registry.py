@@ -1,3 +1,4 @@
+# pytrobot\core\strategy\base_registry.py
 from abc import ABC, abstractmethod
 
 class BaseRegistry(ABC):
