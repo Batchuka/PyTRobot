@@ -48,9 +48,9 @@ class LogManager(metaclass=Singleton):
 
                 # Formato do log com a ordem que você pediu
                 formatted_time = self.formatTime(record)  # Formata o tempo
-                formatted_level = f"{record.levelname:<2}"  # Nível de log (alinhado à esquerda)
-                formatted_name = f"[{record.name:<8}]"  # Nome do logger com preenchimento à esquerda (tamanho 10)
-                formatted_context = f"{context:<24}"  # Contexto com preenchimento à esquerda (tamanho 20)
+                formatted_level = f"|{record.levelname:<8}"  # Nível de log (alinhado à esquerda)
+                formatted_name = f" |{record.name:<10}"  # Nome do logger com preenchimento à esquerda (tamanho 10)
+                formatted_context = f"{context} —"  # Contexto com preenchimento à esquerda (tamanho 20)
                 formatted_message = f"{record.getMessage()}"  # A mensagem original
 
                 # Formato do log

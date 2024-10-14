@@ -108,9 +108,9 @@ class SQSManager:
             # Verifica se a task está registrada
             if task_name in self.task_registry.get_all():
                 self.logger.warning("Não tem essa atividade")
-            #     success = self.execute_task(task_name, **task_kwargs)
-            #     if success:
-            #         self.delete_message(message)
+                success = self.execute_task(task_name, **task_kwargs)
+                if success:
+                    self.delete_message(message)
             else:
                 self.logger.warning(f"Tarefa '{task_name}' não registrada. Mensagem ID: {message['MessageId']}")
         else:
@@ -127,6 +127,7 @@ class SQSManager:
         if isinstance(body, str):
             try:
                 # Se for uma string, tenta fazer o load como JSON
+                body = body.replace("'", '"')
                 return json.loads(body)
             except json.JSONDecodeError as e:
                 self.logger.error(f"Erro ao decodificar JSON da mensagem: {e}")
@@ -204,45 +205,46 @@ class SQSManager:
         except Exception as e:
             self.logger.error(f"Erro ao excluir mensagem {message['MessageId']}: {e}")
 
-if __name__ == "__main__":
-    from pytrobot.core.strategy.sqs.registry import SQSRegistry
-    from pytrobot.core.strategy.sqs.message_builder import SQSMessageBuilder
+# if __name__ == "__main__":
+#     from pytrobot.core.strategy.sqs.registry import SQSRegistry
+#     from pytrobot.core.strategy.sqs.message_builder import SQSMessageBuilder
 
-    # Simulação dos valores necessários para SQS
-    region_name = 'us-east-1'
-    queue_url = 'https://sqs.us-east-1.amazonaws.com/435062120355/wmt-rpa-teste'
-    max_messages = 10
-    wait_time = 20
+#     # Simulação dos valores necessários para SQS
+#     region_name = 'us-east-1'
+#     queue_url = 'https://sqs.us-east-1.amazonaws.com/435062120355/wmt-rpa-teste'
+#     max_messages = 10
+#     wait_time = 20
 
-    # Cria uma instância de SQSRegistry para registrar tasks simuladas
-    task_registry = SQSRegistry()
+#     # Cria uma instância de SQSRegistry para registrar tasks simuladas
+#     task_registry = SQSRegistry()
 
-    # # Simulação de uma task para registrar no registry
-    # class DummyTask:
-    #     def run(self, **kwargs):
-    #         print(f"Executando DummyTask com args: {kwargs}")
+#     # # Simulação de uma task para registrar no registry
+#     # class DummyTask:
+#     #     def run(self, **kwargs):
+#     #         print(f"Executando DummyTask com args: {kwargs}")
 
-    # # Registrar a task DummyTask
-    # task_registry.register('DummyTask', DummyTask)
+#     # # Registrar a task DummyTask
+#     # task_registry.register('DummyTask', DummyTask)
 
-    # Inicializa o SQSManager com task_registry
-    sqs_manager = SQSManager(
-        task_registry=task_registry,
-        region_name=region_name,
-        queue_url=queue_url,
-        max_messages=max_messages,
-        wait_time=wait_time
-    )
+#     # Inicializa o SQSManager com task_registry
+#     sqs_manager = SQSManager(
+#         task_registry=task_registry,
+#         region_name=region_name,
+#         queue_url=queue_url,
+#         max_messages=max_messages,
+#         wait_time=wait_time
+#     )
 
-    # # Simula a criação de uma mensagem com o builder
-    # message = SQSMessageBuilder(task_name='DummyTask').add_kwargs(param1='value1', param2='value2').build()
+#     # # Simula a criação de uma mensagem com o builder
+#     # message = SQSMessageBuilder(task_name='DummyTask').add_kwargs(param1='value1', param2='value2').build()
 
-    # # Enviar a mensagem para a fila SQS
-    # sqs_manager.send_message(message)
+#     # # Enviar a mensagem para a fila SQS
+#     # sqs_manager.send_message(message)
 
-    # Inicia o processo de polling e processamento (não irá parar, então limite o tempo no teste)
-    try:
-        sqs_manager.start()
-        time.sleep(90)  # Simulação do processo por 30 segundos
-    except KeyboardInterrupt:
-        print("Encerrando o processo.")
+#     # Inicia o processo de polling e processamento (não irá parar, então limite o tempo no teste)
+#     try:
+#         sqs_manager.start()
+#         while True:
+#             time.sleep(10)
+#     except KeyboardInterrupt:
+#         print("Encerrando o processo.")

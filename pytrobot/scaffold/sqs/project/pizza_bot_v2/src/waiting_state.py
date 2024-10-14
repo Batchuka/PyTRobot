@@ -1,11 +1,9 @@
 from pytrobot.core.decortador.state import State
 from pytrobot.core.strategy.state.base_state import BaseState
 
-from pytrobot.core.strategy.sqs.message_builder import SQSMessageBuilder
-from pytrobot.core.strategy.sqs.strategy import SQSStrategy
 
-@State('WaitingState', 'DeadState')
-class OrderState(BaseState):
+@State('EatingState', 'DeadState')
+class WaitingState(BaseState):
     """The robot orders pizza and prepares for the pizza delivery."""
 
     def on_entry(self):
